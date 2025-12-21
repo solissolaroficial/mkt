@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: solis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: solis_db
+      POSTGRES_USER: solis_user
+      POSTGRES_PASSWORD: solis_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - solis-network
+    # Não exposto externamente conforme solicitado
+    ports: []
+
+  # Backend Go + Fiber
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: solis-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: solis_user
+      DB_PASSWORD: solis_password
+      DB_NAME: solis_db
+      PORT: 8080
+      JWT_SECRET: your-secret-key-here
+    depends_on:
+      - postgres
+    networks:
+      - solis-network
+    ports:
+      - "8500:8080"  # Mapeamento conforme solicitado
+
+  # Frontend React (sem nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: solis-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - solis-network
+    ports:
+      - "3500:80"  # Mapeamento conforme solicitado
+    environment:
+      - VITE_API_URL=http://localhost:8500/api
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  solis-network:
+    driver: bridge
