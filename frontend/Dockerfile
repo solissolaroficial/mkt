@@ -1,4 +1,4 @@
-# Etapa 1: Build stage
+# Etapa 1: Build stage (para produção)
 FROM node:18-alpine AS builder
 
 # Definir o diretório de trabalho
@@ -8,28 +8,39 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
+# Definir argumento de build para a URL da API
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Construir a aplicação
 RUN npm run build
 
-# Etapa 2: Runtime stage com servidor de desenvolvimento
+# Etapa 2: Runtime stage com hot reload (desenvolvimento)
 FROM node:18-alpine
-
-# Instalar serve para servir os arquivos estáticos
-RUN npm install -g serve
 
 # Criar diretório de trabalho
 WORKDIR /app
 
-# Copiar o build da etapa anterior
-COPY --from=builder /app/dist ./dist
+# Copiar package.json
+COPY package*.json ./
 
-# Expor a porta 80
-EXPOSE 80
+# Instalar dependências
+RUN npm install
 
-# Comando para servir os arquivos estáticos
-CMD ["serve", "-s", "dist", "-l", "80"]
+# Copiar código fonte para hot reload
+COPY . .
+
+# Definir argumento de build para a URL da API
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Expor a porta 3000 (porta padrão do Vite)
+EXPOSE 3000
+
+# Comando para executar o Vite em modo dev com hot reload
+CMD ["npm", "run", "dev"]

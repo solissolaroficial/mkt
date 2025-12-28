@@ -1,5 +1,5 @@
 
-import { KpiCategory, RepTableData, MarketingChannelData, Task, AllowedUser, PdvPost, RecurrentPdv, KpiLog, ShowroomItem, CalendarPost, SocialBenchmarking, Notification, GiftItem, GiftTransaction, AccountPayable, RepresentativeProfile, ProgramCredential, InternalContact, BreakdownItem, OfflineAction, BudgetItem, ChannelPerformance } from './types';
+import { KpiCategory, RepTableData, MarketingChannelData, Task, AllowedUser, PdvPost, RecurrentPdv, KpiLog, ShowroomItem, CalendarPost, SocialBenchmarking, Notification, GiftItem, GiftTransaction, AccountPayable, RepresentativeProfile, ProgramCredential, InternalContact, BreakdownItem, OfflineAction, BudgetItem, ChannelPerformance } from '../types/legacy.types';
 
 export const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 

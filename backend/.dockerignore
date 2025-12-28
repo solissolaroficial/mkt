@@ -1,0 +1,13 @@
+tmp
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+.git
+.gitignore
+.DS_Store
+vendor

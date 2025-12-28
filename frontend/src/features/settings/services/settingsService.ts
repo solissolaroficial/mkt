@@ -1,0 +1,36 @@
+import { apiClient } from '@/infrastructure/api/client';
+import type { ProgramCredential, InternalContact } from '../types';
+
+export const settingsService = {
+  /**
+   * Get program credentials
+   */
+  getCredentials: async (): Promise<ProgramCredential[]> => {
+    const response = await apiClient.get('/api/settings/credentials');
+    return response.data;
+  },
+
+  /**
+   * Get internal contacts
+   */
+  getContacts: async (): Promise<InternalContact[]> => {
+    const response = await apiClient.get('/api/settings/contacts');
+    return response.data;
+  },
+
+  /**
+   * Update user profile
+   */
+  updateProfile: async (data: { name: string; email: string; phone: string; role: string }): Promise<void> => {
+    const response = await apiClient.put('/api/settings/profile', data);
+    return response.data;
+  },
+
+  /**
+   * Update user password
+   */
+  updatePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+    const response = await apiClient.put('/api/settings/password', data);
+    return response.data;
+  },
+};

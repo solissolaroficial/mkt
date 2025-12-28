@@ -1,0 +1,304 @@
+package controller
+
+import (
+	"context"
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
+	"github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
+)
+
+// KpiController handles HTTP requests for KPI operations
+type KpiController struct {
+	createKpiUseCase         *kpis.CreateKpiUseCase
+	getKpiUseCase            *kpis.GetKpiUseCase
+	listKpisUseCase          *kpis.ListKpisUseCase
+	updateKpiUseCase         *kpis.UpdateKpiUseCase
+	deleteKpiUseCase         *kpis.DeleteKpiUseCase
+	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
+	mapper                   *KpiMapper
+}
+
+// NewKpiController creates a new KpiController instance
+func NewKpiController(
+	createKpiUseCase *kpis.CreateKpiUseCase,
+	getKpiUseCase *kpis.GetKpiUseCase,
+	listKpisUseCase *kpis.ListKpisUseCase,
+	updateKpiUseCase *kpis.UpdateKpiUseCase,
+	deleteKpiUseCase *kpis.DeleteKpiUseCase,
+	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase,
+) *KpiController {
+	return &KpiController{
+		createKpiUseCase:         createKpiUseCase,
+		getKpiUseCase:            getKpiUseCase,
+		listKpisUseCase:          listKpisUseCase,
+		updateKpiUseCase:         updateKpiUseCase,
+		deleteKpiUseCase:         deleteKpiUseCase,
+		updateMonthlyDataUseCase: updateMonthlyDataUseCase,
+		mapper:                   NewKpiMapper(),
+	}
+}
+
+// Create handles KPI creation
+// @Summary Create a new KPI
+// @Description Create a new KPI category with the provided data
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiRequest body request.CreateKpiRequest true "KPI data"
+// @Success 201 {object} response.KpiResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis [post]
+func (c *KpiController) Create(ctx *fiber.Ctx) error {
+	// Parse request body
+	var req request.CreateKpiRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Execute use case
+	input := kpis.CreateKpiInput{
+		Title: req.Title,
+		Color: req.Color,
+		Unit:  req.Unit,
+	}
+
+	kpi, err := c.createKpiUseCase.Execute(context.Background(), input)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response - now includes monthly data
+	kpiResponse := c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+
+	return ctx.Status(fiber.StatusCreated).JSON(kpiResponse)
+}
+
+// GetByID handles KPI retrieval by ID
+// @Summary Get KPI by ID
+// @Description Retrieve a KPI category by its ID
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param id path string true "KPI ID"
+// @Success 200 {object} response.KpiResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{id} [get]
+func (c *KpiController) GetByID(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	id := ctx.Params("id")
+
+	kpi, err := c.getKpiUseCase.Execute(context.Background(), id)
+	if err != nil {
+		if err == errors.ErrKpiNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI not found",
+			})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	// Convert to response - now includes monthly data
+	kpiResponse := c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+
+	return ctx.Status(fiber.StatusOK).JSON(kpiResponse)
+}
+
+// List handles KPI listing with pagination
+// @Summary List KPIs
+// @Description Retrieve a paginated list of KPI categories
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param pageSize query int false "Page size" default(10)
+// @Success 200 {object} response.KpiListResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis [get]
+func (c *KpiController) List(ctx *fiber.Ctx) error {
+	// Extract query params
+	page, _ := strconv.Atoi(ctx.Query("page", "1"))
+	pageSize, _ := strconv.Atoi(ctx.Query("pageSize", "10"))
+
+	// Create pagination value object
+	pagination := valueobject.NewPagination(page, pageSize)
+
+	// Execute use case
+	output, err := c.listKpisUseCase.Execute(context.Background(), pagination)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	// Convert entities to responses with monthly data
+	kpiResponses := make([]response.KpiResponse, len(output.Kpis))
+	for i, kpi := range output.Kpis {
+		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+	}
+
+	// Calculate pagination info
+	totalPages := int(output.Total) / pageSize
+	if int(output.Total)%pageSize > 0 {
+		totalPages++
+	}
+
+	// Create list response
+	listResponse := response.KpiListResponse{
+		Data: kpiResponses,
+		Pagination: response.PaginationResponse{
+			Page:       page,
+			PageSize:   pageSize,
+			Total:      int64(output.Total),
+			TotalPages: totalPages,
+		},
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(listResponse)
+}
+
+// Update handles KPI update
+// @Summary Update KPI
+// @Description Update an existing KPI category
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param id path string true "KPI ID"
+// @Param kpiRequest body request.UpdateKpiRequest true "KPI update data"
+// @Success 200 {object} response.KpiResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{id} [put]
+func (c *KpiController) Update(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	id := ctx.Params("id")
+
+	// Parse request body
+	var req request.UpdateKpiRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Execute use case
+	input := kpis.UpdateKpiInput{
+		Title: req.Title,
+		Color: req.Color,
+		Unit:  req.Unit,
+	}
+
+	kpi, err := c.updateKpiUseCase.Execute(context.Background(), id, input)
+	if err != nil {
+		if err == errors.ErrKpiNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI not found",
+			})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response - now includes monthly data
+	kpiResponse := c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+
+	return ctx.Status(fiber.StatusOK).JSON(kpiResponse)
+}
+
+// Delete handles KPI deletion
+// @Summary Delete KPI
+// @Description Delete an existing KPI category
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param id path string true "KPI ID"
+// @Success 204
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{id} [delete]
+func (c *KpiController) Delete(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	id := ctx.Params("id")
+
+	err := c.deleteKpiUseCase.Execute(context.Background(), id)
+	if err != nil {
+		if err == errors.ErrKpiNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI not found",
+			})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	return ctx.Status(fiber.StatusNoContent).Send(nil)
+}
+
+// UpdateMonthlyData handles monthly data update
+// @Summary Update monthly data
+// @Description Update monthly data for a specific KPI
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param monthlyDataId path string true "Monthly Data ID"
+// @Param monthlyDataRequest body request.UpdateMonthlyDataRequest true "Monthly data update"
+// @Success 200 {object} response.MonthlyDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/monthly-data/{monthlyDataId} [put]
+func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
+	// Extract IDs from params
+	kpiId := ctx.Params("kpiId")
+	monthlyDataId := ctx.Params("monthlyDataId")
+
+	// Parse request body
+	var req request.UpdateMonthlyDataRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Execute use case
+	input := kpis.UpdateMonthlyDataInput{
+		MonthlyDataID: monthlyDataId,
+		KpiID:         kpiId,
+		Realized:      req.Realized,
+		Meta:          req.Meta,
+		Breakdown:     req.Breakdown,
+	}
+
+	monthlyData, err := c.updateMonthlyDataUseCase.Execute(context.Background(), input)
+	if err != nil {
+		if err == errors.ErrMonthDataNotFound || err == errors.ErrKpiNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "Monthly data or KPI not found",
+			})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response
+	monthlyDataResponse := c.mapper.ToMonthlyDataResponse(monthlyData)
+
+	return ctx.Status(fiber.StatusOK).JSON(monthlyDataResponse)
+}

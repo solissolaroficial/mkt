@@ -1,38 +1,27 @@
-# Etapa 1: Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine
 
-# Definir o diretório de trabalho
+# Instalar dependências necessárias
+RUN apk add --no-cache git ca-certificates
+
 WORKDIR /app
+
+# Instalar air para hot reload
+RUN go install github.com/air-verse/air@v1.52.3
 
 # Copiar arquivos go mod
 COPY go.mod go.sum ./
-
-# Baixar dependências
 RUN go mod download
 
-# Copiar código fonte
-COPY . .
+# Copiar arquivo .air.toml
+COPY .air.toml .
 
-# Construir a aplicação
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Copiar script de entrada
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Etapa 2: Runtime stage
-FROM alpine:latest
+# Criar diretório tmp para o air
+RUN mkdir -p tmp
 
-# Instalar ca-certificates para requisições HTTPS
-RUN apk --no-cache add ca-certificates
-
-# Criar diretório de trabalho
-WORKDIR /root/
-
-# Copiar o binário da etapa de build
-COPY --from=builder /app/main .
-
-# Copiar arquivo .env se existir
-COPY --from=builder /app/.env .env
-
-# Expor a porta 8080
 EXPOSE 8080
 
-# Comando para executar a aplicação
-CMD ["./main"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
