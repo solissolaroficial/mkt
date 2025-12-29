@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { kpiService } from '../services/kpiService';
 import type { KpiCategory } from '../types';
+import { QUERY_KEYS } from '@/shared/utils/constants';
 
 /**
  * Hook customizado para buscar um KPI específico pelo ID
@@ -9,7 +10,7 @@ import type { KpiCategory } from '../types';
  */
 export function useKpiById(kpiId: string) {
   return useQuery({
-    queryKey: ['kpi', kpiId],
+    queryKey: QUERY_KEYS.KPIS.DETAIL(kpiId),
     queryFn: () => kpiService.getById(kpiId),
     enabled: !!kpiId, // Só busca se tiver ID válido
     staleTime: 5 * 60 * 1000, // 5 minutos

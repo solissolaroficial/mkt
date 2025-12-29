@@ -8,7 +8,7 @@ export const ENDPOINTS = {
     GET: (id: string) => `/api/kpis/${id}`,
     UPDATE: (id: string) => `/api/kpis/${id}`,
     DELETE: (id: string) => `/api/kpis/${id}`,
-    UPDATE_MONTHLY: (kpiId: string, monthlyId: string) =>
-      `/api/kpis/${kpiId}/monthly-data/${monthlyId}`,
+    UPDATE_MONTHLY: (kpiId: string) =>
+      `/api/kpis/${kpiId}/monthly-data`,
   },
 } as const;

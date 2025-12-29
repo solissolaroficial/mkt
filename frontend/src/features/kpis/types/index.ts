@@ -18,9 +18,11 @@ export interface UpdateKpiDTO {
 }
 
 export interface UpdateMonthlyDataDTO {
+  year?: number; // Year (e.g., 2024, 2025)
   realized?: number;
   meta?: number;
   breakdown?: BreakdownItem[];
+  month?: string;
 }
 
 // Filtros

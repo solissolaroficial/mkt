@@ -7,7 +7,7 @@ import { QUERY_KEYS } from '@/shared/utils/constants';
  */
 export const useKpis = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.KPIS.ALL,
+    queryKey: QUERY_KEYS.KPIS.LIST(),
     queryFn: () => kpiService.list(),
     staleTime: 1000 * 60 * 5, // 5 minutos
   });

@@ -14,6 +14,7 @@ import (
 type MonthlyData struct {
 	id            uuid.UUID
 	kpiCategoryID uuid.UUID
+	year          int    // Year (e.g., 2024, 2025)
 	month         string // 'JAN', 'FEV', etc
 	realized      *float64
 	meta          *float64
@@ -24,10 +25,11 @@ type MonthlyData struct {
 }
 
 // NewMonthlyData creates new monthly data with validation
-func NewMonthlyData(kpiCategoryID uuid.UUID, month string) (*MonthlyData, error) {
+func NewMonthlyData(kpiCategoryID uuid.UUID, year int, month string) (*MonthlyData, error) {
 	data := &MonthlyData{
 		id:            uuid.New(),
 		kpiCategoryID: kpiCategoryID,
+		year:          year,
 		month:         month,
 		realized:      nil,
 		meta:          nil,
@@ -44,10 +46,11 @@ func NewMonthlyData(kpiCategoryID uuid.UUID, month string) (*MonthlyData, error)
 }
 
 // ReconstructMonthlyData reconstructs monthly data from database (without validation)
-func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, month string, realized, meta *float64, breakdown []byte, createdAt, updatedAt time.Time) (*MonthlyData, error) {
+func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, year int, month string, realized, meta *float64, breakdown []byte, createdAt, updatedAt time.Time) (*MonthlyData, error) {
 	return &MonthlyData{
 		id:            id,
 		kpiCategoryID: kpiCategoryID,
+		year:          year,
 		month:         month,
 		realized:      realized,
 		meta:          meta,
@@ -60,6 +63,7 @@ func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, month string, realized,
 // Getters (encapsulation)
 func (m *MonthlyData) ID() uuid.UUID            { return m.id }
 func (m *MonthlyData) KpiCategoryID() uuid.UUID { return m.kpiCategoryID }
+func (m *MonthlyData) Year() int                { return m.year }
 func (m *MonthlyData) Month() string            { return m.month }
 func (m *MonthlyData) Realized() *float64       { return m.realized }
 func (m *MonthlyData) Meta() *float64           { return m.meta }

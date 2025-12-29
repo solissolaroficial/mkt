@@ -56,12 +56,12 @@ func (g *monthlyDataGatewayImpl) Save(ctx context.Context, data *entity.MonthlyD
 	return nil
 }
 
-// FindByKpiAndMonth retrieves monthly data for a specific KPI and month
-func (g *monthlyDataGatewayImpl) FindByKpiAndMonth(ctx context.Context, kpiID uuid.UUID, month string) (*entity.MonthlyData, error) {
+// FindByKpiAndMonth retrieves monthly data for a specific KPI, year and month
+func (g *monthlyDataGatewayImpl) FindByKpiAndMonth(ctx context.Context, kpiID uuid.UUID, year int, month string) (*entity.MonthlyData, error) {
 	var dataModel model.MonthlyData
 
 	err := g.db.WithContext(ctx).
-		Where("kpi_category_id = ? AND month = ?", kpiID, month).
+		Where("kpi_category_id = ? AND year = ? AND month = ?", kpiID, year, month).
 		First(&dataModel).Error
 
 	if err != nil {
@@ -119,11 +119,11 @@ func (g *monthlyDataGatewayImpl) Update(ctx context.Context, data *entity.Monthl
 	return nil
 }
 
-// UpdateMeta updates only the meta value for a specific KPI and month
-func (g *monthlyDataGatewayImpl) UpdateMeta(ctx context.Context, kpiID uuid.UUID, month string, meta float64) error {
+// UpdateMeta updates only the meta value for a specific KPI, year and month
+func (g *monthlyDataGatewayImpl) UpdateMeta(ctx context.Context, kpiID uuid.UUID, year int, month string, meta float64) error {
 	result := g.db.WithContext(ctx).
 		Model(&model.MonthlyData{}).
-		Where("kpi_category_id = ? AND month = ?", kpiID, month).
+		Where("kpi_category_id = ? AND year = ? AND month = ?", kpiID, year, month).
 		Update("meta", meta)
 
 	if result.Error != nil {
@@ -137,11 +137,11 @@ func (g *monthlyDataGatewayImpl) UpdateMeta(ctx context.Context, kpiID uuid.UUID
 	return nil
 }
 
-// UpdateRealized updates only the realized value for a specific KPI and month
-func (g *monthlyDataGatewayImpl) UpdateRealized(ctx context.Context, kpiID uuid.UUID, month string, realized float64) error {
+// UpdateRealized updates only the realized value for a specific KPI, year and month
+func (g *monthlyDataGatewayImpl) UpdateRealized(ctx context.Context, kpiID uuid.UUID, year int, month string, realized float64) error {
 	result := g.db.WithContext(ctx).
 		Model(&model.MonthlyData{}).
-		Where("kpi_category_id = ? AND month = ?", kpiID, month).
+		Where("kpi_category_id = ? AND year = ? AND month = ?", kpiID, year, month).
 		Update("realized", realized)
 
 	if result.Error != nil {
@@ -155,11 +155,11 @@ func (g *monthlyDataGatewayImpl) UpdateRealized(ctx context.Context, kpiID uuid.
 	return nil
 }
 
-// UpdateBreakdown updates only the breakdown data for a specific KPI and month
-func (g *monthlyDataGatewayImpl) UpdateBreakdown(ctx context.Context, kpiID uuid.UUID, month string, breakdown interface{}) error {
+// UpdateBreakdown updates only the breakdown data for a specific KPI, year and month
+func (g *monthlyDataGatewayImpl) UpdateBreakdown(ctx context.Context, kpiID uuid.UUID, year int, month string, breakdown interface{}) error {
 	result := g.db.WithContext(ctx).
 		Model(&model.MonthlyData{}).
-		Where("kpi_category_id = ? AND month = ?", kpiID, month).
+		Where("kpi_category_id = ? AND year = ? AND month = ?", kpiID, year, month).
 		Update("breakdown", breakdown)
 
 	if result.Error != nil {

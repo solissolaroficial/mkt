@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { 
+import React, { useState, useEffect, useRef } from 'react';
+import {
   User, 
   Mail, 
   Lock, 
@@ -18,19 +18,46 @@ import {
 import type { Notification, KpiCategory } from '@/shared/types';
 import type { SettingsViewProps, SettingsSection, UserFormData } from '../types';
 
-const SettingsView: React.FC<SettingsViewProps> = ({ 
-    onLogout, 
-    notifications = [], 
+const SettingsView: React.FC<SettingsViewProps> = ({
+    onLogout,
+    notifications = [],
     onUpdateNotification,
     kpis,
-    onUpdateKpiMeta 
+    onUpdateKpiMeta
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Goal Editing State
-  const [selectedGoalKpi, setSelectedGoalKpi] = useState<string>(kpis && kpis.length > 0 ? kpis[0].id : '');
+  const [selectedGoalKpi, setSelectedGoalKpi] = useState<string>('');
+  const [metaValues, setMetaValues] = useState<Record<string, number>>({});
+  
+  // Debounce timeout ref
+  const debounceTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Atualizar selectedGoalKpi quando kpis mudar e estiver vazio
+  useEffect(() => {
+    if (kpis && kpis.length > 0 && !selectedGoalKpi) {
+      const firstKpiId = kpis[0].id;
+      setSelectedGoalKpi(firstKpiId);
+      // Inicializar metaValues com os valores do primeiro KPI
+      const initialValues: Record<string, number> = {};
+      kpis[0].data.forEach(d => {
+        if (d.meta !== null) {
+          initialValues[d.month] = d.meta;
+        }
+      });
+      setMetaValues(initialValues);
+    }
+  }, [kpis, selectedGoalKpi]);
+  
+  // Cleanup debounce timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimeoutRef.current).forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
 
   // Mock User State
   const [formData, setFormData] = useState<UserFormData>({
@@ -320,9 +347,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                         
                         <div>
                             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Selecione o Indicador (KPI)</label>
-                            <select 
+                            <select
                                 value={selectedGoalKpi}
-                                onChange={(e) => setSelectedGoalKpi(e.target.value)}
+                                onChange={(e) => {
+                                    const newKpiId = e.target.value;
+                                    setSelectedGoalKpi(newKpiId);
+                                    // Inicializar metaValues com os valores do novo KPI
+                                    const newKpi = kpis?.find(k => k.id === newKpiId);
+                                    if (newKpi) {
+                                        const initialValues: Record<string, number> = {};
+                                        newKpi.data.forEach(d => {
+                                            if (d.meta !== null) {
+                                                initialValues[d.month] = d.meta;
+                                            }
+                                        });
+                                        setMetaValues(initialValues);
+                                    }
+                                }}
                                 className="w-full md:w-1/2 bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
                             >
                                 {kpis?.map(k => (
@@ -342,12 +383,26 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                     </div>
                                     <div className="relative">
                                         <label className="block text-[10px] text-gray-500 uppercase font-bold mb-1">Meta Definida</label>
-                                        <input 
+                                        <input
                                             type="number"
-                                            value={monthlyData.meta !== null ? monthlyData.meta : ''}
+                                            value={metaValues[monthlyData.month] !== undefined ? metaValues[monthlyData.month] : (monthlyData.meta !== null ? monthlyData.meta : '')}
                                             onChange={(e) => {
                                                 const val = parseFloat(e.target.value);
-                                                onUpdateKpiMeta(currentKpiForGoals.id, monthlyData.month, isNaN(val) ? 0 : val);
+                                                const currentYear = new Date().getFullYear();
+                                                const monthKey = monthlyData.month;
+                                                
+                                                // Atualizar estado local imediatamente para o input funcionar
+                                                setMetaValues(prev => ({ ...prev, [monthKey]: isNaN(val) ? 0 : val }));
+                                                
+                                                // Limpar timeout anterior se existir
+                                                if (debounceTimeoutRef.current[monthKey]) {
+                                                    clearTimeout(debounceTimeoutRef.current[monthKey]);
+                                                }
+                                                
+                                                // Debounce: aguardar 800ms antes de enviar ao backend
+                                                debounceTimeoutRef.current[monthKey] = setTimeout(() => {
+                                                    onUpdateKpiMeta(currentKpiForGoals.id, monthKey, currentYear, isNaN(val) ? 0 : val);
+                                                }, 800);
                                             }}
                                             className="w-full bg-[#1a1d24] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-[#1e5144] font-mono text-sm"
                                             placeholder="Definir meta"

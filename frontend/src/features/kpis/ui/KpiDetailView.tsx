@@ -64,8 +64,7 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
               if (monthIdx === now.getMonth()) {
                   setLaunchDate(now.toISOString().split('T')[0]);
               } else {
-                  // Using 2025 as default year as per app context
-                  const year = 2025; 
+                  const year = currentYear;
                   const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-01`;
                   setLaunchDate(dateStr);
               }
@@ -160,10 +159,11 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
           if (monthData) {
             updateMonthlyData({
               kpiId: kpi.id,
-              monthlyDataId: `${kpi.id}-${launchMonth}`, // Usando um identificador baseado no mês
               data: {
+                year: currentYear,
                 realized: newTotal,
                 breakdown: currentBreakdown,
+                month: launchMonth,
               }
             }, {
               onSuccess: () => {
@@ -184,9 +184,10 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
           if (monthData) {
             updateMonthlyData({
               kpiId: kpi.id,
-              monthlyDataId: `${kpi.id}-${launchMonth}`,
               data: {
+                year: currentYear,
                 realized: Number(launchValue),
+                month: launchMonth,
               }
             }, {
               onSuccess: () => {
@@ -258,10 +259,11 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
       if (monthData) {
         updateMonthlyData({
           kpiId: kpi.id,
-          monthlyDataId: `${kpi.id}-${launchMonth}`,
           data: {
+            year: currentYear,
             realized: total,
             breakdown: breakdown,
+            month: launchMonth,
           }
         }, {
           onSuccess: () => {
@@ -274,20 +276,24 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
 
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
+  const currentYear = new Date().getFullYear();
+  
+  // Get all logs from all MonthlyData (logs are stored at MonthlyData level)
+  const allLogs = React.useMemo(() => {
+    return kpi.data.flatMap(monthData => monthData.logs || []);
+  }, [kpi.data]);
   
   const getDailyChartData = (currentRealized: number, currentMeta: number | null, monthStr: string) => {
       const monthIdx = MONTHS.indexOf(monthStr);
-      // Assume 2025 for consistency with app data, or use current year
-      const year = 2025; 
+      const year = currentYear;
       const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
       
       // Filter logs for this month
-      const relevantLogs = (kpi.logs || []).filter(l => {
+      const relevantLogs = allLogs.filter(l => {
           if (!l.date) return false;
           const d = new Date(l.date);
-          // Check if log belongs to this month/year (assuming 2025 or matching year)
-          // Since existing logs mock 2025, and launchDate is YYYY-MM-DD
-          return l.month === monthStr; 
+          // Check if log belongs to this month/year
+          return l.month === monthStr;
       });
 
       const dailyData = [];
@@ -355,10 +361,13 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
   const availableOppLogs = React.useMemo(() => {
       if (!allKpis || !isAdSpend) return [];
       const oppKpi = allKpis.find(k => k.id === 'opportunities');
-      if (!oppKpi || !oppKpi.logs) return [];
+      if (!oppKpi) return [];
+
+      // Get all logs from all MonthlyData of Opportunities KPI
+      const oppLogs = oppKpi.data.flatMap(monthData => monthData.logs || []);
 
       // Filter logs for the currently selected month in the Enrich Modal
-      return oppKpi.logs
+      return oppLogs
           .filter(l => l.month === launchMonth)
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [allKpis, isAdSpend, launchMonth]);
@@ -926,13 +935,13 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
                 </div>
                 
                 <div className="flex-grow overflow-y-auto custom-scrollbar p-6">
-                    {(!kpi.logs || kpi.logs.length === 0) ? (
+                    {allLogs.length === 0 ? (
                         <div className="text-center text-gray-500 py-8">
                             Nenhum histórico disponível.
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {kpi.logs.map((log) => (
+                            {allLogs.map((log) => (
                                 <div key={log.id} className="flex items-start gap-4 p-4 bg-[#0f1115] rounded-xl border border-gray-800 hover:border-gray-700 transition-colors group">
                                     <div className="mt-1 p-2 bg-[#1e5144]/10 text-emerald-400 rounded-lg">
                                         {log.action === 'create' ? <Plus size={16} /> : <X size={16} />}

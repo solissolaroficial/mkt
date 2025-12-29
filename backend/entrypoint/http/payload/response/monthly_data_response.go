@@ -17,6 +17,7 @@ type KpiLogResponse struct {
 type MonthlyDataResponse struct {
 	ID            string           `json:"id"`
 	KpiCategoryID string           `json:"kpi_category_id"`
+	Year          int              `json:"year"` // Year (e.g., 2024, 2025)
 	Month         string           `json:"month"`
 	Realized      *float64         `json:"realized,omitempty"`
 	Meta          *float64         `json:"meta,omitempty"`

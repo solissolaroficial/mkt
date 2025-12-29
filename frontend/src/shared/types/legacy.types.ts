@@ -6,10 +6,12 @@ export interface BreakdownItem {
 }
 
 export interface MonthlyData {
+  year?: number; // Year (e.g., 2024, 2025)
   month: string;
   realized: number | null;
   meta: number | null;
   breakdown?: BreakdownItem[]; // Added for detailed view (e.g. Channel breakdown)
+  logs?: KpiLog[]; // Logs are stored at MonthlyData level, not KPI level
 }
 
 export interface KpiLog {
@@ -30,7 +32,6 @@ export interface KpiCategory {
   data: MonthlyData[];
   color: string;
   unit?: string; // 'currency' | 'percent' | 'number'
-  logs?: KpiLog[];
 }
 
 export interface RepData {

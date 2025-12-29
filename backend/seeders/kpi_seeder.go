@@ -103,6 +103,9 @@ func (s *KpiSeeder) SeedKpiCategories(ctx context.Context) (map[string]*entity.K
 func (s *KpiSeeder) SeedMonthlyData(ctx context.Context, kpiCategories map[string]*entity.KpiCategory) error {
 	log.Println("📅 Creating MonthlyData for KPIs...")
 
+	// Get current year for seeding
+	currentYear := time.Now().Year()
+
 	// Get legacy KPI data from frontend constants
 	legacyData := s.getLegacyKpiData()
 
@@ -124,7 +127,7 @@ func (s *KpiSeeder) SeedMonthlyData(ctx context.Context, kpiCategories map[strin
 		// Create monthly data for each month
 		for _, monthData := range legacy.monthlyData {
 			// Create MonthlyData
-			monthlyData, err := entity.NewMonthlyData(kpi.ID(), monthData.month)
+			monthlyData, err := entity.NewMonthlyData(kpi.ID(), currentYear, monthData.month)
 			if err != nil {
 				log.Printf("❌ Error creating MonthlyData for KPI '%s', month '%s': %v", legacy.title, monthData.month, err)
 				continue

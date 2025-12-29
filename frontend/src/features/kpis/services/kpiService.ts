@@ -53,12 +53,27 @@ export const kpiService = {
    */
   updateMonthlyData: async (
     kpiId: string,
-    monthlyDataId: string,
     data: UpdateMonthlyDataDTO
   ): Promise<KpiCategory> => {
     const response = await apiClient.put<KpiCategory>(
-      ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId, monthlyDataId),
+      ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId),
       data
+    );
+    return response.data;
+  },
+
+  /**
+   * Atualiza apenas a meta de um mês específico
+   */
+  updateMeta: async (
+    kpiId: string,
+    year: number,
+    month: string,
+    meta: number
+  ): Promise<KpiCategory> => {
+    const response = await apiClient.put<KpiCategory>(
+      ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId),
+      { year, month, meta }
     );
     return response.data;
   },

@@ -7,7 +7,7 @@ export interface SettingsViewProps {
   notifications?: Notification[];
   onUpdateNotification?: (notifications: Notification[]) => void;
   kpis?: KpiCategory[];
-  onUpdateKpiMeta?: (kpiId: string, month: string, newMeta: number) => void;
+  onUpdateKpiMeta?: (kpiId: string, month: string, year: number, newMeta: number) => void;
 }
 
 export type SettingsSection = 'profile' | 'security' | 'history' | 'goals';

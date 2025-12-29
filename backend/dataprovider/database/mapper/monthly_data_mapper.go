@@ -26,6 +26,7 @@ func (m *MonthlyDataMapper) ToDomain(dataModel *model.MonthlyData) (*entity.Mont
 	monthlyData, err := entity.ReconstructMonthlyData(
 		dataModel.UUID,
 		dataModel.KpiCategoryID,
+		dataModel.Year,
 		dataModel.Month,
 		dataModel.Realized,
 		dataModel.Meta,
@@ -72,6 +73,7 @@ func (m *MonthlyDataMapper) ToModel(data *entity.MonthlyData) (*model.MonthlyDat
 	return &model.MonthlyData{
 		UUID:          data.ID(),
 		KpiCategoryID: data.KpiCategoryID(),
+		Year:          data.Year(),
 		Month:         data.Month(),
 		Realized:      data.Realized(),
 		Meta:          data.Meta(),

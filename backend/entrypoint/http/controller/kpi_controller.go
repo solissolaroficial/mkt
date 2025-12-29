@@ -256,17 +256,15 @@ func (c *KpiController) Delete(ctx *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param kpiId path string true "KPI ID"
-// @Param monthlyDataId path string true "Monthly Data ID"
 // @Param monthlyDataRequest body request.UpdateMonthlyDataRequest true "Monthly data update"
 // @Success 200 {object} response.MonthlyDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /kpis/{kpiId}/monthly-data/{monthlyDataId} [put]
+// @Router /kpis/{kpiId}/monthly-data [put]
 func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
-	// Extract IDs from params
+	// Extract ID from params
 	kpiId := ctx.Params("kpiId")
-	monthlyDataId := ctx.Params("monthlyDataId")
 
 	// Parse request body
 	var req request.UpdateMonthlyDataRequest
@@ -284,13 +282,14 @@ func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
 
 	// Execute use case
 	input := kpis.UpdateMonthlyDataInput{
-		MonthlyDataID: monthlyDataId,
-		KpiID:         kpiId,
-		Realized:      req.Realized,
-		Meta:          req.Meta,
-		Breakdown:     req.Breakdown,
-		UserID:        userID,
-		Context:       req.Context,
+		KpiID:     kpiId,
+		Year:      req.Year,
+		Month:     req.Month,
+		Realized:  req.Realized,
+		Meta:      req.Meta,
+		Breakdown: req.Breakdown,
+		UserID:    userID,
+		Context:   req.Context,
 	}
 
 	monthlyData, err := c.updateMonthlyDataUseCase.Execute(context.Background(), input)

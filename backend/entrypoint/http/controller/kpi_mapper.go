@@ -64,6 +64,7 @@ func (m *KpiMapper) ToMonthlyDataResponse(monthlyData *entity.MonthlyData) *resp
 	return &response.MonthlyDataResponse{
 		ID:            monthlyData.ID().String(),
 		KpiCategoryID: monthlyData.KpiCategoryID().String(),
+		Year:          monthlyData.Year(),
 		Month:         monthlyData.Month(),
 		Realized:      monthlyData.Realized(),
 		Meta:          monthlyData.Meta(),

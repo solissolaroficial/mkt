@@ -17,5 +17,5 @@ func SetupKpiRoutes(router fiber.Router, kpiController *controller.KpiController
 	kpis.Delete("/:id", kpiController.Delete)
 
 	// Monthly data
-	kpis.Put("/:kpiId/monthly-data/:monthlyDataId", kpiController.UpdateMonthlyData)
+	kpis.Put("/:kpiId/monthly-data", kpiController.UpdateMonthlyData)
 }

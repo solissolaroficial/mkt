@@ -57,13 +57,11 @@ export const useUpdateMonthlyData = () => {
   return useMutation({
     mutationFn: ({
       kpiId,
-      monthlyDataId,
       data,
     }: {
       kpiId: string;
-      monthlyDataId: string;
       data: UpdateMonthlyDataDTO;
-    }) => kpiService.updateMonthlyData(kpiId, monthlyDataId, data),
+    }) => kpiService.updateMonthlyData(kpiId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.KPIS.ALL });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.KPIS.DETAIL(variables.kpiId) });
