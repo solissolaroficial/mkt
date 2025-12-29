@@ -5,6 +5,7 @@ import { tokenStorage } from '../auth/tokenStorage';
 
 // Layouts
 import MainLayout from '@/shared/ui/layout/MainLayout';
+import ErrorBoundary from '@/shared/ui/ErrorBoundary';
 
 // Pages - Auth
 import { LoginView } from '@/features/auth';
@@ -13,7 +14,7 @@ import { LoginView } from '@/features/auth';
 import DashboardView from '@/features/dashboard/ui/DashboardView';
 
 // Pages - KPIs
-import { KpiListView } from '@/features/kpis';
+import { KpiListView, KpiDetailPage } from '@/features/kpis';
 
 // Pages - Marketing
 import MarketingPage from '@/features/marketing/pages/MarketingPage';
@@ -77,7 +78,11 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       {
-        element: <MainLayout />,
+        element: (
+          <ErrorBoundary>
+            <MainLayout />
+          </ErrorBoundary>
+        ),
         children: [
           {
             path: '/dashboard',
@@ -86,6 +91,10 @@ export const router = createBrowserRouter([
           {
             path: '/kpis',
             element: <KpiListView />,
+          },
+          {
+            path: '/kpis/:kpiId',
+            element: <KpiDetailPage />,
           },
           {
             path: '/marketing',
