@@ -26,6 +26,7 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { id: 'commercial', label: 'Comercial', icon: TrendingUp, path: '/commercial' },
     { id: 'kpis', label: 'KPIs', icon: Target, path: '/kpis' },
     { id: 'marketing', label: 'Marketing', icon: Megaphone, path: '/marketing' },
     { id: 'tasks', label: 'Tarefas', icon: CheckSquare, path: '/tasks' },
