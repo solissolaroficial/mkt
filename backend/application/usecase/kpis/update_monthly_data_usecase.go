@@ -2,6 +2,7 @@ package kpis
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
@@ -9,7 +10,7 @@ import (
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
-// UpdateMonthlyDataInput represents the input data for updating monthly data
+// UpdateMonthlyDataInput represents input data for updating monthly data
 type UpdateMonthlyDataInput struct {
 	MonthlyDataID string      `json:"monthly_data_id"`
 	KpiID         string      `json:"kpi_id,omitempty"`
@@ -17,9 +18,11 @@ type UpdateMonthlyDataInput struct {
 	Realized      *float64    `json:"realized,omitempty"`
 	Meta          *float64    `json:"meta,omitempty"`
 	Breakdown     interface{} `json:"breakdown,omitempty"`
+	UserID        string      `json:"user_id,omitempty"` // User making the change
+	Context       string      `json:"context,omitempty"` // Context of the change
 }
 
-// UpdateMonthlyDataUseCase handles the updating of monthly data for KPIs
+// UpdateMonthlyDataUseCase handles updating of monthly data for KPIs
 type UpdateMonthlyDataUseCase struct {
 	monthlyDataGateway gateway.MonthlyDataGateway
 	kpiGateway         gateway.KpiGateway
@@ -36,7 +39,7 @@ func NewUpdateMonthlyDataUseCase(
 	}
 }
 
-// Execute performs the monthly data update operation
+// Execute performs monthly data update operation
 func (uc *UpdateMonthlyDataUseCase) Execute(ctx context.Context, input UpdateMonthlyDataInput) (*entity.MonthlyData, error) {
 	var monthlyData *entity.MonthlyData
 
@@ -101,6 +104,23 @@ func (uc *UpdateMonthlyDataUseCase) Execute(ctx context.Context, input UpdateMon
 
 	// 4. Atualizar campos usando setters da entity
 	if input.Realized != nil {
+		// Create log entry before updating
+		if input.UserID != "" {
+			logEntry := entity.KpiLogEntry{
+				ID:        uuid.New().String(),
+				Date:      time.Now().Format(time.RFC3339),
+				Timestamp: time.Now().Format("15:04"),
+				User:      input.UserID,
+				Month:     monthlyData.Month(),
+				OldValue:  monthlyData.Realized(),
+				NewValue:  *input.Realized,
+				Action:    "update",
+				Context:   input.Context,
+			}
+			if err := monthlyData.AddLog(logEntry); err != nil {
+				return nil, err
+			}
+		}
 		monthlyData.SetRealized(*input.Realized)
 	}
 

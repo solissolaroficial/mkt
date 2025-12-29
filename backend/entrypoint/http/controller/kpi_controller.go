@@ -276,6 +276,12 @@ func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// Extract user ID from JWT token
+	userID := ""
+	if ctx.Locals("userID") != nil {
+		userID = ctx.Locals("userID").(string)
+	}
+
 	// Execute use case
 	input := kpis.UpdateMonthlyDataInput{
 		MonthlyDataID: monthlyDataId,
@@ -283,6 +289,8 @@ func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
 		Realized:      req.Realized,
 		Meta:          req.Meta,
 		Breakdown:     req.Breakdown,
+		UserID:        userID,
+		Context:       req.Context,
 	}
 
 	monthlyData, err := c.updateMonthlyDataUseCase.Execute(context.Background(), input)

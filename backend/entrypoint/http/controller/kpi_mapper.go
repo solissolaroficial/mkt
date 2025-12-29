@@ -45,6 +45,22 @@ func (m *KpiMapper) ToMonthlyDataResponse(monthlyData *entity.MonthlyData) *resp
 		}
 	}
 
+	// Convert logs from entity to response
+	logs := make([]response.KpiLogResponse, 0)
+	for _, log := range monthlyData.GetLogs() {
+		logs = append(logs, response.KpiLogResponse{
+			ID:        log.ID,
+			Date:      log.Date,
+			Timestamp: log.Timestamp,
+			User:      log.User,
+			Month:     log.Month,
+			OldValue:  log.OldValue,
+			NewValue:  log.NewValue,
+			Action:    log.Action,
+			Context:   log.Context,
+		})
+	}
+
 	return &response.MonthlyDataResponse{
 		ID:            monthlyData.ID().String(),
 		KpiCategoryID: monthlyData.KpiCategoryID().String(),
@@ -52,6 +68,7 @@ func (m *KpiMapper) ToMonthlyDataResponse(monthlyData *entity.MonthlyData) *resp
 		Realized:      monthlyData.Realized(),
 		Meta:          monthlyData.Meta(),
 		Breakdown:     breakdown,
+		Logs:          logs,
 	}
 }
 

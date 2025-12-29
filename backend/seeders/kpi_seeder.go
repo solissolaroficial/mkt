@@ -3,7 +3,9 @@ package seeders
 import (
 	"context"
 	"log"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
@@ -142,6 +144,24 @@ func (s *KpiSeeder) SeedMonthlyData(ctx context.Context, kpiCategories map[strin
 			if monthData.breakdown != nil {
 				if err := monthlyData.SetBreakdown(monthData.breakdown); err != nil {
 					log.Printf("❌ Error setting breakdown for KPI '%s', month '%s': %v", legacy.title, monthData.month, err)
+				}
+			}
+
+			// Add sample log entry
+			if monthData.realized != nil {
+				logEntry := entity.KpiLogEntry{
+					ID:        uuid.New().String(),
+					Date:      time.Now().Format(time.RFC3339),
+					Timestamp: "10:30",
+					User:      "Jackson",
+					Month:     monthData.month,
+					OldValue:  nil,
+					NewValue:  *monthData.realized,
+					Action:    "create",
+					Context:   "Lote 01",
+				}
+				if err := monthlyData.AddLog(logEntry); err != nil {
+					log.Printf("❌ Error adding log for KPI '%s', month '%s': %v", legacy.title, monthData.month, err)
 				}
 			}
 

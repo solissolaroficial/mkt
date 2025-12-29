@@ -23,7 +23,7 @@ func (m *MonthlyDataMapper) ToDomain(dataModel *model.MonthlyData) (*entity.Mont
 		}
 	}
 
-	return entity.ReconstructMonthlyData(
+	monthlyData, err := entity.ReconstructMonthlyData(
 		dataModel.UUID,
 		dataModel.KpiCategoryID,
 		dataModel.Month,
@@ -33,6 +33,16 @@ func (m *MonthlyDataMapper) ToDomain(dataModel *model.MonthlyData) (*entity.Mont
 		dataModel.CreatedAt,
 		dataModel.UpdatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Converte o campo Logs JSONB para string e define na entidade
+	if dataModel.Logs != nil {
+		monthlyData.SetLogs(string(dataModel.Logs))
+	}
+
+	return monthlyData, nil
 }
 
 // ToModel converte Entity (Domínio) para Model (GORM)
@@ -53,6 +63,12 @@ func (m *MonthlyDataMapper) ToModel(data *entity.MonthlyData) (*model.MonthlyDat
 		}
 	}
 
+	// Converte o campo Logs string para datatypes.JSON
+	var logsJSON datatypes.JSON
+	if data.Logs() != "" {
+		logsJSON = datatypes.JSON([]byte(data.Logs()))
+	}
+
 	return &model.MonthlyData{
 		UUID:          data.ID(),
 		KpiCategoryID: data.KpiCategoryID(),
@@ -60,6 +76,7 @@ func (m *MonthlyDataMapper) ToModel(data *entity.MonthlyData) (*model.MonthlyDat
 		Realized:      data.Realized(),
 		Meta:          data.Meta(),
 		Breakdown:     breakdownJSON,
+		Logs:          logsJSON,
 		CreatedAt:     data.CreatedAt(),
 		UpdatedAt:     data.UpdatedAt(),
 	}, nil

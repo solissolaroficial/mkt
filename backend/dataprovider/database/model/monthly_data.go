@@ -14,6 +14,7 @@ type MonthlyData struct {
 	Realized      *float64       `gorm:"type:decimal(12,2)" json:"realized"` // nullable
 	Meta          *float64       `gorm:"type:decimal(12,2)" json:"meta"`     // nullable
 	Breakdown     datatypes.JSON `gorm:"type:jsonb" json:"breakdown"`        // PostgreSQL JSONB
+	Logs          datatypes.JSON `gorm:"type:jsonb" json:"logs"`             // PostgreSQL JSONB - array of log entries
 	CreatedAt     time.Time      `gorm:"not null" json:"created_at"`
 	UpdatedAt     time.Time      `gorm:"not null" json:"updated_at"`
 	KpiCategory   KpiCategory    `gorm:"foreignKey:KpiCategoryID" json:"kpi_category,omitempty"`

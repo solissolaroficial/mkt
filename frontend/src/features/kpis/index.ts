@@ -3,8 +3,12 @@ export { default as KpiChart } from './ui/KpiChart';
 export { default as KpiDetailView } from './ui/KpiDetailView';
 export { default as KpiListView } from './ui/KpiListView';
 
+// Pages
+export { default as KpiDetailPage } from './pages/KpiDetailPage';
+
 // Hooks
 export { useKpis, useKpi } from './hooks/useKpis';
+export { useKpiById } from './hooks/useKpiById';
 export {
   useCreateKpi,
   useUpdateKpi,

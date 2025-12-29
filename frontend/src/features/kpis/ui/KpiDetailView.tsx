@@ -27,30 +27,30 @@ interface KpiDetailViewProps {
 }
 
 const KpiDetailView: React.FC<KpiDetailViewProps> = ({ kpi, allKpis, selectedMonth, monthNames, onBack }) => {
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isLaunchOpen, setIsLaunchOpen] = useState(false);
-  const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
-  
-  // Launch State
-  const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
-  const [launchMonth, setLaunchMonth] = useState('NOV'); // Extracted Month for internal logic
-  const [launchValue, setLaunchValue] = useState('');
-  const [launchContext, setLaunchContext] = useState('');
-  
-  // Opportunity Launch Specifics
-  const [oppChannel, setOppChannel] = useState('');
-  const [oppSubItem, setOppSubItem] = useState('');
-  const [isNewChannel, setIsNewChannel] = useState(false);
+const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+const [isLaunchOpen, setIsLaunchOpen] = useState(false);
+const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
 
-  // Enrichment Specifics (Ad Spend)
-  // Store values as Record<label_key, value>
-  const [enrichValues, setEnrichValues] = useState<Record<string, string>>({});
-  
-  // Expanded breakdown rows state
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+// Launch State
+const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
+const [launchMonth, setLaunchMonth] = useState('NOV'); // Extracted Month for internal logic
+const [launchValue, setLaunchValue] = useState('');
+const [launchContext, setLaunchContext] = useState('');
 
-  // ADICIONAR: Hook de mutation para salvar dados
-  const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
+// Opportunity Launch Specifics
+const [oppChannel, setOppChannel] = useState('');
+const [oppSubItem, setOppSubItem] = useState('');
+const [isNewChannel, setIsNewChannel] = useState(false);
+
+// Enrichment Specifics (Ad Spend)
+// Store values as Record<label_key, value>
+const [enrichValues, setEnrichValues] = useState<Record<string, string>>({});
+
+// Expanded breakdown rows state
+const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+// ADICIONAR: Hook de mutation para salvar dados
+const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
 
   useEffect(() => {
       // Set default date to today or start of selected month
@@ -537,8 +537,8 @@ const KpiDetailView: React.FC<KpiDetailViewProps> = ({ kpi, allKpis, selectedMon
                                         )}
                                     </td>
                                     <td className="px-4 py-3 font-medium text-white">{row.month}</td>
-                                    <td className="px-4 py-3">{row.realized !== null ? row.realized.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' }) : '-'}</td>
-                                    <td className="px-4 py-3">{row.meta?.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' })}</td>
+                                    <td className="px-4 py-3">{row.realized?.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' }) || '-'}</td>
+                                    <td className="px-4 py-3">{row.meta?.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' }) || '-'}</td>
                                     <td className="px-4 py-3">
                                         {row.realized !== null ? (
                                             // Inverse logic for Costs (CPL) - Lower is better
