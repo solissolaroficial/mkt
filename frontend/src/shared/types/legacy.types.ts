@@ -33,6 +33,7 @@ export interface KpiCategory {
   data: MonthlyData[];
   color: string;
   unit?: string; // 'currency' | 'percent' | 'number'
+  logs?: KpiLog[];
 }
 
 export interface RepData {

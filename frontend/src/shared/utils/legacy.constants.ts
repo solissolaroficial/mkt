@@ -250,6 +250,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'youtube',
     title: 'Novos Inscritos no Youtube',
+    slug: 'novos-inscritos-youtube',
     color: '#FF0000',
     logs: [],
     data: [
@@ -270,6 +271,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'training_reps',
     title: 'Treinamentos Realizados (Reps)',
+    slug: 'treinamentos-realizados-reps',
     color: '#3B82F6',
     logs: [],
     data: [
@@ -290,6 +292,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'training_people',
     title: 'Pessoas Treinadas (Solis)',
+    slug: 'pessoas-treinadas-solis',
     color: '#10B981',
     logs: [],
     data: [
@@ -310,6 +313,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'marketing',
     title: 'Ações de Marketing (Reps)',
+    slug: 'acoes-marketing-reps',
     color: '#8B5CF6',
     logs: [],
     data: [
@@ -330,6 +334,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'inbound',
     title: 'Visitantes Inbound',
+    slug: 'visitantes-inbound',
     color: '#F59E0B',
     logs: [],
     data: [
@@ -350,6 +355,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'opportunities',
     title: 'Taxa de Oportunidades',
+    slug: 'taxa-oportunidades',
     color: '#EC4899',
     unit: 'number',
     logs: [],
@@ -391,6 +397,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'authority',
     title: 'Autoridade na Internet (DA)',
+    slug: 'autoridade-internet-da',
     color: '#6366F1',
     logs: [],
     data: [
@@ -411,6 +418,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'ad_spend',
     title: 'Investimento em Ads (R$)',
+    slug: 'investimento-ads-r',
     color: '#85bb65',
     unit: 'currency',
     logs: [],
@@ -452,6 +460,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'cpl',
     title: 'Custo por Lead (CPL)',
+    slug: 'custo-por-lead-cpl',
     color: '#eab308',
     unit: 'currency',
     logs: [],
@@ -473,6 +482,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'mql',
     title: 'Leads Qualificados (MQLs)',
+    slug: 'leads-qualificados-mqls',
     color: '#06b6d4',
     logs: [],
     data: [
@@ -493,6 +503,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'roas',
     title: 'ROAS (Retorno em Ads)',
+    slug: 'roas-retorno-ads',
     color: '#6366f1',
     unit: 'number',
     logs: [],
@@ -523,6 +534,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'conversion_rate',
     title: 'Taxa de Conversão Global (%)',
+    slug: 'taxa-conversao-global',
     color: '#f43f5e',
     unit: 'percent',
     logs: [],

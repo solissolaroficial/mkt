@@ -31,6 +31,12 @@ export const MARKETING_KPIS_SLUGS = [
   'visitantes_inbound',
 ];
 
+// Slugs dos KPIs de Treinamentos
+export const TRAINING_KPIS_SLUGS = [
+  'treinamentos_realizados_reps',
+  'pessoas_treinadas_solis',
+];
+
 // Slugs dos KPIs necessários para cálculos cruzados na página de detalhes
 export const KPI_DETAIL_DEPENDENCIES_SLUGS = [
   'taxa_de_oportunidades', // Necessário para cálculos de Ad Spend (CPL)

@@ -19,6 +19,9 @@ import { KpiListView, KpiDetailPage } from '@/features/kpis';
 // Pages - Marketing
 import MarketingPage from '@/features/marketing/pages/MarketingPage';
 
+// Pages - Training
+import { TrainingPage } from '@/features/training';
+
 // Pages - Commercial
 import { CommercialPage } from '@/features/commercial';
 
@@ -102,6 +105,10 @@ export const router = createBrowserRouter([
           {
             path: '/marketing',
             element: <MarketingPage />,
+          },
+          {
+            path: '/training',
+            element: <TrainingPage />,
           },
           {
             path: '/commercial',

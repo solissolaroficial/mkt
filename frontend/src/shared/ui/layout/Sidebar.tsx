@@ -29,6 +29,7 @@ const Sidebar: React.FC = () => {
     { id: 'commercial', label: 'Comercial', icon: TrendingUp, path: '/commercial' },
     { id: 'kpis', label: 'KPIs', icon: Target, path: '/kpis' },
     { id: 'marketing', label: 'Marketing', icon: Megaphone, path: '/marketing' },
+    { id: 'training', label: 'Treinamentos', icon: GraduationCap, path: '/training' },
     { id: 'tasks', label: 'Tarefas', icon: CheckSquare, path: '/tasks' },
     { id: 'calendar', label: 'Calendário', icon: Calendar, path: '/calendar' },
     { id: 'pdv', label: 'PDV', icon: MapPin, path: '/pdv' },
