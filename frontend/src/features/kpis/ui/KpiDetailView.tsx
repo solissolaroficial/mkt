@@ -98,12 +98,12 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
       setExpandedRows(prev => ({ ...prev, [month]: !prev[month] }));
   };
 
-  // Determine input configuration based on KPI ID
-  const isRepKpi = ['training_reps', 'marketing'].includes(kpi.id);
-  const isChannelKpi = ['roas'].includes(kpi.id); 
-  const isOppKpi = kpi.id === 'opportunities';
-  const isAdSpend = kpi.id === 'ad_spend';
-  const isCplKpi = kpi.id === 'cpl';
+  // Determine input configuration based on KPI slug
+  const isRepKpi = ['treinamentos_realizados_reps', 'acoes_de_marketing_reps'].includes(kpi.slug);
+  const isChannelKpi = ['roas_retorno_em_ads'].includes(kpi.slug);
+  const isOppKpi = kpi.slug === 'taxa_de_oportunidades';
+  const isAdSpend = kpi.slug === 'investimento_em_ads';
+  const isCplKpi = kpi.slug === 'custo_por_lead_cpl';
   
   const handleLaunch = (e: React.FormEvent) => {
       e.preventDefault();
@@ -242,9 +242,9 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
   const handleEnrichSave = (e: React.FormEvent) => {
       e.preventDefault();
       if (!allKpis) return;
-
+      
       // Find Opportunity Data for reference
-      const oppKpi = allKpis.find(k => k.id === 'opportunities');
+      const oppKpi = allKpis.find(k => k.slug === 'taxa_de_oportunidades');
       const oppData = oppKpi?.data.find(d => d.month === launchMonth);
       
       if (!oppData || !oppData.breakdown) {
@@ -353,14 +353,14 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
   // --- PREPARE DATA FOR ENRICHMENT FORM ---
   const getOpportunitiesForMonth = () => {
       if (!allKpis) return null;
-      const oppKpi = allKpis.find(k => k.id === 'opportunities');
+      const oppKpi = allKpis.find(k => k.slug === 'taxa_de_oportunidades');
       return oppKpi?.data.find(d => d.month === launchMonth);
   };
 
   // Logic to find which days have Opportunity logs to show in the date picker
   const availableOppLogs = React.useMemo(() => {
       if (!allKpis || !isAdSpend) return [];
-      const oppKpi = allKpis.find(k => k.id === 'opportunities');
+      const oppKpi = allKpis.find(k => k.slug === 'taxa_de_oportunidades');
       if (!oppKpi) return [];
 
       // Get all logs from all MonthlyData of Opportunities KPI

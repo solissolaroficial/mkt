@@ -17,6 +17,7 @@ type KpiController struct {
 	createKpiUseCase         *kpis.CreateKpiUseCase
 	getKpiUseCase            *kpis.GetKpiUseCase
 	listKpisUseCase          *kpis.ListKpisUseCase
+	getKpisBySlugsUseCase    *kpis.GetKpisBySlugsUseCase
 	updateKpiUseCase         *kpis.UpdateKpiUseCase
 	deleteKpiUseCase         *kpis.DeleteKpiUseCase
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
@@ -28,6 +29,7 @@ func NewKpiController(
 	createKpiUseCase *kpis.CreateKpiUseCase,
 	getKpiUseCase *kpis.GetKpiUseCase,
 	listKpisUseCase *kpis.ListKpisUseCase,
+	getKpisBySlugsUseCase *kpis.GetKpisBySlugsUseCase,
 	updateKpiUseCase *kpis.UpdateKpiUseCase,
 	deleteKpiUseCase *kpis.DeleteKpiUseCase,
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase,
@@ -36,6 +38,7 @@ func NewKpiController(
 		createKpiUseCase:         createKpiUseCase,
 		getKpiUseCase:            getKpiUseCase,
 		listKpisUseCase:          listKpisUseCase,
+		getKpisBySlugsUseCase:    getKpisBySlugsUseCase,
 		updateKpiUseCase:         updateKpiUseCase,
 		deleteKpiUseCase:         deleteKpiUseCase,
 		updateMonthlyDataUseCase: updateMonthlyDataUseCase,
@@ -163,6 +166,58 @@ func (c *KpiController) List(ctx *fiber.Ctx) error {
 			PageSize:   pageSize,
 			Total:      int64(output.Total),
 			TotalPages: totalPages,
+		},
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(listResponse)
+}
+
+// GetBySlugs handles KPI retrieval by a list of slugs
+// @Summary Get KPIs by slugs
+// @Description Retrieve KPI categories by a list of slugs
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param slugs body request.GetKpisBySlugsRequest true "List of slugs"
+// @Success 200 {object} response.KpiListResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/by-slugs [post]
+func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
+	// Parse request body
+	var req request.GetKpisBySlugsRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Execute use case
+	input := kpis.GetKpisBySlugsInput{
+		Slugs: req.Slugs,
+	}
+
+	output, err := c.getKpisBySlugsUseCase.Execute(context.Background(), input)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	// Convert entities to responses with monthly data
+	kpiResponses := make([]response.KpiResponse, len(output.Kpis))
+	for i, kpi := range output.Kpis {
+		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+	}
+
+	// Create list response
+	listResponse := response.KpiListResponse{
+		Data: kpiResponses,
+		Pagination: response.PaginationResponse{
+			Page:       1,
+			PageSize:   len(kpiResponses),
+			Total:      int64(len(kpiResponses)),
+			TotalPages: 1,
 		},
 	}
 

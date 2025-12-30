@@ -16,6 +16,7 @@ export {
   useUpdateMonthlyData
 } from './hooks/useKpiMutations';
 export { useKpiCalculations } from './hooks/useKpiCalculations';
+export { useKpiDetailDependencies } from './hooks/useKpiDetailDependencies';
 
 // Types
 export type {

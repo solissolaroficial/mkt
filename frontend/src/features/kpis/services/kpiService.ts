@@ -77,4 +77,15 @@ export const kpiService = {
     );
     return response.data;
   },
+
+  /**
+   * Busca KPIs por uma lista de slugs
+   */
+  getBySlugs: async (slugs: string[]): Promise<KpiCategory[]> => {
+    const response = await apiClient.post<{ data: KpiCategory[] }>(
+      ENDPOINTS.KPIS.GET_BY_SLUGS,
+      { slugs }
+    );
+    return response.data.data;
+  },
 };

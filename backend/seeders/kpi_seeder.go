@@ -49,21 +49,22 @@ func (s *KpiSeeder) SeedKpiCategories(ctx context.Context) (map[string]*entity.K
 	// Define KPI categories based on legacy.constants.ts
 	kpiDefinitions := []struct {
 		title string
+		slug  string
 		color string
 		unit  string
 	}{
-		{"Novos Inscritos no Youtube", "#FF0000", "number"},
-		{"Treinamentos Realizados (Reps)", "#3B82F6", "number"},
-		{"Pessoas Treinadas (Solis)", "#10B981", "number"},
-		{"Ações de Marketing (Reps)", "#8B5CF6", "number"},
-		{"Visitantes Inbound", "#F59E0B", "number"},
-		{"Taxa de Oportunidades", "#EC4899", "number"},
-		{"Autoridade na Internet (DA)", "#6366F1", "number"},
-		{"Investimento em Ads (R$)", "#85bb65", "currency"},
-		{"Custo por Lead (CPL)", "#eab308", "currency"},
-		{"Leads Qualificados (MQLs)", "#06b6d4", "number"},
-		{"ROAS (Retorno em Ads)", "#6366f1", "number"},
-		{"Taxa de Conversão Global (%)", "#f43f5e", "percent"},
+		{"Novos Inscritos no Youtube", "novos_inscritos_no_youtube", "#FF0000", "number"},
+		{"Treinamentos Realizados (Reps)", "treinamentos_realizados_reps", "#3B82F6", "number"},
+		{"Pessoas Treinadas (Solis)", "pessoas_treinadas_solis", "#10B981", "number"},
+		{"Ações de Marketing (Reps)", "acoes_de_marketing_reps", "#8B5CF6", "number"},
+		{"Visitantes Inbound", "visitantes_inbound", "#F59E0B", "number"},
+		{"Taxa de Oportunidades", "taxa_de_oportunidades", "#EC4899", "number"},
+		{"Autoridade na Internet (DA)", "autoridade_na_internet_da", "#6366F1", "number"},
+		{"Investimento em Ads (R$)", "investimento_em_ads", "#85bb65", "currency"},
+		{"Custo por Lead (CPL)", "custo_por_lead_cpl", "#eab308", "currency"},
+		{"Leads Qualificados (MQLs)", "leads_qualificados_mqls", "#06b6d4", "number"},
+		{"ROAS (Retorno em Ads)", "roas_retorno_em_ads", "#6366f1", "number"},
+		{"Taxa de Conversão Global (%)", "taxa_de_conversao_global", "#f43f5e", "percent"},
 	}
 
 	kpiMap := make(map[string]*entity.KpiCategory)
@@ -77,8 +78,8 @@ func (s *KpiSeeder) SeedKpiCategories(ctx context.Context) (map[string]*entity.K
 			continue
 		}
 
-		// Create new KPI category
-		kpi, err := entity.NewKpiCategory(def.title, def.color, def.unit)
+		// Create new KPI category with explicit slug
+		kpi, err := entity.NewKpiCategoryWithSlug(def.title, def.color, def.unit, def.slug)
 		if err != nil {
 			log.Printf("❌ Error creating KPI category '%s': %v", def.title, err)
 			continue

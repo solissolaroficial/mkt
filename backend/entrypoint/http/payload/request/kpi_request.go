@@ -13,3 +13,8 @@ type UpdateKpiRequest struct {
 	Color *string `json:"color,omitempty"`
 	Unit  *string `json:"unit,omitempty" validate:"omitempty,oneof=currency percent number"`
 }
+
+// GetKpisBySlugsRequest defines the structure for getting KPIs by slugs
+type GetKpisBySlugsRequest struct {
+	Slugs []string `json:"slugs" validate:"required,min=1"`
+}

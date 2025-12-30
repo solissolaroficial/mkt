@@ -49,6 +49,7 @@ func (m *KpiMapper) ToModel(kpi *entity.KpiCategory) (*model.KpiCategory, error)
 	return &model.KpiCategory{
 		UUID:        kpi.ID(),
 		Title:       kpi.Title(),
+		Slug:        kpi.Slug(),
 		Color:       kpi.Color(),
 		Unit:        kpi.Unit(),
 		MonthlyData: monthlyDataModels,

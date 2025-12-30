@@ -8,6 +8,7 @@ export const ENDPOINTS = {
     GET: (id: string) => `/api/kpis/${id}`,
     UPDATE: (id: string) => `/api/kpis/${id}`,
     DELETE: (id: string) => `/api/kpis/${id}`,
+    GET_BY_SLUGS: '/api/kpis/by-slugs',
     UPDATE_MONTHLY: (kpiId: string) =>
       `/api/kpis/${kpiId}/monthly-data`,
   },

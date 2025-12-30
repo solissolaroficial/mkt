@@ -1,21 +1,17 @@
-import { useMemo } from 'react';
-import { useKpis } from '@/features/kpis/hooks/useKpis';
+import { useQuery } from '@tanstack/react-query';
+import { kpiService } from '@/features/kpis/services/kpiService';
+import { COMMERCIAL_KPIS_SLUGS, QUERY_KEYS } from '@/shared/utils/constants';
 
 export const useCommercial = () => {
-  const { data } = useKpis();
-  const allKpis = data?.data || [];
-
-  // Filtrar apenas os KPIs comerciais
-  const commercialKpis = useMemo(() => {
-    return allKpis.filter(kpi =>
-      kpi.title === 'Taxa de Oportunidades' ||
-      kpi.title === 'Taxa de Conversão Global (%)'
-    );
-  }, [allKpis]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: QUERY_KEYS.KPIS.BY_SLUGS(COMMERCIAL_KPIS_SLUGS),
+    queryFn: () => kpiService.getBySlugs(COMMERCIAL_KPIS_SLUGS),
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
 
   return {
-    commercialKpis,
-    isLoading: false,
-    error: null
+    commercialKpis: data || [],
+    isLoading,
+    error
   };
 };

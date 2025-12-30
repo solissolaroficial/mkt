@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Target, Youtube, GraduationCap, Megaphone, TrendingUp } from 'lucide-react';
-import { useKpis } from '@/features/kpis';
+import { useDashboardKpis } from '@/features/dashboard';
 import { useKpiCalculations } from '@/features/kpis/hooks/useKpiCalculations';
 import { useUIStore } from '@/shared/store/uiStore';
 import SummaryCard from './SummaryCard';
@@ -12,28 +12,17 @@ import { useTasks } from '@/features/tasks';
 import { useCalendarPosts } from '@/features/calendar';
 
 const DashboardView: React.FC = () => {
-  const { data, isLoading, error } = useKpis();
+  const { data, isLoading, error } = useDashboardKpis();
   const { selectedMonth } = useUIStore();
   const navigate = useNavigate();
   const { data: tasksData } = useTasks();
   const { data: postsData } = useCalendarPosts();
   
   // Aplicar cálculos derivados (CPL, etc)
-  const kpis = useKpiCalculations(data?.data || []);
+  const kpis = useKpiCalculations(data || []);
   
-  // Filtrar KPIs principais para cards (Visão Geral)
-  const mainKpis = useMemo(() => {
-    return kpis.filter((kpi) =>
-      [
-          'Novos Inscritos no Youtube',
-          'Treinamentos Realizados (Reps)',
-          'Pessoas Treinadas (Solis)',
-          'Ações de Marketing (Reps)',
-          'Visitantes Inbound',
-          'Autoridade na Internet (DA)'
-        ].includes(kpi.title)
-    );
-  }, [kpis]);
+  // KPIs já filtrados pelo backend via slugs
+  const mainKpis = kpis;
 
   // Calcular estatísticas para cada KPI
   const getKpiStats = (kpi: KpiCategory) => {

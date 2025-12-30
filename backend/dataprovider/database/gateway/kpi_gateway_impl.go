@@ -95,6 +95,51 @@ func (g *kpiGatewayImpl) FindByTitle(ctx context.Context, title string) (*entity
 	return g.mapper.ToDomain(&kpiModel)
 }
 
+// FindBySlug retrieves a KPI category by its slug
+func (g *kpiGatewayImpl) FindBySlug(ctx context.Context, slug string) (*entity.KpiCategory, error) {
+	var kpiModel model.KpiCategory
+
+	err := g.db.WithContext(ctx).
+		Preload("MonthlyData").
+		Where("slug = ?", slug).
+		First(&kpiModel).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, kpiErrors.ErrKpiNotFound
+		}
+		return nil, err
+	}
+
+	return g.mapper.ToDomain(&kpiModel)
+}
+
+// FindBySlugs retrieves KPI categories by a list of slugs
+func (g *kpiGatewayImpl) FindBySlugs(ctx context.Context, slugs []string) ([]*entity.KpiCategory, error) {
+	var kpiModels []model.KpiCategory
+
+	err := g.db.WithContext(ctx).
+		Preload("MonthlyData").
+		Where("slug IN ?", slugs).
+		Find(&kpiModels).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert slice of models to slice of entities
+	kpiEntities := make([]*entity.KpiCategory, len(kpiModels))
+	for i, kpiModel := range kpiModels {
+		kpiEntity, err := g.mapper.ToDomain(&kpiModel)
+		if err != nil {
+			return nil, err
+		}
+		kpiEntities[i] = kpiEntity
+	}
+
+	return kpiEntities, nil
+}
+
 // FindAll retrieves KPI categories with pagination
 func (g *kpiGatewayImpl) FindAll(ctx context.Context, pagination valueobject.Pagination) ([]*entity.KpiCategory, int64, error) {
 	var kpiModels []model.KpiCategory

@@ -4,6 +4,7 @@ package response
 type KpiResponse struct {
 	ID    string                `json:"id"`
 	Title string                `json:"title"`
+	Slug  string                `json:"slug"`
 	Color string                `json:"color"`
 	Unit  string                `json:"unit"`
 	Data  []MonthlyDataResponse `json:"data"`

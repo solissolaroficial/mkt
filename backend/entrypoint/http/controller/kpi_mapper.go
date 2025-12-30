@@ -18,6 +18,7 @@ func (m *KpiMapper) ToKpiResponse(kpi *entity.KpiCategory) *response.KpiResponse
 	return &response.KpiResponse{
 		ID:    kpi.ID().String(),
 		Title: kpi.Title(),
+		Slug:  kpi.Slug(),
 		Color: kpi.Color(),
 		Unit:  kpi.Unit(),
 		Data:  m.ToMonthlyDataResponseList(kpi.MonthlyDatas()),
@@ -87,6 +88,7 @@ func (m *KpiMapper) ToKpiResponseWithMonthlyData(kpi *entity.KpiCategory, monthl
 	return &response.KpiResponse{
 		ID:    kpi.ID().String(),
 		Title: kpi.Title(),
+		Slug:  kpi.Slug(),
 		Color: kpi.Color(),
 		Unit:  kpi.Unit(),
 		Data:  m.ToMonthlyDataResponseList(monthlyData),

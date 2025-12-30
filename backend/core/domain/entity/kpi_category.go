@@ -2,6 +2,8 @@ package entity
 
 import (
 	"errors"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,6 +13,7 @@ import (
 type KpiCategory struct {
 	id           uuid.UUID
 	title        string
+	slug         string
 	color        string
 	unit         string // 'currency', 'percent', 'number'
 	monthlyDatas []*MonthlyData
@@ -20,9 +23,21 @@ type KpiCategory struct {
 
 // NewKpiCategory creates a new KPI category with validation
 func NewKpiCategory(title, color, unit string) (*KpiCategory, error) {
+	return NewKpiCategoryWithSlug(title, color, unit, "")
+}
+
+// NewKpiCategoryWithSlug creates a new KPI category with an optional custom slug
+// If slug is empty, it will be generated automatically from the title
+func NewKpiCategoryWithSlug(title, color, unit, slug string) (*KpiCategory, error) {
+	// Generate slug if not provided
+	if slug == "" {
+		slug = generateSlug(title)
+	}
+
 	kpi := &KpiCategory{
 		id:           uuid.New(),
 		title:        title,
+		slug:         slug,
 		color:        color,
 		unit:         unit,
 		monthlyDatas: []*MonthlyData{},
@@ -42,6 +57,7 @@ func ReconstructKpiCategory(id uuid.UUID, title, color, unit string, createdAt, 
 	return &KpiCategory{
 		id:           id,
 		title:        title,
+		slug:         generateSlug(title),
 		color:        color,
 		unit:         unit,
 		monthlyDatas: []*MonthlyData{},
@@ -55,6 +71,7 @@ func ReconstructKpiCategoryWithMonthlyData(id uuid.UUID, title, color, unit stri
 	return &KpiCategory{
 		id:           id,
 		title:        title,
+		slug:         generateSlug(title),
 		color:        color,
 		unit:         unit,
 		monthlyDatas: monthlyDatas,
@@ -66,6 +83,7 @@ func ReconstructKpiCategoryWithMonthlyData(id uuid.UUID, title, color, unit stri
 // Getters (encapsulation)
 func (k *KpiCategory) ID() uuid.UUID                { return k.id }
 func (k *KpiCategory) Title() string                { return k.title }
+func (k *KpiCategory) Slug() string                 { return k.slug }
 func (k *KpiCategory) Color() string                { return k.color }
 func (k *KpiCategory) Unit() string                 { return k.unit }
 func (k *KpiCategory) MonthlyDatas() []*MonthlyData { return k.monthlyDatas }
@@ -89,6 +107,7 @@ func (k *KpiCategory) UpdateTitle(newTitle string) error {
 		return errors.New("title cannot be empty")
 	}
 	k.title = newTitle
+	k.slug = generateSlug(newTitle)
 	k.updatedAt = time.Now()
 	return nil
 }
@@ -123,4 +142,28 @@ func (k *KpiCategory) AddMonthlyData(monthlyData *MonthlyData) {
 func (k *KpiCategory) SetMonthlyDatas(monthlyDatas []*MonthlyData) {
 	k.monthlyDatas = monthlyDatas
 	k.updatedAt = time.Now()
+}
+
+// generateSlug creates a URL-friendly slug from a title
+// Converts to lowercase, removes accents and special characters, replaces spaces with underscores
+func generateSlug(title string) string {
+	// Convert to lowercase
+	slug := strings.ToLower(title)
+
+	// Remove accents and special characters
+	re := regexp.MustCompile(`[áéíóúçâêô%()]`)
+	slug = re.ReplaceAllString(slug, "")
+
+	// Replace spaces and special characters with underscores
+	re = regexp.MustCompile(`[\s\(\)\%]`)
+	slug = re.ReplaceAllString(slug, "_")
+
+	// Remove multiple consecutive underscores
+	re = regexp.MustCompile(`_+`)
+	slug = re.ReplaceAllString(slug, "_")
+
+	// Remove leading/trailing underscores
+	slug = strings.Trim(slug, "_")
+
+	return slug
 }

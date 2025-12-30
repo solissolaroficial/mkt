@@ -19,6 +19,12 @@ type KpiGateway interface {
 	// FindByTitle retrieves a KPI category by its title
 	FindByTitle(ctx context.Context, title string) (*entity.KpiCategory, error)
 
+	// FindBySlug retrieves a KPI category by its slug
+	FindBySlug(ctx context.Context, slug string) (*entity.KpiCategory, error)
+
+	// FindBySlugs retrieves KPI categories by a list of slugs
+	FindBySlugs(ctx context.Context, slugs []string) ([]*entity.KpiCategory, error)
+
 	// FindAll retrieves KPI categories with pagination
 	FindAll(ctx context.Context, pagination valueobject.Pagination) ([]*entity.KpiCategory, int64, error)
 

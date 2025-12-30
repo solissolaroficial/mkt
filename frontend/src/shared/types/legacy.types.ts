@@ -29,6 +29,7 @@ export interface KpiLog {
 export interface KpiCategory {
   id: string;
   title: string;
+  slug: string;
   data: MonthlyData[];
   color: string;
   unit?: string; // 'currency' | 'percent' | 'number'

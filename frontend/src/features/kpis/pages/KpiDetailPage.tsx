@@ -1,25 +1,27 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useKpiById } from '../hooks/useKpiById';
-import { useKpis } from '../hooks/useKpis';
+import { useKpiDetailDependencies } from '../hooks/useKpiDetailDependencies';
 import { useUIStore } from '@/shared/store/uiStore';
 import KpiDetailView from '../ui/KpiDetailView';
 
 /**
  * Página wrapper para exibir detalhes de um KPI específico
  * Obtém o kpiId da URL e busca os dados do KPI
+ * Otimizado para buscar apenas os KPIs necessários via slugs
  */
 const KpiDetailPage: React.FC = () => {
   const { kpiId } = useParams<{ kpiId: string }>();
   const navigate = useNavigate();
   const { selectedMonth } = useUIStore();
   
-  // Buscar KPI específico pelo ID
+  // Buscar KPI específico pelo ID (busca otimizada por ID)
   const { data: kpi, isLoading, error } = useKpiById(kpiId || '');
   
-  // Buscar todos os KPIs para referência cruzada (necessário para Ad Spend cruzar com Opportunities)
-  const { data: allKpisData } = useKpis();
-  const allKpis = allKpisData?.data || [];
+  // Buscar apenas os KPIs necessários para referência cruzada via slugs
+  // Otimizado para buscar apenas: opportunities (necessário para Ad Spend cruzar com Opportunities)
+  const { data: dependentKpis } = useKpiDetailDependencies();
+  const allKpis = dependentKpis || [];
 
   // Loading state
   if (isLoading) {
