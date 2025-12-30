@@ -22,6 +22,15 @@ export const COMMERCIAL_KPIS_SLUGS = [
   'taxa_de_conversao_global',
 ];
 
+// Slugs dos KPIs de Marketing
+export const MARKETING_KPIS_SLUGS = [
+  'novos_inscritos_no_youtube',
+  'treinamentos_realizados_reps',
+  'pessoas_treinadas_solis',
+  'acoes_de_marketing_reps',
+  'visitantes_inbound',
+];
+
 // Slugs dos KPIs necessários para cálculos cruzados na página de detalhes
 export const KPI_DETAIL_DEPENDENCIES_SLUGS = [
   'taxa_de_oportunidades', // Necessário para cálculos de Ad Spend (CPL)
