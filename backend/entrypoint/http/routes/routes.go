@@ -9,8 +9,12 @@ import (
 
 // Controllers agrupa todos os controllers da aplicação
 type Controllers struct {
-	AuthController *controller.AuthController
-	KpiController  *controller.KpiController
+	AuthController         *controller.AuthController
+	KpiController          *controller.KpiController
+	TaskController         *controller.TaskController
+	SubtaskController      *controller.SubtaskController
+	CommentController      *controller.CommentController
+	NotificationController *controller.NotificationController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -36,6 +40,10 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	// 5. Rotas protegidas (com auth middleware)
 	protected := api.Group("", middlewares.AuthMiddleware.Handle())
 	SetupKpiRoutes(protected, controllers.KpiController)
+	SetupTaskRoutes(protected, controllers.TaskController)
+	SetupSubtaskRoutes(protected, controllers.SubtaskController)
+	SetupCommentRoutes(protected, controllers.CommentController)
+	SetupNotificationRoutes(protected, controllers.NotificationController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

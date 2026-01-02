@@ -17,6 +17,10 @@ func RunMigrations(db *gorm.DB) error {
 		&model.User{},
 		&model.KpiCategory{},
 		&model.MonthlyData{},
+		&model.Task{},
+		&model.Subtask{},
+		&model.Comment{},
+		&model.Notification{},
 	)
 
 	if err != nil {

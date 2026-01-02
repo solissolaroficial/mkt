@@ -12,6 +12,7 @@ import (
 
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
+	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/service"
 	dbgateway "github.com/seu-usuario/solis-backend/dataprovider/database/gateway"
@@ -32,9 +33,13 @@ type Container struct {
 	JwtService    service.JWTService
 
 	// Gateways
-	UserGateway        gateway.UserGateway
-	KpiGateway         gateway.KpiGateway
-	MonthlyDataGateway gateway.MonthlyDataGateway
+	UserGateway         gateway.UserGateway
+	KpiGateway          gateway.KpiGateway
+	MonthlyDataGateway  gateway.MonthlyDataGateway
+	TaskGateway         gateway.TaskGateway
+	SubtaskGateway      gateway.SubtaskGateway
+	CommentGateway      gateway.CommentGateway
+	NotificationGateway gateway.NotificationGateway
 
 	// Seeders
 	UserSeeder *seeders.UserSeeder
@@ -52,9 +57,38 @@ type Container struct {
 	DeleteKpiUseCase         *kpis.DeleteKpiUseCase
 	UpdateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
 
+	// Use Cases - Tasks
+	CreateTaskUseCase                  *tasks.CreateTaskUseCase
+	UpdateTaskUseCase                  *tasks.UpdateTaskUseCase
+	DeleteTaskUseCase                  *tasks.DeleteTaskUseCase
+	GetTaskUseCase                     *tasks.GetTaskUseCase
+	ListTasksUseCase                   *tasks.ListTasksUseCase
+	CreateSubtaskUseCase               *tasks.CreateSubtaskUseCase
+	UpdateSubtaskUseCase               *tasks.UpdateSubtaskUseCase
+	DeleteSubtaskUseCase               *tasks.DeleteSubtaskUseCase
+	GetSubtaskUseCase                  *tasks.GetSubtaskUseCase
+	ListSubtasksUseCase                *tasks.ListSubtasksUseCase
+	CreateCommentUseCase               *tasks.CreateCommentUseCase
+	UpdateCommentUseCase               *tasks.UpdateCommentUseCase
+	DeleteCommentUseCase               *tasks.DeleteCommentUseCase
+	GetCommentUseCase                  *tasks.GetCommentUseCase
+	ListCommentsUseCase                *tasks.ListCommentsUseCase
+	CreateNotificationUseCase          *tasks.CreateNotificationUseCase
+	UpdateNotificationUseCase          *tasks.UpdateNotificationUseCase
+	DeleteNotificationUseCase          *tasks.DeleteNotificationUseCase
+	GetNotificationUseCase             *tasks.GetNotificationUseCase
+	ListNotificationsUseCase           *tasks.ListNotificationsUseCase
+	MarkAsReadNotificationUseCase      *tasks.MarkAsReadNotificationUseCase
+	MarkAllAsReadNotificationsUseCase  *tasks.MarkAllAsReadNotificationsUseCase
+	DeleteNotificationsByTaskIDUseCase *tasks.DeleteNotificationsByTaskIDUseCase
+
 	// Controllers
-	AuthController *controller.AuthController
-	KpiController  *controller.KpiController
+	AuthController         *controller.AuthController
+	KpiController          *controller.KpiController
+	TaskController         *controller.TaskController
+	SubtaskController      *controller.SubtaskController
+	CommentController      *controller.CommentController
+	NotificationController *controller.NotificationController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -83,6 +117,10 @@ func NewContainer(cfg *Config) (*Container, error) {
 	userGateway := dbgateway.NewUserGateway(db)
 	kpiGateway := dbgateway.NewKpiGateway(db)
 	monthlyDataGateway := dbgateway.NewMonthlyDataGateway(db)
+	taskGateway := dbgateway.NewTaskGateway(db)
+	subtaskGateway := dbgateway.NewSubtaskGateway(db)
+	commentGateway := dbgateway.NewCommentGateway(db)
+	notificationGateway := dbgateway.NewNotificationGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -105,9 +143,35 @@ func NewContainer(cfg *Config) (*Container, error) {
 		monthlyDataGateway,
 		kpiGateway,
 	)
+
+	// Task Use Cases
+	createTaskUseCase := tasks.NewCreateTaskUseCase(taskGateway, subtaskGateway)
+	updateTaskUseCase := tasks.NewUpdateTaskUseCase(taskGateway)
+	deleteTaskUseCase := tasks.NewDeleteTaskUseCase(taskGateway)
+	getTaskUseCase := tasks.NewGetTaskUseCase(taskGateway)
+	listTasksUseCase := tasks.NewListTasksUseCase(taskGateway)
+	createSubtaskUseCase := tasks.NewCreateSubtaskUseCase(subtaskGateway)
+	updateSubtaskUseCase := tasks.NewUpdateSubtaskUseCase(subtaskGateway)
+	deleteSubtaskUseCase := tasks.NewDeleteSubtaskUseCase(subtaskGateway)
+	getSubtaskUseCase := tasks.NewGetSubtaskUseCase(subtaskGateway)
+	listSubtasksUseCase := tasks.NewListSubtasksUseCase(subtaskGateway)
+	createCommentUseCase := tasks.NewCreateCommentUseCase(commentGateway)
+	updateCommentUseCase := tasks.NewUpdateCommentUseCase(commentGateway)
+	deleteCommentUseCase := tasks.NewDeleteCommentUseCase(commentGateway)
+	getCommentUseCase := tasks.NewGetCommentUseCase(commentGateway)
+	listCommentsUseCase := tasks.NewListCommentsUseCase(commentGateway)
+	createNotificationUseCase := tasks.NewCreateNotificationUseCase(notificationGateway)
+	updateNotificationUseCase := tasks.NewUpdateNotificationUseCase(notificationGateway)
+	deleteNotificationUseCase := tasks.NewDeleteNotificationUseCase(notificationGateway)
+	getNotificationUseCase := tasks.NewGetNotificationUseCase(notificationGateway)
+	listNotificationsUseCase := tasks.NewListNotificationsUseCase(notificationGateway)
+	markAsReadNotificationUseCase := tasks.NewMarkAsReadNotificationUseCase(notificationGateway)
+	markAllAsReadNotificationsUseCase := tasks.NewMarkAllAsReadNotificationsUseCase(notificationGateway)
+	deleteNotificationsByTaskIDUseCase := tasks.NewDeleteNotificationsByTaskIDUseCase(notificationGateway)
+
 	log.Println("✅ Use cases initialized")
 
-	// 5. Controllers (dependem de use cases)
+	//5. Controllers (dependem de use cases)
 	authController := controller.NewAuthController(loginUseCase)
 	kpiController := controller.NewKpiController(
 		createKpiUseCase,
@@ -118,6 +182,37 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteKpiUseCase,
 		updateMonthlyDataUseCase,
 	)
+	taskController := controller.NewTaskController(
+		createTaskUseCase,
+		updateTaskUseCase,
+		deleteTaskUseCase,
+		getTaskUseCase,
+		listTasksUseCase,
+	)
+	subtaskController := controller.NewSubtaskController(
+		createSubtaskUseCase,
+		updateSubtaskUseCase,
+		deleteSubtaskUseCase,
+		getSubtaskUseCase,
+		listSubtasksUseCase,
+	)
+	commentController := controller.NewCommentController(
+		createCommentUseCase,
+		updateCommentUseCase,
+		deleteCommentUseCase,
+		getCommentUseCase,
+		listCommentsUseCase,
+	)
+	notificationController := controller.NewNotificationController(
+		createNotificationUseCase,
+		updateNotificationUseCase,
+		deleteNotificationUseCase,
+		getNotificationUseCase,
+		listNotificationsUseCase,
+		markAsReadNotificationUseCase,
+		markAllAsReadNotificationsUseCase,
+		deleteNotificationsByTaskIDUseCase,
+	)
 	log.Println("✅ Controllers initialized")
 
 	// 6. Middlewares (dependem de services)
@@ -127,26 +222,57 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	// 7. Retornar Container
 	return &Container{
-		DB:                       db,
-		HasherService:            hasherService,
-		JwtService:               jwtService,
-		UserGateway:              userGateway,
-		KpiGateway:               kpiGateway,
-		MonthlyDataGateway:       monthlyDataGateway,
-		UserSeeder:               userSeeder,
-		KpiSeeder:                kpiSeeder,
-		LoginUseCase:             loginUseCase,
-		CreateKpiUseCase:         createKpiUseCase,
-		GetKpiUseCase:            getKpiUseCase,
-		ListKpisUseCase:          listKpisUseCase,
-		GetKpisBySlugsUseCase:    getKpisBySlugsUseCase,
-		UpdateKpiUseCase:         updateKpiUseCase,
-		DeleteKpiUseCase:         deleteKpiUseCase,
-		UpdateMonthlyDataUseCase: updateMonthlyDataUseCase,
-		AuthController:           authController,
-		KpiController:            kpiController,
-		AuthMiddleware:           authMiddleware,
-		CorsMiddleware:           corsMiddleware,
+		DB:                                 db,
+		HasherService:                      hasherService,
+		JwtService:                         jwtService,
+		UserGateway:                        userGateway,
+		KpiGateway:                         kpiGateway,
+		MonthlyDataGateway:                 monthlyDataGateway,
+		TaskGateway:                        taskGateway,
+		SubtaskGateway:                     subtaskGateway,
+		CommentGateway:                     commentGateway,
+		NotificationGateway:                notificationGateway,
+		UserSeeder:                         userSeeder,
+		KpiSeeder:                          kpiSeeder,
+		LoginUseCase:                       loginUseCase,
+		CreateKpiUseCase:                   createKpiUseCase,
+		GetKpiUseCase:                      getKpiUseCase,
+		ListKpisUseCase:                    listKpisUseCase,
+		GetKpisBySlugsUseCase:              getKpisBySlugsUseCase,
+		UpdateKpiUseCase:                   updateKpiUseCase,
+		DeleteKpiUseCase:                   deleteKpiUseCase,
+		UpdateMonthlyDataUseCase:           updateMonthlyDataUseCase,
+		CreateTaskUseCase:                  createTaskUseCase,
+		UpdateTaskUseCase:                  updateTaskUseCase,
+		DeleteTaskUseCase:                  deleteTaskUseCase,
+		GetTaskUseCase:                     getTaskUseCase,
+		ListTasksUseCase:                   listTasksUseCase,
+		CreateSubtaskUseCase:               createSubtaskUseCase,
+		UpdateSubtaskUseCase:               updateSubtaskUseCase,
+		DeleteSubtaskUseCase:               deleteSubtaskUseCase,
+		GetSubtaskUseCase:                  getSubtaskUseCase,
+		ListSubtasksUseCase:                listSubtasksUseCase,
+		CreateCommentUseCase:               createCommentUseCase,
+		UpdateCommentUseCase:               updateCommentUseCase,
+		DeleteCommentUseCase:               deleteCommentUseCase,
+		GetCommentUseCase:                  getCommentUseCase,
+		ListCommentsUseCase:                listCommentsUseCase,
+		CreateNotificationUseCase:          createNotificationUseCase,
+		UpdateNotificationUseCase:          updateNotificationUseCase,
+		DeleteNotificationUseCase:          deleteNotificationUseCase,
+		GetNotificationUseCase:             getNotificationUseCase,
+		ListNotificationsUseCase:           listNotificationsUseCase,
+		MarkAsReadNotificationUseCase:      markAsReadNotificationUseCase,
+		MarkAllAsReadNotificationsUseCase:  markAllAsReadNotificationsUseCase,
+		DeleteNotificationsByTaskIDUseCase: deleteNotificationsByTaskIDUseCase,
+		AuthController:                     authController,
+		KpiController:                      kpiController,
+		TaskController:                     taskController,
+		SubtaskController:                  subtaskController,
+		CommentController:                  commentController,
+		NotificationController:             notificationController,
+		AuthMiddleware:                     authMiddleware,
+		CorsMiddleware:                     corsMiddleware,
 	}, nil
 }
 
@@ -201,8 +327,12 @@ func (c *Container) Close() error {
 // GetControllers retorna struct para usar nas rotas
 func (c *Container) GetControllers() *routes.Controllers {
 	return &routes.Controllers{
-		AuthController: c.AuthController,
-		KpiController:  c.KpiController,
+		AuthController:         c.AuthController,
+		KpiController:          c.KpiController,
+		TaskController:         c.TaskController,
+		SubtaskController:      c.SubtaskController,
+		CommentController:      c.CommentController,
+		NotificationController: c.NotificationController,
 	}
 }
 
