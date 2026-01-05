@@ -60,7 +60,7 @@ func (c *CommentController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err = c.createCommentUseCase.Execute(comment)
+	err = c.createCommentUseCase.Execute(ctx.Context(), comment)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(taskresponse.ErrorResponse{
 			Error: err.Error(),

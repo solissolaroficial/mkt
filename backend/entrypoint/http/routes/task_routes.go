@@ -15,6 +15,7 @@ func SetupTaskRoutes(router fiber.Router, taskController *controller.TaskControl
 	tasks.Put("/:id", taskController.Update)
 	tasks.Delete("/:id", taskController.Delete)
 	tasks.Get("/", taskController.List)
+	tasks.Post("/reorder", taskController.Reorder)
 }
 
 // SetupSubtaskRoutes configura as rotas de Subtasks

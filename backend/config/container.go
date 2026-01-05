@@ -13,6 +13,7 @@ import (
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
+	"github.com/seu-usuario/solis-backend/application/usecase/users"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/service"
 	dbgateway "github.com/seu-usuario/solis-backend/dataprovider/database/gateway"
@@ -48,6 +49,9 @@ type Container struct {
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
 
+	// Use Cases - Users
+	ListUsersUseCase *users.ListUsersUseCase
+
 	// Use Cases - KPIs
 	CreateKpiUseCase         *kpis.CreateKpiUseCase
 	GetKpiUseCase            *kpis.GetKpiUseCase
@@ -63,6 +67,7 @@ type Container struct {
 	DeleteTaskUseCase                  *tasks.DeleteTaskUseCase
 	GetTaskUseCase                     *tasks.GetTaskUseCase
 	ListTasksUseCase                   *tasks.ListTasksUseCase
+	ReorderTasksUseCase                *tasks.ReorderTasksUseCase
 	CreateSubtaskUseCase               *tasks.CreateSubtaskUseCase
 	UpdateSubtaskUseCase               *tasks.UpdateSubtaskUseCase
 	DeleteSubtaskUseCase               *tasks.DeleteSubtaskUseCase
@@ -89,6 +94,7 @@ type Container struct {
 	SubtaskController      *controller.SubtaskController
 	CommentController      *controller.CommentController
 	NotificationController *controller.NotificationController
+	UserController         *controller.UserController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -150,12 +156,17 @@ func NewContainer(cfg *Config) (*Container, error) {
 	deleteTaskUseCase := tasks.NewDeleteTaskUseCase(taskGateway)
 	getTaskUseCase := tasks.NewGetTaskUseCase(taskGateway)
 	listTasksUseCase := tasks.NewListTasksUseCase(taskGateway)
+	reorderTasksUseCase := tasks.NewReorderTasksUseCase(taskGateway)
 	createSubtaskUseCase := tasks.NewCreateSubtaskUseCase(subtaskGateway)
 	updateSubtaskUseCase := tasks.NewUpdateSubtaskUseCase(subtaskGateway)
 	deleteSubtaskUseCase := tasks.NewDeleteSubtaskUseCase(subtaskGateway)
 	getSubtaskUseCase := tasks.NewGetSubtaskUseCase(subtaskGateway)
 	listSubtasksUseCase := tasks.NewListSubtasksUseCase(subtaskGateway)
-	createCommentUseCase := tasks.NewCreateCommentUseCase(commentGateway)
+	createCommentUseCase := tasks.NewCreateCommentUseCase(
+		commentGateway,
+		notificationGateway,
+		userGateway,
+	)
 	updateCommentUseCase := tasks.NewUpdateCommentUseCase(commentGateway)
 	deleteCommentUseCase := tasks.NewDeleteCommentUseCase(commentGateway)
 	getCommentUseCase := tasks.NewGetCommentUseCase(commentGateway)
@@ -168,6 +179,9 @@ func NewContainer(cfg *Config) (*Container, error) {
 	markAsReadNotificationUseCase := tasks.NewMarkAsReadNotificationUseCase(notificationGateway)
 	markAllAsReadNotificationsUseCase := tasks.NewMarkAllAsReadNotificationsUseCase(notificationGateway)
 	deleteNotificationsByTaskIDUseCase := tasks.NewDeleteNotificationsByTaskIDUseCase(notificationGateway)
+
+	// User Use Cases
+	listUsersUseCase := users.NewListUsersUseCase(userGateway)
 
 	log.Println("✅ Use cases initialized")
 
@@ -188,6 +202,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteTaskUseCase,
 		getTaskUseCase,
 		listTasksUseCase,
+		reorderTasksUseCase,
 	)
 	subtaskController := controller.NewSubtaskController(
 		createSubtaskUseCase,
@@ -213,8 +228,10 @@ func NewContainer(cfg *Config) (*Container, error) {
 		markAllAsReadNotificationsUseCase,
 		deleteNotificationsByTaskIDUseCase,
 	)
-	log.Println("✅ Controllers initialized")
 
+	userController := controller.NewUserController(listUsersUseCase)
+
+	log.Println("✅ Controllers initialized")
 	// 6. Middlewares (dependem de services)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	corsMiddleware := middleware.NewCorsMiddleware()
@@ -265,12 +282,14 @@ func NewContainer(cfg *Config) (*Container, error) {
 		MarkAsReadNotificationUseCase:      markAsReadNotificationUseCase,
 		MarkAllAsReadNotificationsUseCase:  markAllAsReadNotificationsUseCase,
 		DeleteNotificationsByTaskIDUseCase: deleteNotificationsByTaskIDUseCase,
+		ListUsersUseCase:                   listUsersUseCase,
 		AuthController:                     authController,
 		KpiController:                      kpiController,
 		TaskController:                     taskController,
 		SubtaskController:                  subtaskController,
 		CommentController:                  commentController,
 		NotificationController:             notificationController,
+		UserController:                     userController,
 		AuthMiddleware:                     authMiddleware,
 		CorsMiddleware:                     corsMiddleware,
 	}, nil
@@ -333,6 +352,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		SubtaskController:      c.SubtaskController,
 		CommentController:      c.CommentController,
 		NotificationController: c.NotificationController,
+		UserController:         c.UserController,
 	}
 }
 

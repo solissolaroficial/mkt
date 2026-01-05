@@ -1,24 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { taskService } from '../services/taskService';
-import type { Task } from '../types';
+import { subtaskService } from '../services/taskService';
+import type { Subtask } from '../types';
 
-export const useTasks = (page = 1, limit = 100) => {
+export const useSubtasks = (taskId: string) => {
   return useQuery({
-    queryKey: ['tasks', page, limit],
+    queryKey: ['subtasks', taskId],
     queryFn: async () => {
-      return await taskService.list(page, limit);
+      return await subtaskService.list(taskId);
     },
+    enabled: !!taskId,
     staleTime: 1000 * 60 * 5,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-export const useTask = (id: string) => {
+export const useSubtask = (id: string) => {
   return useQuery({
-    queryKey: ['tasks', id],
+    queryKey: ['subtasks', id],
     queryFn: async () => {
-      return await taskService.getById(id);
+      return await subtaskService.getById(id);
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,

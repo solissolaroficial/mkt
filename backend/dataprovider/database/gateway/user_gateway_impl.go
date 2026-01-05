@@ -110,3 +110,35 @@ func (g *userGatewayImpl) ExistsByEmail(ctx context.Context, email string) (bool
 
 	return count > 0, nil
 }
+
+// FindByName retrieves a user by their name
+func (g *userGatewayImpl) FindByName(ctx context.Context, name string) (*entity.User, error) {
+	var userModel model.User
+
+	err := g.db.WithContext(ctx).Where("name = ?", name).First(&userModel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, authErrors.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return g.mapper.ToDomain(&userModel), nil
+}
+
+// ListAll retrieves all active users
+func (g *userGatewayImpl) ListAll(ctx context.Context) ([]*entity.User, error) {
+	var userModels []model.User
+
+	err := g.db.WithContext(ctx).Where("active = ?", true).Find(&userModels).Error
+	if err != nil {
+		return nil, err
+	}
+
+	users := make([]*entity.User, len(userModels))
+	for i, userModel := range userModels {
+		users[i] = g.mapper.ToDomain(&userModel)
+	}
+
+	return users, nil
+}

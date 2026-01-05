@@ -49,6 +49,9 @@ type TaskGateway interface {
 
 	// FindOverdue busca tarefas atrasadas
 	FindOverdue(pagination *valueobject.Pagination, sortOrders []*valueobject.SortOrder) ([]*entity.Task, int64, error)
+
+	// Reorder atualiza a ordem de múltiplas tarefas
+	Reorder(taskIDs []uuid.UUID) error
 }
 
 // TaskCriteria define os critérios de busca para tarefas

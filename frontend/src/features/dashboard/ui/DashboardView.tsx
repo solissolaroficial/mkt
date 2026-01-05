@@ -106,7 +106,7 @@ const DashboardView: React.FC = () => {
       <div className="flex flex-col gap-6">
         <div className="h-[400px]">
           <TaskWidget
-            tasks={tasksData || []}
+            tasks={tasksData?.data || []}
             onViewAll={() => navigate('/tasks')}
             onTaskClick={(taskId) => navigate('/tasks')}
           />

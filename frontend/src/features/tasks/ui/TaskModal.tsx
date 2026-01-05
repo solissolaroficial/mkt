@@ -1,14 +1,16 @@
  
-import React, { useState } from 'react';
-import type { Task, Subtask, Comment, AllowedUser } from '@/shared/types';
-import { ALLOWED_USERS } from '@/shared/utils/legacy.constants';
-import { 
-  X, 
-  CheckSquare, 
-  MessageSquare, 
-  User, 
-  Trash2, 
-  Send, 
+import React, { useState, useMemo } from 'react';
+import type { Task, Subtask, Comment, AllowedUser, TaskFlow, TaskStatus } from '@/shared/types';
+import type { AppUser } from '@/shared/types/user.types';
+import { useUsers } from '@/features/users/hooks';
+import { useAuth } from '@/features/auth';
+import {
+  X,
+  CheckSquare,
+  MessageSquare,
+  User,
+  Trash2,
+  Send,
   AlignLeft,
   CalendarDays,
   Calendar,
@@ -17,20 +19,30 @@ import {
   Plus,
   Layers,
   ChevronDown,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import type { TaskModalProps } from '../types';
 
-// Temporary available flows - in a real app this would come from props or context
-const AVAILABLE_FLOWS = ['Jackson', 'Beatriz', 'Larissa', 'Geral'];
+const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onMention, onAddSubtask, onUpdateSubtask, onDeleteSubtask, onAddComment, onUpdateComment, onDeleteComment }) => {
+// Load users from API
+const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
 
-const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onMention }) => {
-  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const [newSubtaskAssignee, setNewSubtaskAssignee] = useState<AllowedUser>('Jackson');
-  const [newSubtaskDate, setNewSubtaskDate] = useState('');
-  
-  const [newComment, setNewComment] = useState('');
-  const [activeUser] = useState<AllowedUser>('Jackson'); 
+// AVAILABLE_FLOWS é calculado dinamicamente a partir de appUsers
+const AVAILABLE_FLOWS = useMemo(() => {
+  return appUsers?.map(u => u.id) || [];
+}, [appUsers]);
+
+const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+// Initialize with first user UUID from appUsers, or empty string if not loaded
+const firstUserId = appUsers?.[0]?.id || '';
+const [newSubtaskAssignee, setNewSubtaskAssignee] = useState<string>(firstUserId);
+const [newSubtaskDate, setNewSubtaskDate] = useState('');
+
+const [newComment, setNewComment] = useState('');
+// Use authenticated user if available, otherwise use first user from appUsers
+const { user } = useAuth();
+const [activeUser] = useState<string>(user?.id || firstUserId);
   
   // Mention Autocomplete State
   const [showMentions, setShowMentions] = useState(false);
@@ -40,6 +52,20 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
   const [isFlowDropdownOpen, setIsFlowDropdownOpen] = useState(false);
 
   if (!isOpen || !task) return null; // Safety check
+  
+  // Show loading while users are being fetched
+  if (isLoadingUsers) {
+    return (
+      <div className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4 backdrop-blur-sm">
+        <div className="bg-[#1a1d24] w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl border border-gray-800 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 size={48} className="text-pink-500 animate-spin" />
+            <p className="text-gray-400">Carregando usuários...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Handlers
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -47,14 +73,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
   };
 
   const toggleSubtask = (subtaskId: string) => {
-    const updatedSubtasks = task.subtasks?.map(st => 
-      st.id === subtaskId ? { ...st, completed: !st.completed } : st
+    const updatedSubtasks = task.subtasks?.map(st =>
+      st.id === subtaskId ? { ...st, status: (st.status === 'completed' ? 'pending' : 'completed') as TaskStatus } : st
     ) || [];
     onUpdate({ ...task, subtasks: updatedSubtasks });
   };
 
   const updateSubtaskField = (subtaskId: string, field: keyof Subtask, value: any) => {
-    const updatedSubtasks = task.subtasks?.map(st => 
+    const updatedSubtasks = task.subtasks?.map(st =>
       st.id === subtaskId ? { ...st, [field]: value } : st
     ) || [];
     onUpdate({ ...task, subtasks: updatedSubtasks });
@@ -65,17 +91,27 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
     if (!newSubtaskTitle.trim()) return;
     const newSub: Subtask = {
       id: Date.now().toString(),
+      task_id: task.id,
       title: newSubtaskTitle,
-      completed: false,
-      assignee: newSubtaskAssignee,
-      dueDate: newSubtaskDate || new Date().toISOString().split('T')[0]
+      description: '',
+      priority: 'low',
+      status: 'pending',
+      assignee_id: newSubtaskAssignee || '',
+      due_date: newSubtaskDate || new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
-    onUpdate({ ...task, subtasks: [...(task.subtasks || []), newSub] });
+    if (onAddSubtask) {
+      onAddSubtask(newSub);
+    }
     setNewSubtaskTitle('');
     setNewSubtaskDate('');
   };
 
   const deleteSubtask = (subtaskId: string) => {
+    if (onDeleteSubtask) {
+      onDeleteSubtask(subtaskId);
+    }
     const updatedSubtasks = task.subtasks?.filter(st => st.id !== subtaskId) || [];
     onUpdate({ ...task, subtasks: updatedSubtasks });
   };
@@ -87,18 +123,33 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
     const lowerComment = newComment.toLowerCase();
     
     if (onMention) {
-        if (lowerComment.includes('@jackson')) {
+        // Extract all mentions from the comment
+        const mentionRegex = /@(\w+)/g;
+        const matches = lowerComment.match(mentionRegex) || [];
+        
+        // Convert to names (remove the @)
+        const mentionedNames = matches.map(m => m.substring(1).toLowerCase());
+        
+        // Check if any of the mentions correspond to an existing user
+        const hasValidMention = mentionedNames.some(name =>
+            appUsers?.some(u => u.name.toLowerCase() === name)
+        );
+        
+        if (hasValidMention) {
             onMention(task.id, task.title);
         }
     }
 
     const comment: Comment = {
       id: Date.now().toString(),
-      user: activeUser,
+      task_id: task.id,
+      user_id: activeUser,
       text: newComment,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: new Date().toISOString()
     };
-    onUpdate({ ...task, comments: [...(task.comments || []), comment] });
+    if (onAddComment) {
+      onAddComment(comment);
+    }
     setNewComment('');
     setShowMentions(false);
   };
@@ -107,7 +158,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
       onUpdate({ ...task, archived: !task.archived });
   };
 
-  const completedSubtasks = task.subtasks?.filter(s => s.completed).length || 0;
+  const completedSubtasks = task.subtasks?.filter(s => s.status === 'completed').length || 0;
   const totalSubtasks = task.subtasks?.length || 0;
   const progress = totalSubtasks === 0 ? 0 : (completedSubtasks / totalSubtasks) * 100;
 
@@ -156,18 +207,18 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
       setShowMentions(false);
   };
 
-  const toggleFlow = (flow: string) => {
+  const toggleFlow = (flowId: string) => {
       const currentFlows = task.flows || [];
       let newFlows;
-      if (currentFlows.includes(flow)) {
-          newFlows = currentFlows.filter(f => f !== flow);
+      if (currentFlows.includes(flowId as any)) {
+          newFlows = currentFlows.filter(f => f !== flowId);
       } else {
-          newFlows = [...currentFlows, flow];
+          newFlows = [...currentFlows, flowId];
       }
       onUpdate({ ...task, flows: newFlows });
   };
 
-  const filteredUsers = ALLOWED_USERS.filter(u => u.toLowerCase().includes(mentionFilter));
+  const filteredUsers = (appUsers || []).filter(u => u.name.toLowerCase().includes(mentionFilter));
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4 backdrop-blur-sm" onClick={onClose}>
@@ -221,7 +272,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                     </span>
                     <span className="text-gray-500">na lista</span>
                     <span className="font-medium text-emerald-400 border-b border-emerald-400/30 pb-0.5">
-                        {task.status === 'todo' ? 'A Fazer' : task.status === 'in_progress' ? 'Em Andamento' : 'Concluído'}
+                        {task.status === 'pending' ? 'A Fazer' : task.status === 'in_progress' ? 'Em Andamento' : 'Concluído'}
                     </span>
                     {task.archived && <span className="text-amber-500 text-xs font-bold px-2 py-0.5 bg-amber-500/10 rounded border border-amber-500/20">ARQUIVADA</span>}
                 </div>
@@ -270,45 +321,45 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                     <div className="space-y-2 mb-4">
                         {task.subtasks?.map(st => (
                             <div key={st.id} className="group flex items-center gap-3 bg-[#0f1115] border border-gray-800 hover:border-gray-700 p-2 pr-3 rounded-lg transition-all">
-                                <button 
+                                <button
                                     onClick={() => toggleSubtask(st.id)}
-                                    className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ml-1 ${st.completed ? 'bg-emerald-500 border-emerald-500 text-[#0f1115]' : 'border-gray-600 hover:border-emerald-500'}`}
+                                    className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ml-1 ${st.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-[#0f1115]' : 'border-gray-600 hover:border-emerald-500'}`}
                                 >
-                                    {st.completed && <CheckSquare size={14} />}
+                                    {st.status === 'completed' && <CheckSquare size={14} />}
                                 </button>
                                 
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     value={st.title}
                                     onChange={(e) => updateSubtaskField(st.id, 'title', e.target.value)}
-                                    className={`flex-grow bg-transparent border-none p-0 text-sm focus:ring-0 ${st.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}
+                                    className={`flex-grow bg-transparent border-none p-0 text-sm focus:ring-0 ${st.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-200'}`}
                                 />
 
                                 <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
                                     <div className="relative">
                                         <div className="flex items-center gap-1.5 bg-[#1a1d24] px-2 py-1 rounded text-xs border border-gray-700">
                                             <span className="w-4 h-4 rounded-full bg-gray-600 flex items-center justify-center text-[8px] font-bold text-white">
-                                                {st.assignee ? st.assignee[0] : 'U'}
+                                                {st.assignee_id ? appUsers?.find(u => u.id === st.assignee_id)?.name[0] : 'U'}
                                             </span>
                                             <select
-                                                value={st.assignee || 'Jackson'}
-                                                onChange={(e) => updateSubtaskField(st.id, 'assignee', e.target.value)}
+                                                value={st.assignee_id || ''}
+                                                onChange={(e) => updateSubtaskField(st.id, 'assignee_id', e.target.value)}
                                                 className="absolute inset-0 opacity-0 cursor-pointer w-full"
                                             >
-                                                {ALLOWED_USERS.map(u => <option key={u} value={u}>{u}</option>)}
+                                                {appUsers?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                                             </select>
-                                            <span className="truncate max-w-[60px]">{st.assignee}</span>
+                                            <span className="truncate max-w-[60px]">{st.assignee_id ? appUsers?.find(u => u.id === st.assignee_id)?.name : ''}</span>
                                         </div>
                                     </div>
 
                                     <div className="relative">
                                         <div className="flex items-center gap-1.5 bg-[#1a1d24] px-2 py-1 rounded text-xs border border-gray-700">
                                             <Calendar size={10} />
-                                            <span>{st.dueDate ? st.dueDate.split('-').slice(1).reverse().join('/') : '--/--'}</span>
-                                            <input 
+                                            <span>{st.due_date ? st.due_date.split('-').slice(1).reverse().join('/') : '--/--'}</span>
+                                            <input
                                                 type="date"
-                                                value={st.dueDate || ''}
-                                                onChange={(e) => updateSubtaskField(st.id, 'dueDate', e.target.value)}
+                                                value={st.due_date || ''}
+                                                onChange={(e) => updateSubtaskField(st.id, 'due_date', e.target.value)}
                                                 className="absolute inset-0 opacity-0 cursor-pointer w-full"
                                                 onClick={openDatePicker}
                                             />
@@ -337,15 +388,17 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                         </div>
                         <div className="flex gap-2">
                              <div className="relative w-28 bg-[#0f1115] border border-gray-800 rounded-lg flex items-center px-2">
-                                <User size={14} className="text-gray-500 mr-2" />
-                                <span className="text-xs text-gray-300 truncate">{newSubtaskAssignee}</span>
-                                <select
-                                    value={newSubtaskAssignee}
-                                    onChange={(e) => setNewSubtaskAssignee(e.target.value as AllowedUser)}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                >
-                                    {ALLOWED_USERS.map(u => <option key={u} value={u}>{u}</option>)}
-                                </select>
+                               <User size={14} className="text-gray-500 mr-2" />
+                               <span className="text-xs text-gray-300 truncate">
+                                 {appUsers?.find(u => u.id === newSubtaskAssignee)?.name || 'Selecione'}
+                               </span>
+                               <select
+                                   value={newSubtaskAssignee}
+                                   onChange={(e) => setNewSubtaskAssignee(e.target.value)}
+                                   className="absolute inset-0 opacity-0 cursor-pointer"
+                               >
+                                   {appUsers?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                               </select>
                              </div>
                              <div className="relative w-24 bg-[#0f1115] border border-gray-800 rounded-lg flex items-center px-2">
                                 <Calendar size={14} className="text-gray-500 mr-2" />
@@ -380,12 +433,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                         {task.comments?.map(comment => (
                             <div key={comment.id} className="flex gap-4 group">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-xs font-bold border border-gray-600 flex-shrink-0 text-gray-300">
-                                    {comment.user[0]}
+                                    {appUsers?.find(u => u.id === comment.user_id)?.name[0] || '?'}
                                 </div>
                                 <div>
                                     <div className="flex items-baseline gap-2 mb-1">
-                                        <span className="font-semibold text-gray-200 text-sm">{comment.user}</span>
-                                        <span className="text-xs text-gray-600">{comment.timestamp}</span>
+                                        <span className="font-semibold text-gray-200 text-sm">{appUsers?.find(u => u.id === comment.user_id)?.name || comment.user_id}</span>
+                                        <span className="text-xs text-gray-600">{new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                     <div className="bg-[#20232b] px-4 py-2.5 rounded-2xl rounded-tl-none border border-gray-800 text-sm text-gray-300 leading-relaxed max-w-2xl">
                                         {renderCommentText(comment.text)}
@@ -397,7 +450,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
 
                     <div className="flex gap-3">
                         <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-500 font-bold text-xs flex-shrink-0 border border-gray-700">
-                            {activeUser[0]}
+                            {appUsers?.find(u => u.id === activeUser)?.name[0] || '?'}
                         </div>
                         <div className="flex-grow bg-[#0f1115] border border-gray-800 rounded-xl flex items-center pr-2 focus-within:border-gray-600 transition-colors relative">
                             <textarea 
@@ -424,12 +477,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                                 <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#20232b] border border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 animate-in fade-in slide-in-from-bottom-2">
                                     {filteredUsers.map(u => (
                                         <button
-                                            key={u}
-                                            onClick={() => insertMention(u)}
+                                            key={u.id}
+                                            onClick={() => insertMention(u.name)}
                                             className="w-full text-left px-3 py-2 hover:bg-[#2a2e37] text-gray-300 text-sm flex items-center gap-2"
                                         >
-                                            <span className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px]">{u[0]}</span>
-                                            {u}
+                                            <span className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-[10px]">{u.name[0]}</span>
+                                            {u.name}
                                         </button>
                                     ))}
                                 </div>
@@ -452,15 +505,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                         <div className="relative bg-[#1a1d24] border border-gray-700 rounded-lg hover:border-gray-600 transition-colors group-focus-within:border-emerald-500/50">
                             <div className="flex items-center px-3 py-2.5">
                                 <Calendar size={14} className="text-gray-500 mr-2 flex-shrink-0" />
-                                <span className="text-sm text-gray-300 truncate">{task.startDate ? task.startDate.split('-').reverse().join('/') : 'Selecione'}</span>
+                                <span className="text-sm text-gray-300 truncate">{task.created_at ? new Date(task.created_at).toLocaleDateString('pt-BR') : 'Selecione'}</span>
                             </div>
-                            <input 
-                                type="date"
-                                value={task.startDate || ''}
-                                onChange={(e) => onUpdate({...task, startDate: e.target.value})}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                onClick={openDatePicker}
-                            />
                         </div>
                     </div>
 
@@ -470,12 +516,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                         <div className="relative bg-[#1a1d24] border border-gray-700 rounded-lg hover:border-gray-600 transition-colors group-focus-within:border-emerald-500/50">
                             <div className="flex items-center px-3 py-2.5">
                                 <CalendarDays size={14} className="text-gray-500 mr-2 flex-shrink-0" />
-                                <span className="text-sm text-gray-300 truncate">{task.dueDate ? task.dueDate.split('-').reverse().join('/') : 'Selecione'}</span>
+                                <span className="text-sm text-gray-300 truncate">{task.due_date ? task.due_date.split('-').reverse().join('/') : 'Selecione'}</span>
                             </div>
                             <input 
                                 type="date"
-                                value={task.dueDate}
-                                onChange={(e) => onUpdate({...task, dueDate: e.target.value})}
+                                value={task.due_date}
+                                onChange={(e) => onUpdate({...task, due_date: e.target.value})}
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                                 onClick={openDatePicker}
                             />
@@ -496,8 +542,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                             className="w-full bg-[#1a1d24] border border-gray-700 rounded-lg px-3 py-2.5 text-left text-sm text-gray-200 flex items-center justify-between hover:border-gray-600 transition-colors h-[42px]"
                         >
                             <span className="truncate">
-                                {task.flows && task.flows.length > 0 
-                                    ? (task.flows.length > 1 ? `${task.flows.length} Selec.` : task.flows[0]) 
+                                {task.flows && task.flows.length > 0
+                                    ? (task.flows.length > 1
+                                      ? `${task.flows.length} Selec.`
+                                      : (appUsers?.find(u => u.id === task.flows[0])?.name || 'Selecione'))
                                     : 'Selecione'}
                             </span>
                             <ChevronDown size={14} className="text-gray-500 flex-shrink-0" />
@@ -507,16 +555,19 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setIsFlowDropdownOpen(false)}></div>
                                 <div className="absolute top-full left-0 mt-1 w-48 bg-[#20232b] border border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                    {AVAILABLE_FLOWS.map(flow => {
-                                        const isActive = task.flows?.includes(flow);
+                                    {AVAILABLE_FLOWS.map(flowId => {
+                                        const user = appUsers?.find(u => u.id === flowId);
+                                        if (!user) return null;
+                                        
+                                        const isActive = task.flows?.includes(flowId as any);
                                         return (
                                             <button
-                                                key={flow}
+                                                key={flowId}
                                                 type="button"
-                                                onClick={() => toggleFlow(flow)}
+                                                onClick={() => toggleFlow(flowId)}
                                                 className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#1a1d24] transition-colors ${isActive ? 'text-pink-400 font-medium bg-pink-500/5' : 'text-gray-400'}`}
                                             >
-                                                {flow}
+                                                {user.name}
                                                 {isActive && <Check size={12} />}
                                             </button>
                                         )
@@ -532,11 +583,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                         <div className="relative">
                             <div className="bg-[#1a1d24] border border-gray-700 rounded-lg flex items-center px-3 py-2.5 hover:border-gray-600 transition-colors h-[42px]">
                                 <div className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${
-                                    task.priority === 'alta' ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]' : 
-                                    task.priority === 'media' ? 'bg-amber-500' : 'bg-blue-500'
+                                    task.priority === 'high' ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]' :
+                                    task.priority === 'medium' ? 'bg-amber-500' : 'bg-blue-500'
                                 }`}></div>
                                 <span className="text-sm text-gray-200 capitalize truncate">
-                                    {task.priority === 'alta' ? 'Alta' : task.priority === 'media' ? 'Média' : 'Baixa'}
+                                    {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
                                 </span>
                             </div>
                             <select
@@ -544,9 +595,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                                 onChange={(e) => onUpdate({...task, priority: e.target.value as any})}
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                             >
-                                <option value="baixa">Baixa</option>
-                                <option value="media">Média</option>
-                                <option value="alta">Alta</option>
+                                <option value="low">Baixa</option>
+                                <option value="medium">Média</option>
+                                <option value="high">Alta</option>
                             </select>
                         </div>
                     </div>
@@ -558,16 +609,16 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                     <div className="relative">
                         <div className="bg-[#1a1d24] border border-gray-700 rounded-lg flex items-center px-3 py-2.5 hover:border-gray-600 transition-colors">
                             <div className="w-5 h-5 rounded-full bg-gray-600 flex items-center justify-center text-[10px] font-bold text-white mr-2">
-                                {task.assignee ? task.assignee[0] : 'U'}
+                                {task.assignee_id ? appUsers?.find(u => u.id === task.assignee_id)?.name[0] : 'U'}
                             </div>
-                            <span className="text-sm text-gray-200">{task.assignee}</span>
+                            <span className="text-sm text-gray-200">{task.assignee_id ? appUsers?.find(u => u.id === task.assignee_id)?.name : ''}</span>
                         </div>
                         <select
-                            value={task.assignee || 'Jackson'}
-                            onChange={(e) => onUpdate({...task, assignee: e.target.value as any})}
+                            value={task.assignee_id || ''}
+                            onChange={(e) => onUpdate({...task, assignee_id: e.target.value})}
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                         >
-                            {ALLOWED_USERS.map(u => <option key={u} value={u}>{u}</option>)}
+                            {appUsers?.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                         </select>
                     </div>
                 </div>
@@ -578,7 +629,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                     <div className="relative">
                         <div className="bg-[#1a1d24] border border-gray-700 rounded-lg flex items-center px-3 py-2.5 hover:border-gray-600 transition-colors">
                             <span className="text-sm text-gray-200">
-                                {task.status === 'todo' ? 'A Fazer' : task.status === 'in_progress' ? 'Em Andamento' : 'Concluído'}
+                                {task.status === 'pending' ? 'A Fazer' : task.status === 'in_progress' ? 'Em Andamento' : 'Concluído'}
                             </span>
                         </div>
                         <select
@@ -586,9 +637,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                             onChange={(e) => onUpdate({...task, status: e.target.value as any})}
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                         >
-                            <option value="todo">A Fazer</option>
+                            <option value="pending">A Fazer</option>
                             <option value="in_progress">Em Andamento</option>
-                            <option value="done">Concluído</option>
+                            <option value="completed">Concluído</option>
                         </select>
                     </div>
                 </div>
@@ -603,7 +654,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
             </div>
 
             <div className="mt-auto p-5 border-t border-gray-800 text-xs text-gray-600 space-y-2">
-                <p>Criado em 21/11/2025</p>
+                <p>Criado em {task.created_at ? new Date(task.created_at).toLocaleDateString('pt-BR') : 'N/A'}</p>
                 <p>ID: {task.id}</p>
                 
                 <button 

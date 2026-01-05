@@ -27,42 +27,57 @@ func NewUserSeeder(userGateway gateway.UserGateway, hasherService service.Hasher
 func (s *UserSeeder) Seed(ctx context.Context) error {
 	log.Println("🌱 Seeding users...")
 
-	// Verificar se o usuário admin já existe
-	exists, err := s.userGateway.ExistsByEmail(ctx, "admin@gmail.com")
-	if err != nil {
-		return err
+	// Dados dos usuários a criar
+	usersToCreate := []struct {
+		email    string
+		password string
+		name     string
+		role     string
+	}{
+		{"admin@gmail.com", "admin123", "Admin User", "admin"},
+		{"jackson@solis.com", "jackson123", "Jackson", "marketing"},
+		{"beatriz@solis.com", "beatriz123", "Beatriz", "commercial"},
+		{"larissa@solis.com", "larissa123", "Larissa", "admin"},
 	}
 
-	if exists {
-		log.Println("✅ Admin user already exists, skipping...")
-		return nil
-	}
+	// Criar cada usuário
+	for _, userData := range usersToCreate {
+		// Verificar se o usuário já existe
+		exists, err := s.userGateway.ExistsByEmail(ctx, userData.email)
+		if err != nil {
+			return err
+		}
 
-	// Hash da senha
-	hashedPassword, err := s.hasherService.Hash("admin123")
-	if err != nil {
-		return err
-	}
+		if exists {
+			log.Printf("✅ User %s already exists, skipping...", userData.name)
+			continue
+		}
 
-	// Criar usuário admin
-	adminUser, err := entity.NewUser(
-		"admin@gmail.com",
-		hashedPassword,
-		"Admin User",
-		"admin",
-	)
-	if err != nil {
-		return err
-	}
+		// Hash da senha
+		hashedPassword, err := s.hasherService.Hash(userData.password)
+		if err != nil {
+			return err
+		}
 
-	// Salvar no banco
-	if err := s.userGateway.Save(ctx, adminUser); err != nil {
-		return err
-	}
+		// Criar usuário
+		user, err := entity.NewUser(
+			userData.email,
+			hashedPassword,
+			userData.name,
+			userData.role,
+		)
+		if err != nil {
+			return err
+		}
 
-	log.Println("✅ Admin user created successfully:")
-	log.Println("   Email: admin@gmail.com")
-	log.Println("   Password: admin123")
+		// Salvar no banco
+		if err := s.userGateway.Save(ctx, user); err != nil {
+			return err
+		}
+
+		log.Printf("✅ User %s created successfully:", userData.name)
+		log.Printf("   Email: %s", userData.email)
+	}
 
 	return nil
 }

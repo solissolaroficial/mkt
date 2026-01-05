@@ -15,6 +15,7 @@ type Controllers struct {
 	SubtaskController      *controller.SubtaskController
 	CommentController      *controller.CommentController
 	NotificationController *controller.NotificationController
+	UserController         *controller.UserController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -44,6 +45,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupSubtaskRoutes(protected, controllers.SubtaskController)
 	SetupCommentRoutes(protected, controllers.CommentController)
 	SetupNotificationRoutes(protected, controllers.NotificationController)
+	SetupUserRoutes(protected, controllers.UserController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

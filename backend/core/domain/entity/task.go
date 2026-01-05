@@ -22,6 +22,7 @@ type Task struct {
 	assigneeID  *uuid.UUID
 	flows       []string
 	archived    bool
+	sortOrder   int
 	createdAt   time.Time
 	updatedAt   time.Time
 	deletedAt   *time.Time
@@ -36,6 +37,7 @@ func NewTask(
 	priority constants.TaskPriority,
 	status constants.TaskStatus,
 	category constants.TaskCategory,
+	sortOrder int,
 ) (*Task, error) {
 	if title == "" {
 		return nil, &domainerrors.TaskEmptyTitleError{}
@@ -65,6 +67,7 @@ func NewTask(
 		category:    category,
 		flows:       []string{},
 		archived:    false,
+		sortOrder:   sortOrder,
 		createdAt:   now,
 		updatedAt:   now,
 	}, nil
@@ -83,6 +86,7 @@ func ReconstructTask(
 	assigneeID *uuid.UUID,
 	flows []string,
 	archived bool,
+	sortOrder int,
 	createdAt time.Time,
 	updatedAt time.Time,
 	deletedAt *time.Time,
@@ -99,6 +103,7 @@ func ReconstructTask(
 		assigneeID:  assigneeID,
 		flows:       flows,
 		archived:    archived,
+		sortOrder:   sortOrder,
 		createdAt:   createdAt,
 		updatedAt:   updatedAt,
 		deletedAt:   deletedAt,
@@ -161,6 +166,10 @@ func (t *Task) UpdatedAt() time.Time {
 
 func (t *Task) DeletedAt() *time.Time {
 	return t.deletedAt
+}
+
+func (t *Task) SortOrder() int {
+	return t.sortOrder
 }
 
 // Setters (business logic)
@@ -261,6 +270,12 @@ func (t *Task) Archive() {
 // Unarchive desarquiva a tarefa
 func (t *Task) Unarchive() {
 	t.archived = false
+	t.updatedAt = time.Now()
+}
+
+// SetSortOrder atualiza a ordem da tarefa
+func (t *Task) SetSortOrder(order int) {
+	t.sortOrder = order
 	t.updatedAt = time.Now()
 }
 

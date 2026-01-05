@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	taskrequest "github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	taskresponse "github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
@@ -11,12 +12,13 @@ import (
 
 // TaskController manipula requisições HTTP para Tasks
 type TaskController struct {
-	createTaskUseCase *tasks.CreateTaskUseCase
-	updateTaskUseCase *tasks.UpdateTaskUseCase
-	deleteTaskUseCase *tasks.DeleteTaskUseCase
-	getTaskUseCase    *tasks.GetTaskUseCase
-	listTasksUseCase  *tasks.ListTasksUseCase
-	mapper            *TaskMapper
+	createTaskUseCase   *tasks.CreateTaskUseCase
+	updateTaskUseCase   *tasks.UpdateTaskUseCase
+	deleteTaskUseCase   *tasks.DeleteTaskUseCase
+	getTaskUseCase      *tasks.GetTaskUseCase
+	listTasksUseCase    *tasks.ListTasksUseCase
+	reorderTasksUseCase *tasks.ReorderTasksUseCase
+	mapper              *TaskMapper
 }
 
 // NewTaskController cria um novo TaskController
@@ -26,14 +28,16 @@ func NewTaskController(
 	deleteTaskUseCase *tasks.DeleteTaskUseCase,
 	getTaskUseCase *tasks.GetTaskUseCase,
 	listTasksUseCase *tasks.ListTasksUseCase,
+	reorderTasksUseCase *tasks.ReorderTasksUseCase,
 ) *TaskController {
 	return &TaskController{
-		createTaskUseCase: createTaskUseCase,
-		updateTaskUseCase: updateTaskUseCase,
-		deleteTaskUseCase: deleteTaskUseCase,
-		getTaskUseCase:    getTaskUseCase,
-		listTasksUseCase:  listTasksUseCase,
-		mapper:            NewTaskMapper(),
+		createTaskUseCase:   createTaskUseCase,
+		updateTaskUseCase:   updateTaskUseCase,
+		deleteTaskUseCase:   deleteTaskUseCase,
+		getTaskUseCase:      getTaskUseCase,
+		listTasksUseCase:    listTasksUseCase,
+		reorderTasksUseCase: reorderTasksUseCase,
+		mapper:              NewTaskMapper(),
 	}
 }
 
@@ -111,6 +115,12 @@ func (c *TaskController) Update(ctx *fiber.Ctx) error {
 		dueDate = req.DueDate
 	}
 
+	// Convert startDate to *string
+	var startDate *string
+	if req.StartDate != nil {
+		startDate = req.StartDate
+	}
+
 	// Convert to *string
 	var category, priority, status *string
 	if req.Category != nil {
@@ -142,7 +152,7 @@ func (c *TaskController) Update(ctx *fiber.Ctx) error {
 		assigneeID,
 		req.Archived,
 		flows,
-		nil, // startDate (not in request)
+		startDate,
 		dueDate,
 	)
 	if err != nil {
@@ -238,4 +248,44 @@ func (c *TaskController) List(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(c.mapper.ToTasksListResponse(tasks, total, page, limit))
+}
+
+// Reorder reordena múltiplas tarefas
+// @Summary Reordenar tarefas
+// @Description Reordena múltiplas tarefas na ordem especificada
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param request body taskrequest.ReorderTasksRequest true "IDs das tarefas na ordem desejada"
+// @Success 204
+// @Failure 400 {object} taskresponse.ErrorResponse
+// @Router /tasks/reorder [post]
+func (c *TaskController) Reorder(ctx *fiber.Ctx) error {
+	var req taskrequest.ReorderTasksRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(taskresponse.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Parse task IDs
+	taskIDs := make([]uuid.UUID, len(req.TaskIDs))
+	for i, idStr := range req.TaskIDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(taskresponse.ErrorResponse{
+				Error: "Invalid task ID",
+			})
+		}
+		taskIDs[i] = id
+	}
+
+	err := c.reorderTasksUseCase.Execute(taskIDs)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(taskresponse.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusNoContent).Send(nil)
 }

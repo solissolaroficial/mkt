@@ -7,9 +7,10 @@ export { default as KanbanBoard } from './ui/KanbanBoard';
 // Hooks
 export { useTasks, useTask } from './hooks/useTasks';
 export { useTaskMutations } from './hooks/useTaskMutations';
+export { usePaginatedTasks } from './hooks/usePaginatedTasks';
 
 // Services
-export { taskService } from './services/taskService';
+export { taskService, subtaskService, commentService } from './services/taskService';
 
 // Types
 export type { 

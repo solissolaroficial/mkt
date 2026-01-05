@@ -23,4 +23,10 @@ type UserGateway interface {
 
 	// ExistsByEmail checks if a user with the given email already exists
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
+
+	// FindByName retrieves a user by their name
+	FindByName(ctx context.Context, name string) (*entity.User, error)
+
+	// ListAll retrieves all active users
+	ListAll(ctx context.Context) ([]*entity.User, error)
 }

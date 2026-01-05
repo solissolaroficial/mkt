@@ -11,6 +11,7 @@ type TaskResponse struct {
 	ID            string                 `json:"id"`
 	Title         string                 `json:"title"`
 	Description   string                 `json:"description"`
+	StartDate     *string                `json:"start_date,omitempty"`
 	Category      constants.TaskCategory `json:"category"`
 	Priority      constants.TaskPriority `json:"priority"`
 	Status        constants.TaskStatus   `json:"status"`

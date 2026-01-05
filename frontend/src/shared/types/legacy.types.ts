@@ -65,50 +65,63 @@ export interface MarketingChannelData {
   [month: string]: ChannelPerformance[];
 }
 
-export type TaskStatus = 'todo' | 'in_progress' | 'done';
-export type TaskPriority = 'alta' | 'media' | 'baixa';
-export type AllowedUser = 'Jackson' | 'Beatriz' | 'Larissa';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskCategory = 'commercial' | 'marketing' | 'training' | 'administrative' | 'support';
+export type TaskFlow = 'backlog' | 'to_do' | 'in_progress' | 'review' | 'done';
+export type NotificationType = 'mention' | 'deadline' | 'system';
+export type AllowedUser = TaskFlow;
 
 export interface Subtask {
   id: string;
+  task_id: string;
   title: string;
-  completed: boolean;
-  assignee?: string;
-  dueDate?: string;
+  description: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  due_date?: string;
+  assignee_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Comment {
   id: string;
-  user: string;
+  task_id: string;
+  user_id: string;
   text: string;
+  timestamp: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  task_id?: string;
+  notification_type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  archived: boolean;
   timestamp: string;
 }
 
 export interface Task {
   id: string;
   title: string;
-  description?: string;
-  startDate?: string; // Added start date
-  dueDate: string; // 'Hoje', 'Amanhã', or specific date
+  description: string;
+  category: TaskCategory;
   priority: TaskPriority;
   status: TaskStatus;
-  category: 'comercial' | 'marketing' | 'admin';
-  assignee?: AllowedUser | string;
-  flows?: string[]; // Added flows support
+  flow: TaskFlow;
+  due_date?: string;
+  assignee_id?: string;
+  flows: TaskFlow[];
+  archived: boolean;
   subtasks?: Subtask[];
   comments?: Comment[];
-  archived?: boolean;
-}
-
-export interface Notification {
-  id: string;
-  type: 'mention' | 'deadline' | 'system';
-  title: string;
-  message: string;
-  timestamp: string; // ISO or relative
-  read: boolean;
-  taskId?: string; // Link to task if applicable
-  archived?: boolean;
+  notifications?: Notification[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PdvPost {

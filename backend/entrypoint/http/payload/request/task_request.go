@@ -10,6 +10,7 @@ import (
 type CreateTaskRequest struct {
 	Title       string                 `json:"title" validate:"required"`
 	Description string                 `json:"description"`
+	StartDate   *string                `json:"start_date"`
 	Category    constants.TaskCategory `json:"category" validate:"required"`
 	Priority    constants.TaskPriority `json:"priority" validate:"required"`
 	Status      constants.TaskStatus   `json:"status"`
@@ -24,6 +25,7 @@ type CreateTaskRequest struct {
 type UpdateTaskRequest struct {
 	Title       string                  `json:"title"`
 	Description string                  `json:"description"`
+	StartDate   *string                 `json:"start_date"`
 	Category    *constants.TaskCategory `json:"category"`
 	Priority    *constants.TaskPriority `json:"priority"`
 	Status      *constants.TaskStatus   `json:"status"`
@@ -143,4 +145,9 @@ func (r *SortOrderRequest) ToSortOrder() (*valueobject.SortOrder, error) {
 // ToPagination converte a requisição para Pagination
 func (r *PaginationRequest) ToPagination() valueobject.Pagination {
 	return valueobject.NewPagination(r.Page, r.Limit)
+}
+
+// ReorderTasksRequest representa a requisição para reordenar tarefas
+type ReorderTasksRequest struct {
+	TaskIDs []string `json:"task_ids" validate:"required"`
 }

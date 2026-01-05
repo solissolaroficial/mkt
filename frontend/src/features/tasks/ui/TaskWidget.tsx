@@ -36,17 +36,17 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
 
   // 1. "Achatar" a estrutura: Extrair todas as subtarefas e tarefas principais pendentes
   const actionableItems = tasks.flatMap(card => {
-    if (card.status === 'done') return [];
+    if (card.status === 'completed') return [];
 
-    const pendingSubtasks = (card.subtasks || []).filter(sub => !sub.completed);
+    const pendingSubtasks = (card.subtasks || []).filter(sub => sub.status !== 'completed');
     
     // Se houver subtarefas pendentes, mostre-as
     if (pendingSubtasks.length > 0) {
       return pendingSubtasks.map(sub => ({
         id: sub.id,
         title: sub.title,
-        dueDate: sub.dueDate || card.dueDate || 'Sem data',
-        assignee: sub.assignee || card.assignee,
+        dueDate: sub.due_date || card.due_date || 'Sem data',
+        assignee: sub.assignee_id || card.assignee_id,
         parentId: card.id,
         parentTitle: card.title, // Contexto é o título do Card Pai
         parentPriority: card.priority,
@@ -58,8 +58,8 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
     return [{
       id: card.id,
       title: card.title,
-      dueDate: card.dueDate || 'Sem data',
-      assignee: card.assignee,
+      dueDate: card.due_date || 'Sem data',
+      assignee: card.assignee_id,
       parentId: card.id,
       parentTitle: card.category.charAt(0).toUpperCase() + card.category.slice(1), // Contexto é a categoria
       parentPriority: card.priority,

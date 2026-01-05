@@ -5,7 +5,13 @@ import (
 )
 
 // Export all task use cases
-func NewUseCases(taskGateway gateway.TaskGateway, subtaskGateway gateway.SubtaskGateway, commentGateway gateway.CommentGateway, notificationGateway gateway.NotificationGateway) *UseCases {
+func NewUseCases(
+	taskGateway gateway.TaskGateway,
+	subtaskGateway gateway.SubtaskGateway,
+	commentGateway gateway.CommentGateway,
+	notificationGateway gateway.NotificationGateway,
+	userGateway gateway.UserGateway,
+) *UseCases {
 	return &UseCases{
 		CreateTask: NewCreateTaskUseCase(taskGateway, subtaskGateway),
 		UpdateTask: NewUpdateTaskUseCase(taskGateway),
@@ -20,7 +26,7 @@ func NewUseCases(taskGateway gateway.TaskGateway, subtaskGateway gateway.Subtask
 			List:   NewListSubtasksUseCase(subtaskGateway),
 		},
 		Comment: CommentUseCases{
-			Create: NewCreateCommentUseCase(commentGateway),
+			Create: NewCreateCommentUseCase(commentGateway, notificationGateway, userGateway),
 			Update: NewUpdateCommentUseCase(commentGateway),
 			Delete: NewDeleteCommentUseCase(commentGateway),
 			Get:    NewGetCommentUseCase(commentGateway),

@@ -250,7 +250,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'youtube',
     title: 'Novos Inscritos no Youtube',
-    slug: 'novos-inscritos-youtube',
+    slug: 'novos_inscritos_no_youtube',
     color: '#FF0000',
     logs: [],
     data: [
@@ -271,7 +271,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'training_reps',
     title: 'Treinamentos Realizados (Reps)',
-    slug: 'treinamentos-realizados-reps',
+    slug: 'treinamentos_realizados_reps',
     color: '#3B82F6',
     logs: [],
     data: [
@@ -292,7 +292,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'training_people',
     title: 'Pessoas Treinadas (Solis)',
-    slug: 'pessoas-treinadas-solis',
+    slug: 'pessoas_treinadas_solis',
     color: '#10B981',
     logs: [],
     data: [
@@ -313,7 +313,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'marketing',
     title: 'Ações de Marketing (Reps)',
-    slug: 'acoes-marketing-reps',
+    slug: 'acoes_de_marketing_reps',
     color: '#8B5CF6',
     logs: [],
     data: [
@@ -334,7 +334,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'inbound',
     title: 'Visitantes Inbound',
-    slug: 'visitantes-inbound',
+    slug: 'visitantes_inbound',
     color: '#F59E0B',
     logs: [],
     data: [
@@ -355,7 +355,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'opportunities',
     title: 'Taxa de Oportunidades',
-    slug: 'taxa-oportunidades',
+    slug: 'taxa_de_oportunidades',
     color: '#EC4899',
     unit: 'number',
     logs: [],
@@ -397,7 +397,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'authority',
     title: 'Autoridade na Internet (DA)',
-    slug: 'autoridade-internet-da',
+    slug: 'autoridade_na_internet_da',
     color: '#6366F1',
     logs: [],
     data: [
@@ -418,7 +418,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'ad_spend',
     title: 'Investimento em Ads (R$)',
-    slug: 'investimento-ads-r',
+    slug: 'investimento_em_ads',
     color: '#85bb65',
     unit: 'currency',
     logs: [],
@@ -460,7 +460,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'cpl',
     title: 'Custo por Lead (CPL)',
-    slug: 'custo-por-lead-cpl',
+    slug: 'custo_por_lead_cpl',
     color: '#eab308',
     unit: 'currency',
     logs: [],
@@ -482,7 +482,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'mql',
     title: 'Leads Qualificados (MQLs)',
-    slug: 'leads-qualificados-mqls',
+    slug: 'leads_qualificados_mqls',
     color: '#06b6d4',
     logs: [],
     data: [
@@ -503,7 +503,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'roas',
     title: 'ROAS (Retorno em Ads)',
-    slug: 'roas-retorno-ads',
+    slug: 'roas_retorno_em_ads',
     color: '#6366f1',
     unit: 'number',
     logs: [],
@@ -534,7 +534,7 @@ const RAW_KPIS: KpiCategory[] = [
   {
     id: 'conversion_rate',
     title: 'Taxa de Conversão Global (%)',
-    slug: 'taxa-conversao-global',
+    slug: 'taxa_de_conversao_global',
     color: '#f43f5e',
     unit: 'percent',
     logs: [],
@@ -579,15 +579,15 @@ export const REP_PROFILES: Record<string, RepresentativeProfile> = {
 };
 
 export const MOCK_TASKS: Task[] = [
-  { 
-    id: '1', 
-    title: 'Analisar relatório de leads de Outubro', 
+  {
+    id: '1',
+    title: 'Analisar relatório de leads de Outubro',
     description: 'Verificar a qualidade dos leads vindos do Google Ads e comparar com o mês anterior. Identificar quais campanhas trouxeram mais MQLs.',
-    dueDate: '2025-11-20', 
-    priority: 'alta', 
-    status: 'todo', 
-    category: 'marketing', 
-    assignee: 'Jackson',
+    due_date: '2025-11-20T12:00:00Z',
+    priority: 'high',
+    status: 'pending',
+    category: 'marketing',
+    assignee_id: 'Jackson',
     flows: ['Jackson'], // Added flows
     archived: false,
     subtasks: [
@@ -599,15 +599,15 @@ export const MOCK_TASKS: Task[] = [
       { id: 'c1', user: 'Beatriz', text: 'Já exportei a base bruta, está na pasta compartilhada.', timestamp: '10:30' }
     ]
   },
-  { 
-    id: '2', 
-    title: 'Reunião com representantes regionais', 
+  {
+    id: '2',
+    title: 'Reunião com representantes regionais',
     description: 'Alinhamento mensal de metas e novidades do portfólio.',
-    dueDate: '2025-11-21',
-    priority: 'media', 
-    status: 'in_progress', 
-    category: 'comercial', 
-    assignee: 'Larissa',
+    due_date: '2025-11-21T12:00:00Z',
+    priority: 'medium',
+    status: 'in_progress',
+    category: 'commercial',
+    assignee_id: 'Larissa',
     flows: ['Larissa'], // Added flows
     archived: false,
     subtasks: [
@@ -616,15 +616,15 @@ export const MOCK_TASKS: Task[] = [
     ],
     comments: []
   },
-  { 
-    id: '3', 
-    title: 'Aprovar criativos da campanha de Black Friday', 
+  {
+    id: '3',
+    title: 'Aprovar criativos da campanha de Black Friday',
     description: 'Revisar textos e imagens para a campanha de fim de ano.',
-    dueDate: '2025-11-21', 
-    priority: 'alta', 
-    status: 'done', 
-    category: 'marketing', 
-    assignee: 'Beatriz',
+    due_date: '2025-11-21T12:00:00Z',
+    priority: 'high',
+    status: 'completed',
+    category: 'marketing',
+    assignee_id: 'Beatriz',
     flows: ['Beatriz', 'Jackson'], // Multi-flow example
     archived: false,
     subtasks: [
@@ -633,74 +633,74 @@ export const MOCK_TASKS: Task[] = [
     ],
     comments: []
   },
-  { 
-    id: '4', 
-    title: 'Atualizar planilha de metas Q4', 
+  {
+    id: '4',
+    title: 'Atualizar planilha de metas Q4',
     description: 'Inserir os dados consolidados do Q3 e projetar Q4.',
-    dueDate: '2025-11-22', 
-    priority: 'alta', 
-    status: 'todo', 
-    category: 'admin', 
-    assignee: 'Jackson',
+    due_date: '2025-11-22T12:00:00Z',
+    priority: 'high',
+    status: 'pending',
+    category: 'administrative',
+    assignee_id: 'Jackson',
     flows: ['Jackson'],
     archived: false,
     subtasks: [],
-    comments: [] 
+    comments: []
   },
-  { 
-    id: '5', 
-    title: 'Feedback trimestral equipe de vendas', 
+  {
+    id: '5',
+    title: 'Feedback trimestral equipe de vendas',
     description: 'Rodada de feedbacks individuais.',
-    dueDate: '2025-11-28', 
-    priority: 'media', 
-    status: 'todo', 
-    category: 'comercial', 
-    assignee: 'Jackson',
+    due_date: '2025-11-28T12:00:00Z',
+    priority: 'medium',
+    status: 'pending',
+    category: 'commercial',
+    assignee_id: 'Jackson',
     flows: ['Jackson'],
     archived: false,
     subtasks: [],
-    comments: [] 
+    comments: []
   },
-  { 
-    id: '6', 
-    title: 'Renovar domínio do site', 
+  {
+    id: '6',
+    title: 'Renovar domínio do site',
     description: 'Pagamento anual do registro.br',
-    dueDate: '2025-11-28', 
-    priority: 'baixa', 
-    status: 'todo', 
-    category: 'admin', 
-    assignee: 'Larissa',
+    due_date: '2025-11-28T12:00:00Z',
+    priority: 'low',
+    status: 'pending',
+    category: 'administrative',
+    assignee_id: 'Larissa',
     flows: ['Larissa'],
     archived: false,
     subtasks: [],
-    comments: [] 
+    comments: []
   },
-  { 
-    id: '7', 
-    title: 'Planejamento estratégico 2026', 
+  {
+    id: '7',
+    title: 'Planejamento estratégico 2026',
     description: 'Início das reuniões de planejamento.',
-    dueDate: '2025-11-28', 
-    priority: 'alta', 
-    status: 'in_progress', 
-    category: 'admin', 
-    assignee: 'Beatriz',
+    due_date: '2025-11-28T12:00:00Z',
+    priority: 'high',
+    status: 'in_progress',
+    category: 'administrative',
+    assignee_id: 'Beatriz',
     flows: ['Beatriz'],
     archived: false,
     subtasks: [
         { id: '7-1', title: 'Definir datas', completed: true, assignee: 'Beatriz', dueDate: '2025-11-21' },
         { id: '7-2', title: 'Reservar sala', completed: false, assignee: 'Larissa', dueDate: '2025-11-22' }
     ],
-    comments: [] 
+    comments: []
   },
   {
     id: '8',
     title: 'teste',
     description: 'teste',
-    dueDate: '2025-12-16',
-    priority: 'media',
-    status: 'todo',
+    due_date: '2025-12-16T12:00:00Z',
+    priority: 'medium',
+    status: 'pending',
     category: 'marketing',
-    assignee: 'Jackson',
+    assignee_id: 'Jackson',
     flows: ['Jackson'],
     subtasks: [],
     comments: [],

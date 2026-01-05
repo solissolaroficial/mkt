@@ -38,6 +38,7 @@ func (m *TaskMapper) ToEntity(model *model.Task) (*entity.Task, error) {
 		model.AssigneeID,
 		flows,
 		model.Archived,
+		model.SortOrder,
 		model.CreatedAt,
 		model.UpdatedAt,
 		nil, // deletedAt não é usado na entity (soft delete no model)
@@ -64,6 +65,7 @@ func (m *TaskMapper) ToModel(entity *entity.Task) (*model.Task, error) {
 		AssigneeID:  entity.AssigneeID(),
 		Flows:       string(flowsJSON),
 		Archived:    entity.Archived(),
+		SortOrder:   entity.SortOrder(),
 		CreatedAt:   entity.CreatedAt(),
 		UpdatedAt:   entity.UpdatedAt(),
 	}, nil

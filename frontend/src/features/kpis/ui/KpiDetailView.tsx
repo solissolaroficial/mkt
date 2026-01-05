@@ -52,20 +52,20 @@ const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 // ADICIONAR: Hook de mutation para salvar dados
 const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
 
+const currentYear = new Date().getFullYear();
+
   useEffect(() => {
       // Set default date to today or start of selected month
       const now = new Date();
       if (selectedMonth !== '---') {
           const monthIdx = MONTHS.indexOf(selectedMonth);
-          const currentYear = now.getFullYear();
           if (monthIdx !== -1) {
               // Construct a date in the selected month
               // If selected month is current month, use today, else 1st of month
               if (monthIdx === now.getMonth()) {
                   setLaunchDate(now.toISOString().split('T')[0]);
               } else {
-                  const year = currentYear;
-                  const dateStr = `${year}-${String(monthIdx + 1).padStart(2, '0')}-01`;
+                  const dateStr = `${currentYear}-${String(monthIdx + 1).padStart(2, '0')}-01`;
                   setLaunchDate(dateStr);
               }
               setLaunchMonth(selectedMonth);
@@ -276,7 +276,6 @@ const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
 
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
-  const currentYear = new Date().getFullYear();
   
   // Get all logs from all MonthlyData (logs are stored at MonthlyData level)
   const allLogs = React.useMemo(() => {

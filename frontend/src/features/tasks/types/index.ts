@@ -2,8 +2,26 @@ import type { Task, Subtask, Comment, AllowedUser } from '@/shared/types';
 
 export type { Task, Subtask, Comment, AllowedUser };
 
+export interface PaginatedTasks {
+  data: Task[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface TaskViewProps {
   initialTasks: Task[];
+  onAddTask?: (task: Task) => void;
+  onUpdateTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
+  onAddSubtask?: (subtask: Subtask) => void;
+  onUpdateSubtask?: (subtaskId: string, data: Partial<Subtask>) => void;
+  onDeleteSubtask?: (subtaskId: string) => void;
+  onAddComment?: (comment: Comment) => void;
+  onUpdateComment?: (commentId: string, data: Partial<Comment>) => void;
+  onDeleteComment?: (commentId: string) => void;
+  onReorderTasks?: (taskIds: string[]) => void;
 }
 
 export interface TaskWidgetProps {
@@ -19,6 +37,12 @@ export interface TaskModalProps {
   onUpdate: (updatedTask: Task) => void;
   onDelete: (taskId: string) => void;
   onMention?: (taskId: string, taskTitle: string) => void;
+  onAddSubtask?: (subtask: Subtask) => void;
+  onUpdateSubtask?: (subtaskId: string, data: Partial<Subtask>) => void;
+  onDeleteSubtask?: (subtaskId: string) => void;
+  onAddComment?: (comment: Comment) => void;
+  onUpdateComment?: (commentId: string, data: Partial<Comment>) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 
 export interface KanbanBoardProps {
@@ -26,6 +50,6 @@ export interface KanbanBoardProps {
   onAddTask: (task: Task) => void;
   onUpdateTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
-  onReorderTasks: (tasks: Task[]) => void;
+  onReorderTasks: (taskIds: string[]) => void;
   onTaskClick: (taskId: string) => void;
 }

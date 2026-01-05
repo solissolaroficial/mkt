@@ -1,11 +1,15 @@
  
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Task, TaskStatus } from '@/shared/types';
-import { 
-  Plus, 
-  CheckCircle2, 
-  Circle, 
-  Loader2, 
+import { generateUUID } from '@/shared/utils/uuid';
+import { useUsers } from '@/features/users/hooks';
+import { useAuth } from '@/features/auth';
+import type { AppUser } from '@/shared/types/user.types';
+import {
+  Plus,
+  CheckCircle2,
+  Circle,
+  Loader2,
   User,
   MessageSquare,
   CheckSquare,
@@ -23,43 +27,80 @@ import {
 } from 'lucide-react';
 import type { KanbanBoardProps } from '../types';
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ 
-  tasks, 
-  onAddTask, 
-  onUpdateTask, 
-  onDeleteTask, 
+const KanbanBoard: React.FC<KanbanBoardProps> = ({
+  tasks,
+  onAddTask,
+  onUpdateTask,
+  onDeleteTask,
   onReorderTasks,
-  onTaskClick 
+  onTaskClick
 }) => {
+  // Update local tasks state when tasks prop changes
+  const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
+
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [viewMode, setViewMode] = useState<'board' | 'gantt'>('board');
   const [ganttScale, setGanttScale] = useState<'day' | 'week' | 'month'>('day');
   
+  // --- LOAD USERS ---
+  const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
+
+  // --- LOAD AUTH USER ---
+  const { user } = useAuth();
+
   // --- FLOWS STATE ---
-  const [flows, setFlows] = useState<string[]>(['Jackson', 'Beatriz', 'Larissa']);
-  const [selectedFlow, setSelectedFlow] = useState<string>('Jackson');
+  const [flows, setFlows] = useState<string[]>([]);
+  const [selectedFlow, setSelectedFlow] = useState<string>('');
   const [isFlowSidebarOpen, setIsFlowSidebarOpen] = useState(true);
   const [isAddingFlow, setIsAddingFlow] = useState(false);
   const [newFlowName, setNewFlowName] = useState('');
+
+  // Carregar flows dos usuários reais
+  useEffect(() => {
+    if (appUsers && appUsers.length > 0) {
+      // Usar IDs de usuários como flows
+      const userIds = appUsers.map(u => u.id);
+      setFlows(userIds);
+      
+      // Usar usuário autenticado se disponível, senão usa o primeiro usuário
+      const authenticatedUserId = user?.id;
+      
+      if (authenticatedUserId && userIds.includes(authenticatedUserId)) {
+        setSelectedFlow(authenticatedUserId);
+      } else {
+        setSelectedFlow(userIds[0]);
+      }
+    }
+  }, [appUsers, user]);
 
   // Drag and Drop State
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [activeDropColumn, setActiveDropColumn] = useState<TaskStatus | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
+  // --- FILTER TASKS ---
+  const visibleTasks = localTasks.filter(t => {
+    const isArchivedMatch = showArchived ? t.archived : !t.archived;
+    const isFlowMatch = t.flows?.includes(selectedFlow as any);
+    return isArchivedMatch && isFlowMatch;
+  });
+
   const columns: { id: TaskStatus; title: string; color: string; hoverColor: string; icon: any }[] = [
-    { id: 'todo', title: 'A Fazer', color: 'bg-gray-800/50', hoverColor: 'bg-gray-800', icon: Circle },
+    { id: 'pending', title: 'A Fazer', color: 'bg-gray-800/50', hoverColor: 'bg-gray-800', icon: Circle },
     { id: 'in_progress', title: 'Em Andamento', color: 'bg-blue-900/10', hoverColor: 'bg-blue-900/20', icon: Loader2 },
-    { id: 'done', title: 'Concluído', color: 'bg-green-900/10', hoverColor: 'bg-green-900/20', icon: CheckCircle2 }
+    { id: 'completed', title: 'Concluído', color: 'bg-green-900/10', hoverColor: 'bg-green-900/20', icon: CheckCircle2 }
   ];
 
-  const draggedTask = tasks.find(t => t.id === draggingTaskId);
+  const draggedTask = localTasks.find(t => t.id === draggingTaskId);
 
   const toggleArchiveTask = (taskId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const task = tasks.find(t => t.id === taskId);
+    const task = localTasks.find(t => t.id === taskId);
     if (task) {
       onUpdateTask({ ...task, archived: !task.archived });
     }
@@ -78,19 +119,29 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
+    // selectedFlow já é um ID, não precisa buscar
+    const assigneeId = selectedFlow;
+    if (!assigneeId) {
+      alert('Nenhum usuário selecionado. Selecione um fluxo na sidebar.');
+      return;
+    }
+
     const newTask: Task = {
-      id: Date.now().toString(),
+      id: generateUUID(),
       title: newTaskTitle,
       description: '',
-      dueDate: new Date().toISOString().split('T')[0], // Default today
-      priority: 'media',
-      status: 'todo',
-      category: 'admin',
-      assignee: 'Jackson',
-      flows: [selectedFlow], // Auto-assign current flow
+      category: 'administrative',
+      priority: 'medium',
+      status: 'pending',
+      flow: selectedFlow as any,
+      due_date: new Date().toISOString(),
+      assignee_id: assigneeId,
+      flows: [selectedFlow as any],
+      archived: false,
       subtasks: [],
       comments: [],
-      archived: false
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     onAddTask(newTask);
@@ -111,8 +162,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const getPriorityColor = (p: string) => {
     switch (p) {
-      case 'alta': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      case 'media': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      case 'high': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+      case 'medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      case 'low': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+      case 'urgent': return 'text-red-400 bg-red-500/10 border-red-500/20';
       default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
     }
   };
@@ -204,15 +257,27 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     e.preventDefault();
     
     if (draggingTaskId) {
-      const draggedTaskItem = tasks.find(t => t.id === draggingTaskId);
+      const draggedTaskItem = localTasks.find(t => t.id === draggingTaskId);
       
       if (draggedTaskItem) {
+        // Update status
         const updatedTask = { ...draggedTaskItem, status: targetStatus };
-        // We only reorder locally relative to other tasks, but since tasks list is global,
-        // we might just update status. 
-        // For simple Kanban, updating status is usually enough unless strict ordering is persisted.
-        // Given complexity, let's just update status for now to satisfy requirement.
         onUpdateTask(updatedTask);
+        
+        // Reorder tasks in the target column
+        const tasksInColumn = visibleTasks
+          .filter(t => t.status === targetStatus)
+          .filter(t => t.id !== draggingTaskId);
+        
+        // Insert task at the correct position
+        if (dropIndex !== null && dropIndex >= 0) {
+          tasksInColumn.splice(dropIndex, 0, draggedTaskItem);
+        } else {
+          tasksInColumn.push(draggedTaskItem);
+        }
+        
+        // Call onReorderTasks with IDs in the correct order
+        onReorderTasks(tasksInColumn.map(t => t.id));
       }
     }
     
@@ -228,8 +293,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
           style={{ height: '140px' }}
         >
             <div className={`w-1 h-8 rounded-r absolute left-0 top-4 ${
-                task.priority === 'alta' ? 'bg-rose-500' : 
-                task.priority === 'media' ? 'bg-amber-500' : 'bg-blue-500'
+                task.priority === 'high' ? 'bg-rose-500' :
+                task.priority === 'medium' ? 'bg-amber-500' :
+                task.priority === 'low' ? 'bg-blue-500' : 'bg-red-500'
             }`}></div>
             <div className="pl-3 opacity-50">
                 <h4 className="text-sm font-medium text-gray-400">{task.title}</h4>
@@ -239,13 +305,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     );
   };
 
-  // --- FILTER TASKS ---
-  const visibleTasks = tasks.filter(t => {
-      const isArchivedMatch = showArchived ? t.archived : !t.archived;
-      const isFlowMatch = t.flows?.includes(selectedFlow);
-      return isArchivedMatch && isFlowMatch;
-  });
-  
   const isToday = (dateStr: string) => {
      if (!dateStr || dateStr === 'Sem data') return false;
      const todayStr = new Date().toISOString().split('T')[0];
@@ -306,14 +365,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       let min = new Date(8640000000000000);
       let max = new Date(-8640000000000000);
       
-      const tasksWithDates = visibleTasks.filter(t => t.startDate || t.dueDate !== 'Sem data');
+      const tasksWithDates = visibleTasks.filter(t => t.due_date && t.due_date !== 'Sem data');
       if (tasksWithDates.length === 0) return { start: new Date(), end: new Date() };
 
       tasksWithDates.forEach(t => {
-          const s = parseDate(t.startDate);
-          const e = parseDate(t.dueDate);
+          const e = parseDate(t.due_date);
           
-          const start = s || (e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date());
+          const start = e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date();
           const end = e || new Date();
 
           if (start < min) min = start;
@@ -352,10 +410,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   }, [ganttRange, ganttScale]);
 
   const getBarStyles = (task: Task) => {
-      const s = parseDate(task.startDate);
-      const e = parseDate(task.dueDate);
+      const e = parseDate(task.due_date);
       
-      const start = s || (e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date()); 
+      const start = e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date();
       const end = e || start;
 
       // Align to Gantt Start
@@ -402,20 +459,25 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             </div>
 
             <div className="space-y-2">
-                {flows.map(flow => (
-                    <button
-                        key={flow}
-                        onClick={() => setSelectedFlow(flow)}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center justify-between group ${
-                            selectedFlow === flow 
-                            ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' 
-                            : 'text-gray-400 hover:bg-[#1a1d24] hover:text-gray-200'
-                        }`}
-                    >
-                        {flow}
-                        {selectedFlow === flow && <div className="w-2 h-2 rounded-full bg-pink-500"></div>}
-                    </button>
-                ))}
+                {flows.map(flowId => {
+                    const user = appUsers?.find(u => u.id === flowId);
+                    if (!user) return null;
+                    
+                    return (
+                        <button
+                            key={flowId}
+                            onClick={() => setSelectedFlow(flowId)}
+                            className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center justify-between group ${
+                                selectedFlow === flowId
+                                ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
+                                : 'text-gray-400 hover:bg-[#1a1d24] hover:text-gray-200'
+                            }`}
+                        >
+                            {user.name}
+                            {selectedFlow === flowId && <div className="w-2 h-2 rounded-full bg-pink-500"></div>}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Add Flow */}
@@ -464,7 +526,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <h1 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
                 Quadro de Tarefas
                 <span className="text-sm font-normal text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">
-                    {selectedFlow}
+                    {appUsers?.find(u => u.id === selectedFlow)?.name || 'Selecione'}
                 </span>
             </h1>
             <p className="text-gray-500">
@@ -579,10 +641,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     <div className={`flex-grow p-3 space-y-3 overflow-y-auto custom-scrollbar transition-colors duration-300 ${isDropTarget ? 'bg-[#1e5144]/10' : 'bg-[#15171c]'}`}>
                     
                     {colTasks.map((task, index) => {
-                        const completedSubtasks = task.subtasks?.filter(s => s.completed).length || 0;
+                        const completedSubtasks = task.subtasks?.filter(s => s.status === 'completed').length || 0;
                         const totalSubtasks = task.subtasks?.length || 0;
                         const isDragging = draggingTaskId === task.id;
-                        const taskIsToday = isToday(task.dueDate);
+                        const taskIsToday = isToday(task.due_date);
                         
                         const showGhostBefore = draggedTask && isDropTarget && dropIndex === index && draggedTask.id !== task.id;
 
@@ -607,8 +669,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             `}
                             >
                             <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r ${
-                                task.priority === 'alta' ? 'bg-rose-500' : 
-                                task.priority === 'media' ? 'bg-amber-500' : 'bg-blue-500'
+                                task.priority === 'high' ? 'bg-rose-500' :
+                                task.priority === 'medium' ? 'bg-amber-500' :
+                                task.priority === 'low' ? 'bg-blue-500' : 'bg-red-500'
                             }`}></div>
 
                             <div className="pl-3">
@@ -617,7 +680,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                     {task.priority}
                                 </span>
                                 
-                                {(task.status === 'done' || showArchived) && (
+                                {(task.status === 'completed' || showArchived) && (
                                     <button 
                                         onClick={(e) => toggleArchiveTask(task.id, e)}
                                         className="text-gray-500 hover:text-emerald-400 p-1 rounded-md hover:bg-gray-800 transition-colors"
@@ -628,7 +691,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 )}
                                 </div>
 
-                                <h4 className={`text-sm font-medium mb-3 leading-snug ${task.status === 'done' && !isDragging ? 'text-gray-500 line-through decoration-gray-600' : 'text-gray-200'}`}>
+                                <h4 className={`text-sm font-medium mb-3 leading-snug ${task.status === 'completed' && !isDragging ? 'text-gray-500 line-through decoration-gray-600' : 'text-gray-200'}`}>
                                 {task.title}
                                 </h4>
 
@@ -636,7 +699,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1.5" title="Responsável">
                                         <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-300 font-bold">
-                                            {task.assignee ? task.assignee[0] : <User size={12} />}
+                                            {isLoadingUsers ? (
+                                                <Loader2 size={12} className="animate-spin" />
+                                            ) : task.assignee_id ? (
+                                                appUsers?.find(u => u.id === task.assignee_id)?.name[0]
+                                            ) : (
+                                                <User size={12} />
+                                            )}
                                         </div>
                                     </div>
                                     {(task.comments?.length || 0) > 0 && (
@@ -653,7 +722,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 
                                 <div className="flex items-center gap-1" title="Prazo">
                                     <CalendarDays size={12} className={taskIsToday ? 'text-amber-500' : ''} />
-                                    <span className={taskIsToday ? 'text-amber-500 font-medium' : ''}>{formatDateDisplay(task.dueDate)}</span>
+                                    <span className={taskIsToday ? 'text-amber-500 font-medium' : ''}>{formatDateDisplay(task.due_date)}</span>
                                 </div>
                                 </div>
                             </div>
@@ -699,7 +768,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                     
                     {/* Task Rows */}
                     <div className="min-w-max">
-                        {visibleTasks.filter(t => t.startDate || t.dueDate !== 'Sem data').map(task => {
+                        {visibleTasks.filter(t => t.due_date && t.due_date !== 'Sem data').map(task => {
                             const { left, width } = getBarStyles(task);
                             return (
                                 <div key={task.id} className="flex border-b border-gray-800 hover:bg-[#20232b]/50 transition-colors group">
@@ -708,7 +777,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                         onClick={() => onTaskClick(task.id)}
                                     >
                                         <div className="truncate pr-2 text-sm text-gray-300 font-medium">{task.title}</div>
-                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === 'alta' ? 'bg-rose-500' : task.priority === 'media' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === 'high' ? 'bg-rose-500' : task.priority === 'medium' ? 'bg-amber-500' : task.priority === 'low' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
                                     </div>
                                     <div className="relative flex-grow h-10" style={{ width: totalWidth }}>
                                         {/* Grid Lines */}
@@ -717,17 +786,26 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                         ))}
                                         
                                         {/* Bar */}
-                                        <div 
+                                        <div
                                             className={`absolute top-2 bottom-2 rounded-md flex items-center px-2 text-xs text-white overflow-hidden whitespace-nowrap shadow-sm cursor-pointer hover:brightness-110 transition-all ${
-                                                task.status === 'done' ? 'bg-emerald-500/50' : 
-                                                task.priority === 'alta' ? 'bg-rose-500/70' : 
-                                                task.priority === 'media' ? 'bg-amber-500/70' : 'bg-blue-500/70'
+                                                task.status === 'completed' ? 'bg-emerald-500/50' :
+                                                task.priority === 'high' ? 'bg-rose-500/70' :
+                                                task.priority === 'medium' ? 'bg-amber-500/70' :
+                                                task.priority === 'low' ? 'bg-blue-500/70' : 'bg-red-500/70'
                                             }`}
                                             style={{ left: `${left}px`, width: `${width}px` }}
                                             onClick={() => onTaskClick(task.id)}
-                                            title={`${task.title} (${formatDateDisplay(task.startDate)} - ${formatDateDisplay(task.dueDate)})`}
+                                            title={`${task.title} - ${formatDateDisplay(task.due_date)}`}
                                         >
-                                            {width > 60 && <span className="drop-shadow-md">{task.assignee}</span>}
+                                            {width > 60 && (
+                                                <span className="drop-shadow-md">
+                                                    {isLoadingUsers ? (
+                                                        <Loader2 size={12} className="animate-spin" />
+                                                    ) : (
+                                                        appUsers?.find(u => u.id === task.assignee_id)?.name
+                                                    )}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

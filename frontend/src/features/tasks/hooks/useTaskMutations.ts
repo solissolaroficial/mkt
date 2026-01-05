@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { taskService } from '../services/taskService';
+import { taskService, subtaskService, commentService } from '../services/taskService';
 import type { Task, Subtask, Comment } from '../types';
 
 export const useTaskMutations = () => {
@@ -10,6 +10,9 @@ export const useTaskMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: (error) => {
+      console.error('Error creating task:', error);
+    },
   });
 
   const updateTask = useMutation({
@@ -18,6 +21,9 @@ export const useTaskMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: (error) => {
+      console.error('Error updating task:', error);
+    },
   });
 
   const deleteTask = useMutation({
@@ -25,44 +31,86 @@ export const useTaskMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
+    onError: (error) => {
+      console.error('Error deleting task:', error);
+    },
   });
 
-  const addSubtask = useMutation({
-    mutationFn: ({ taskId, subtask }: { taskId: string; subtask: Partial<Subtask> }) =>
-      taskService.addSubtask(taskId, subtask),
+  const createSubtask = useMutation({
+    mutationFn: (data: Partial<Subtask>) => subtaskService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
+    },
+    onError: (error) => {
+      console.error('Error creating subtask:', error);
     },
   });
 
   const updateSubtask = useMutation({
-    mutationFn: ({ taskId, subtaskId, data }: { taskId: string; subtaskId: string; data: Partial<Subtask> }) =>
-      taskService.updateSubtask(taskId, subtaskId, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Subtask> }) =>
+      subtaskService.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
+    },
+    onError: (error) => {
+      console.error('Error updating subtask:', error);
     },
   });
 
   const deleteSubtask = useMutation({
-    mutationFn: ({ taskId, subtaskId }: { taskId: string; subtaskId: string }) =>
-      taskService.deleteSubtask(taskId, subtaskId),
+    mutationFn: (id: string) => subtaskService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting subtask:', error);
     },
   });
 
-  const addComment = useMutation({
-    mutationFn: ({ taskId, comment }: { taskId: string; comment: Partial<Comment> }) =>
-      taskService.addComment(taskId, comment),
+  const createComment = useMutation({
+    mutationFn: (data: Partial<Comment>) => commentService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+    onError: (error) => {
+      console.error('Error creating comment:', error);
+    },
+  });
+
+  const updateComment = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Comment> }) =>
+      commentService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+    onError: (error) => {
+      console.error('Error updating comment:', error);
+    },
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: (id: string) => commentService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+    onError: (error) => {
+      console.error('Error deleting comment:', error);
     },
   });
 
   const reorderTasks = useMutation({
-    mutationFn: (tasks: Task[]) => taskService.reorder(tasks),
+    mutationFn: (taskIds: string[]) => taskService.reorder(taskIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+    onError: (error) => {
+      console.error('Error reordering tasks:', error);
     },
   });
 
@@ -70,10 +118,12 @@ export const useTaskMutations = () => {
     createTask,
     updateTask,
     deleteTask,
-    addSubtask,
+    createSubtask,
     updateSubtask,
     deleteSubtask,
-    addComment,
+    createComment,
+    updateComment,
+    deleteComment,
     reorderTasks,
   };
 };

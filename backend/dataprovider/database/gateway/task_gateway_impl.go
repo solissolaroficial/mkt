@@ -521,3 +521,22 @@ func (g *taskGatewayImpl) FindOverdue(pagination *valueobject.Pagination, sortOr
 	entities, err := g.mapper.ToEntityList(taskModelPointers)
 	return entities, total, err
 }
+
+// Reorder atualiza a ordem de múltiplas tarefas
+func (g *taskGatewayImpl) Reorder(taskIDs []uuid.UUID) error {
+	if len(taskIDs) == 0 {
+		return nil
+	}
+
+	// Atualiza o sort_order de cada tarefa
+	for i, taskID := range taskIDs {
+		result := g.db.Model(&model.Task{}).
+			Where("uuid = ?", taskID).
+			Update("sort_order", i)
+		if result.Error != nil {
+			return result.Error
+		}
+	}
+
+	return nil
+}

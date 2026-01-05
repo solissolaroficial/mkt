@@ -1,39 +1,45 @@
  
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Task } from '@/shared/types';
-import { 
-  CheckCircle2, 
-  Circle, 
-  Clock, 
-  Calendar, 
-  Plus, 
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  Calendar,
+  Plus,
   Filter,
   Search,
   MoreVertical
 } from 'lucide-react';
 import type { TaskViewProps } from '../types';
 
-const TaskView: React.FC<TaskViewProps> = ({ initialTasks }) => {
+const TaskView: React.FC<TaskViewProps> = ({ initialTasks, onUpdateTask, onDeleteTask }) => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
+  // Update tasks when initialTasks changes
+  useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
+
   const toggleTask = (id: string) => {
-    setTasks(tasks.map(t => 
-      t.id === id ? { ...t, status: t.status === 'done' ? 'todo' : 'done' } : t
-    ));
+    const task = tasks.find(t => t.id === id);
+    if (task && onUpdateTask) {
+      onUpdateTask({ ...task, status: task.status === 'completed' ? 'pending' : 'completed' });
+    }
   };
 
   const filteredTasks = tasks.filter(t => {
-    if (filter === 'pending') return t.status !== 'done';
-    if (filter === 'completed') return t.status === 'done';
+    if (filter === 'pending') return t.status !== 'completed';
+    if (filter === 'completed') return t.status === 'completed';
     return true;
   });
 
   // Grouping
   const groupedTasks = {
-    'Hoje': filteredTasks.filter(t => t.dueDate === 'Hoje'),
-    'Próximos': filteredTasks.filter(t => t.dueDate !== 'Hoje' && t.dueDate !== 'Amanhã'),
-    'Amanhã': filteredTasks.filter(t => t.dueDate === 'Amanhã'),
+    'Hoje': filteredTasks.filter(t => t.due_date === 'Hoje'),
+    'Próximos': filteredTasks.filter(t => t.due_date !== 'Hoje' && t.due_date !== 'Amanhã'),
+    'Amanhã': filteredTasks.filter(t => t.due_date === 'Amanhã'),
   };
 
   const getPriorityColor = (p: string) => {
@@ -104,7 +110,7 @@ const TaskView: React.FC<TaskViewProps> = ({ initialTasks }) => {
                </h3>
                
                {tasksInGroup.map(task => {
-                 const isCompleted = task.status === 'done';
+                 const isCompleted = task.status === 'completed';
                  return (
                  <div 
                     key={task.id} 
@@ -129,9 +135,9 @@ const TaskView: React.FC<TaskViewProps> = ({ initialTasks }) => {
                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100 capitalize">
                            {task.category}
                          </span>
-                         {task.dueDate !== groupKey && (
+                         {task.due_date !== groupKey && (
                             <span className="text-xs text-gray-400 flex items-center gap-1 ml-auto">
-                                <Clock size={12} /> {task.dueDate}
+                               <Clock size={12} /> {task.due_date}
                             </span>
                          )}
                        </div>

@@ -29,15 +29,25 @@ func (m *TaskMapper) ToTask(req *taskrequest.CreateTaskRequest) (*entity.Task, e
 		dueDate = parsedTime
 	}
 
+	var startDate *time.Time
+	if req.StartDate != nil {
+		parsedTime, err := time.Parse(time.RFC3339, *req.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDate = &parsedTime
+	}
+
 	// NewTask doesn't accept assigneeID, assigneeID is set via SetAssigneeID
 	task, err := entity.NewTask(
 		req.Title,
 		nil, // description (not in request)
-		nil, // startDate (not in request)
+		startDate,
 		dueDate,
 		req.Priority,
 		req.Status,
 		req.Category,
+		0, // sortOrder (default 0)
 	)
 	if err != nil {
 		return nil, err
@@ -76,6 +86,15 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 			return nil, err
 		}
 		dueDate = parsedTime
+	}
+
+	var startDate *time.Time
+	if req.StartDate != nil {
+		parsedTime, err := time.Parse(time.RFC3339, *req.StartDate)
+		if err != nil {
+			return nil, err
+		}
+		startDate = &parsedTime
 	}
 
 	var assigneeID *uuid.UUID
@@ -127,7 +146,7 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 		taskID,
 		req.Title,
 		description,
-		nil, // startDate (not in request)
+		startDate,
 		dueDate,
 		priority,
 		status,
@@ -135,6 +154,7 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 		assigneeID,
 		flows,
 		archived,
+		0,          // sortOrder (default 0)
 		time.Now(), // updatedAt
 		time.Now(), // createdAt
 		nil,        // deletedAt
@@ -153,6 +173,7 @@ func (m *TaskMapper) ToTaskResponse(task *entity.Task) taskresponse.TaskResponse
 		ID:            task.ID().String(),
 		Title:         task.Title(),
 		Description:   formatStringPtr(task.Description()),
+		StartDate:     formatTimePtr(task.StartDate()),
 		Category:      task.Category(),
 		Priority:      task.Priority(),
 		Status:        task.Status(),
