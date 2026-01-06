@@ -21,6 +21,7 @@ func RunMigrations(db *gorm.DB) error {
 		&model.Subtask{},
 		&model.Comment{},
 		&model.Notification{},
+		&model.CalendarPostModel{},
 	)
 
 	if err != nil {

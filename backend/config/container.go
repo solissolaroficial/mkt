@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
+	"github.com/seu-usuario/solis-backend/application/usecase/calendar"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	"github.com/seu-usuario/solis-backend/application/usecase/users"
@@ -41,6 +42,7 @@ type Container struct {
 	SubtaskGateway      gateway.SubtaskGateway
 	CommentGateway      gateway.CommentGateway
 	NotificationGateway gateway.NotificationGateway
+	CalendarPostGateway gateway.CalendarPostGateway
 
 	// Seeders
 	UserSeeder *seeders.UserSeeder
@@ -51,6 +53,15 @@ type Container struct {
 
 	// Use Cases - Users
 	ListUsersUseCase *users.ListUsersUseCase
+
+	// Use Cases - Calendar
+	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
+	GetCalendarPostUseCase               *calendar.GetCalendarPostUseCase
+	UpdateCalendarPostUseCase            *calendar.UpdateCalendarPostUseCase
+	UpdateCalendarPostStatusUseCase      *calendar.UpdateCalendarPostStatusUseCase
+	ConfirmCalendarPostPublishingUseCase *calendar.ConfirmCalendarPostPublishingUseCase
+	DeleteCalendarPostUseCase            *calendar.DeleteCalendarPostUseCase
+	ListCalendarPostsUseCase             *calendar.ListCalendarPostsUseCase
 
 	// Use Cases - KPIs
 	CreateKpiUseCase         *kpis.CreateKpiUseCase
@@ -95,6 +106,7 @@ type Container struct {
 	CommentController      *controller.CommentController
 	NotificationController *controller.NotificationController
 	UserController         *controller.UserController
+	CalendarPostController *controller.CalendarPostController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -127,6 +139,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	subtaskGateway := dbgateway.NewSubtaskGateway(db)
 	commentGateway := dbgateway.NewCommentGateway(db)
 	notificationGateway := dbgateway.NewNotificationGateway(db)
+	calendarPostGateway := dbgateway.NewCalendarPostGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -183,6 +196,15 @@ func NewContainer(cfg *Config) (*Container, error) {
 	// User Use Cases
 	listUsersUseCase := users.NewListUsersUseCase(userGateway)
 
+	// Calendar Use Cases
+	createCalendarPostUseCase := calendar.NewCreateCalendarPost(calendarPostGateway)
+	getCalendarPostUseCase := calendar.NewGetCalendarPost(calendarPostGateway)
+	updateCalendarPostUseCase := calendar.NewUpdateCalendarPost(calendarPostGateway)
+	updateCalendarPostStatusUseCase := calendar.NewUpdateCalendarPostStatus(calendarPostGateway)
+	confirmCalendarPostPublishingUseCase := calendar.NewConfirmCalendarPostPublishing(calendarPostGateway)
+	deleteCalendarPostUseCase := calendar.NewDeleteCalendarPost(calendarPostGateway)
+	listCalendarPostsUseCase := calendar.NewListCalendarPosts(calendarPostGateway)
+
 	log.Println("✅ Use cases initialized")
 
 	//5. Controllers (dependem de use cases)
@@ -231,6 +253,16 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	userController := controller.NewUserController(listUsersUseCase)
 
+	calendarPostController := controller.NewCalendarPostController(
+		createCalendarPostUseCase,
+		getCalendarPostUseCase,
+		updateCalendarPostUseCase,
+		updateCalendarPostStatusUseCase,
+		confirmCalendarPostPublishingUseCase,
+		deleteCalendarPostUseCase,
+		listCalendarPostsUseCase,
+	)
+
 	log.Println("✅ Controllers initialized")
 	// 6. Middlewares (dependem de services)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -239,59 +271,68 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	// 7. Retornar Container
 	return &Container{
-		DB:                                 db,
-		HasherService:                      hasherService,
-		JwtService:                         jwtService,
-		UserGateway:                        userGateway,
-		KpiGateway:                         kpiGateway,
-		MonthlyDataGateway:                 monthlyDataGateway,
-		TaskGateway:                        taskGateway,
-		SubtaskGateway:                     subtaskGateway,
-		CommentGateway:                     commentGateway,
-		NotificationGateway:                notificationGateway,
-		UserSeeder:                         userSeeder,
-		KpiSeeder:                          kpiSeeder,
-		LoginUseCase:                       loginUseCase,
-		CreateKpiUseCase:                   createKpiUseCase,
-		GetKpiUseCase:                      getKpiUseCase,
-		ListKpisUseCase:                    listKpisUseCase,
-		GetKpisBySlugsUseCase:              getKpisBySlugsUseCase,
-		UpdateKpiUseCase:                   updateKpiUseCase,
-		DeleteKpiUseCase:                   deleteKpiUseCase,
-		UpdateMonthlyDataUseCase:           updateMonthlyDataUseCase,
-		CreateTaskUseCase:                  createTaskUseCase,
-		UpdateTaskUseCase:                  updateTaskUseCase,
-		DeleteTaskUseCase:                  deleteTaskUseCase,
-		GetTaskUseCase:                     getTaskUseCase,
-		ListTasksUseCase:                   listTasksUseCase,
-		CreateSubtaskUseCase:               createSubtaskUseCase,
-		UpdateSubtaskUseCase:               updateSubtaskUseCase,
-		DeleteSubtaskUseCase:               deleteSubtaskUseCase,
-		GetSubtaskUseCase:                  getSubtaskUseCase,
-		ListSubtasksUseCase:                listSubtasksUseCase,
-		CreateCommentUseCase:               createCommentUseCase,
-		UpdateCommentUseCase:               updateCommentUseCase,
-		DeleteCommentUseCase:               deleteCommentUseCase,
-		GetCommentUseCase:                  getCommentUseCase,
-		ListCommentsUseCase:                listCommentsUseCase,
-		CreateNotificationUseCase:          createNotificationUseCase,
-		UpdateNotificationUseCase:          updateNotificationUseCase,
-		DeleteNotificationUseCase:          deleteNotificationUseCase,
-		GetNotificationUseCase:             getNotificationUseCase,
-		ListNotificationsUseCase:           listNotificationsUseCase,
-		MarkAsReadNotificationUseCase:      markAsReadNotificationUseCase,
-		MarkAllAsReadNotificationsUseCase:  markAllAsReadNotificationsUseCase,
-		DeleteNotificationsByTaskIDUseCase: deleteNotificationsByTaskIDUseCase,
-		ListUsersUseCase:                   listUsersUseCase,
-		AuthController:                     authController,
-		KpiController:                      kpiController,
-		TaskController:                     taskController,
-		SubtaskController:                  subtaskController,
-		CommentController:                  commentController,
-		NotificationController:             notificationController,
-		UserController:                     userController,
-		AuthMiddleware:                     authMiddleware,
-		CorsMiddleware:                     corsMiddleware,
+		DB:                                   db,
+		HasherService:                        hasherService,
+		JwtService:                           jwtService,
+		UserGateway:                          userGateway,
+		KpiGateway:                           kpiGateway,
+		MonthlyDataGateway:                   monthlyDataGateway,
+		TaskGateway:                          taskGateway,
+		SubtaskGateway:                       subtaskGateway,
+		CommentGateway:                       commentGateway,
+		NotificationGateway:                  notificationGateway,
+		CalendarPostGateway:                  calendarPostGateway,
+		UserSeeder:                           userSeeder,
+		KpiSeeder:                            kpiSeeder,
+		LoginUseCase:                         loginUseCase,
+		CreateKpiUseCase:                     createKpiUseCase,
+		GetKpiUseCase:                        getKpiUseCase,
+		ListKpisUseCase:                      listKpisUseCase,
+		GetKpisBySlugsUseCase:                getKpisBySlugsUseCase,
+		UpdateKpiUseCase:                     updateKpiUseCase,
+		DeleteKpiUseCase:                     deleteKpiUseCase,
+		UpdateMonthlyDataUseCase:             updateMonthlyDataUseCase,
+		CreateTaskUseCase:                    createTaskUseCase,
+		UpdateTaskUseCase:                    updateTaskUseCase,
+		DeleteTaskUseCase:                    deleteTaskUseCase,
+		GetTaskUseCase:                       getTaskUseCase,
+		ListTasksUseCase:                     listTasksUseCase,
+		CreateSubtaskUseCase:                 createSubtaskUseCase,
+		UpdateSubtaskUseCase:                 updateSubtaskUseCase,
+		DeleteSubtaskUseCase:                 deleteSubtaskUseCase,
+		GetSubtaskUseCase:                    getSubtaskUseCase,
+		ListSubtasksUseCase:                  listSubtasksUseCase,
+		CreateCommentUseCase:                 createCommentUseCase,
+		UpdateCommentUseCase:                 updateCommentUseCase,
+		DeleteCommentUseCase:                 deleteCommentUseCase,
+		GetCommentUseCase:                    getCommentUseCase,
+		ListCommentsUseCase:                  listCommentsUseCase,
+		CreateNotificationUseCase:            createNotificationUseCase,
+		UpdateNotificationUseCase:            updateNotificationUseCase,
+		DeleteNotificationUseCase:            deleteNotificationUseCase,
+		GetNotificationUseCase:               getNotificationUseCase,
+		ListNotificationsUseCase:             listNotificationsUseCase,
+		MarkAsReadNotificationUseCase:        markAsReadNotificationUseCase,
+		MarkAllAsReadNotificationsUseCase:    markAllAsReadNotificationsUseCase,
+		DeleteNotificationsByTaskIDUseCase:   deleteNotificationsByTaskIDUseCase,
+		ListUsersUseCase:                     listUsersUseCase,
+		CreateCalendarPostUseCase:            createCalendarPostUseCase,
+		GetCalendarPostUseCase:               getCalendarPostUseCase,
+		UpdateCalendarPostUseCase:            updateCalendarPostUseCase,
+		UpdateCalendarPostStatusUseCase:      updateCalendarPostStatusUseCase,
+		ConfirmCalendarPostPublishingUseCase: confirmCalendarPostPublishingUseCase,
+		DeleteCalendarPostUseCase:            deleteCalendarPostUseCase,
+		ListCalendarPostsUseCase:             listCalendarPostsUseCase,
+		AuthController:                       authController,
+		KpiController:                        kpiController,
+		TaskController:                       taskController,
+		SubtaskController:                    subtaskController,
+		CommentController:                    commentController,
+		NotificationController:               notificationController,
+		UserController:                       userController,
+		CalendarPostController:               calendarPostController,
+		AuthMiddleware:                       authMiddleware,
+		CorsMiddleware:                       corsMiddleware,
 	}, nil
 }
 
@@ -353,6 +394,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		CommentController:      c.CommentController,
 		NotificationController: c.NotificationController,
 		UserController:         c.UserController,
+		CalendarPostController: c.CalendarPostController,
 	}
 }
 
