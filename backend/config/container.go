@@ -13,6 +13,7 @@ import (
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
 	"github.com/seu-usuario/solis-backend/application/usecase/calendar"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
+	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	"github.com/seu-usuario/solis-backend/application/usecase/users"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -43,6 +44,8 @@ type Container struct {
 	CommentGateway      gateway.CommentGateway
 	NotificationGateway gateway.NotificationGateway
 	CalendarPostGateway gateway.CalendarPostGateway
+	PdvPostGateway      gateway.PdvPostGateway
+	RecurrentPdvGateway gateway.RecurrentPdvGateway
 
 	// Seeders
 	UserSeeder *seeders.UserSeeder
@@ -107,6 +110,7 @@ type Container struct {
 	NotificationController *controller.NotificationController
 	UserController         *controller.UserController
 	CalendarPostController *controller.CalendarPostController
+	PdvController          *controller.PdvController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -205,6 +209,25 @@ func NewContainer(cfg *Config) (*Container, error) {
 	deleteCalendarPostUseCase := calendar.NewDeleteCalendarPost(calendarPostGateway)
 	listCalendarPostsUseCase := calendar.NewListCalendarPosts(calendarPostGateway)
 
+	// PDV Gateways
+	pdvPostGateway := dbgateway.NewPdvPostGateway(db)
+	recurrentPdvGateway := dbgateway.NewRecurrentPdvGateway(db)
+
+	// PDV Use Cases - PdvPost
+	createPdvPostUseCase := usecasepdv.NewCreatePdvPost(pdvPostGateway)
+	listPdvPostsUseCase := usecasepdv.NewListPdvPosts(pdvPostGateway)
+	getPdvPostUseCase := usecasepdv.NewGetPdvPost(pdvPostGateway)
+	updatePdvPostUseCase := usecasepdv.NewUpdatePdvPost(pdvPostGateway)
+	updatePdvPostStatusUseCase := usecasepdv.NewUpdatePdvPostStatus(pdvPostGateway)
+	deletePdvPostUseCase := usecasepdv.NewDeletePdvPost(pdvPostGateway)
+
+	// PDV Use Cases - RecurrentPdv
+	createRecurrentPdvUseCase := usecasepdv.NewCreateRecurrentPdv(recurrentPdvGateway)
+	getRecurrentPdvUseCase := usecasepdv.NewGetRecurrentPdv(recurrentPdvGateway)
+	updateRecurrentPdvUseCase := usecasepdv.NewUpdateRecurrentPdv(recurrentPdvGateway)
+	listRecurrentPdvsUseCase := usecasepdv.NewListRecurrentPdvs(recurrentPdvGateway)
+	deleteRecurrentPdvUseCase := usecasepdv.NewDeleteRecurrentPdv(recurrentPdvGateway)
+
 	log.Println("✅ Use cases initialized")
 
 	//5. Controllers (dependem de use cases)
@@ -263,6 +286,20 @@ func NewContainer(cfg *Config) (*Container, error) {
 		listCalendarPostsUseCase,
 	)
 
+	pdvController := controller.NewPdvController(
+		createPdvPostUseCase,
+		listPdvPostsUseCase,
+		getPdvPostUseCase,
+		updatePdvPostUseCase,
+		updatePdvPostStatusUseCase,
+		deletePdvPostUseCase,
+		createRecurrentPdvUseCase,
+		getRecurrentPdvUseCase,
+		updateRecurrentPdvUseCase,
+		listRecurrentPdvsUseCase,
+		deleteRecurrentPdvUseCase,
+	)
+
 	log.Println("✅ Controllers initialized")
 	// 6. Middlewares (dependem de services)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
@@ -282,6 +319,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 		CommentGateway:                       commentGateway,
 		NotificationGateway:                  notificationGateway,
 		CalendarPostGateway:                  calendarPostGateway,
+		PdvPostGateway:                       pdvPostGateway,
+		RecurrentPdvGateway:                  recurrentPdvGateway,
 		UserSeeder:                           userSeeder,
 		KpiSeeder:                            kpiSeeder,
 		LoginUseCase:                         loginUseCase,
@@ -331,6 +370,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		NotificationController:               notificationController,
 		UserController:                       userController,
 		CalendarPostController:               calendarPostController,
+		PdvController:                        pdvController,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -395,6 +435,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		NotificationController: c.NotificationController,
 		UserController:         c.UserController,
 		CalendarPostController: c.CalendarPostController,
+		PdvController:          c.PdvController,
 	}
 }
 
