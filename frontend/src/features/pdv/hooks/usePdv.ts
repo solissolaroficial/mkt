@@ -1,75 +1,57 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { pdvService } from '../services/pdvService';
-import { MOCK_PDV_POSTS, RECURRENT_PDVS, REP_NAMES } from '@/shared/utils/legacy.constants';
-import type { PdvPost, RecurrentPdv } from '@/shared/types';
+import type { PdvPostFilters, RecurrentPdvFilters } from '../../../shared/types/legacy.types';
 
-/**
- * Hook to get all PDV posts
- */
-export const usePdvPosts = () => {
+// Hook para lista de posts PDV (com filtros)
+export const usePdvPosts = (params?: PdvPostFilters) => {
   return useQuery({
-    queryKey: ['pdv', 'posts'],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      return MOCK_PDV_POSTS;
-    },
+    queryKey: ['pdv-posts', params],
+    queryFn: () => pdvService.list(params),
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+  });
+};
+
+// Hook para post PDV individual
+export const usePdvPost = (id: string) => {
+  return useQuery({
+    queryKey: ['pdv-post', id],
+    queryFn: () => pdvService.getById(id),
+    enabled: !!id,
     staleTime: 1000 * 60 * 5,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
   });
 };
 
-/**
- * Hook to get all recurrent PDVs
- */
-export const useRecurrentPdvs = () => {
+// Hook para lista de PDVs recorrentes (com filtros)
+export const useRecurrentPdvs = (params?: RecurrentPdvFilters) => {
   return useQuery({
-    queryKey: ['pdv', 'recurrent'],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      return RECURRENT_PDVS;
-    },
+    queryKey: ['recurrent-pdvs', params],
+    queryFn: () => pdvService.listRecurrent(params),
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+  });
+};
+
+// Hook para PDV recorrente individual
+export const useRecurrentPdv = (id: string) => {
+  return useQuery({
+    queryKey: ['recurrent-pdv', id],
+    queryFn: () => pdvService.getRecurrentById(id),
+    enabled: !!id,
     staleTime: 1000 * 60 * 10,
-  });
-};
-
-/**
- * Hook to create a new PDV post
- */
-export const useCreatePdvPost = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: pdvService.createPost,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pdv', 'posts'] });
-    },
-  });
-};
-
-/**
- * Hook to create a new recurrent PDV
- */
-export const useCreateRecurrentPdv = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: pdvService.createRecurrentPdv,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pdv', 'recurrent'] });
-    },
-  });
-};
-
-/**
- * Hook to update PDV post status
- */
-export const useUpdatePdvPostStatus = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'verified' | 'pending' }) => 
-      pdvService.updatePostStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pdv', 'posts'] });
-    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
   });
 };

@@ -166,7 +166,8 @@ func (c *PdvController) UpdatePdvPostStatus(ctx *fiber.Ctx) error {
 		User:      user,
 	}
 
-	if err := c.updatePdvPostStatusUseCase.Execute(ctx.Context(), input); err != nil {
+	post, err := c.updatePdvPostStatusUseCase.Execute(ctx.Context(), input)
+	if err != nil {
 		if errors.Is(err, domainErrors.ErrPdvPostNotFound) {
 			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
 				Error: "PDV post not found",
@@ -179,9 +180,7 @@ func (c *PdvController) UpdatePdvPostStatus(ctx *fiber.Ctx) error {
 	}
 
 	log.Printf("PDV post status updated successfully: %s to %s by user %s", id, req.Status, user)
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Status updated successfully",
-	})
+	return ctx.JSON(c.mapper.ToPdvPostResponse(post))
 }
 
 // CreateRecurrentPdv cria um novo PDV recorrente

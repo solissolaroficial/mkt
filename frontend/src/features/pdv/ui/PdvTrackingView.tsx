@@ -1,44 +1,44 @@
 import React, { useState } from 'react';
 import type { PdvPost, RecurrentPdv } from '@/shared/types';
-import { 
-  Plus, 
-  Filter, 
-  CalendarDays, 
-  Instagram, 
-  Facebook, 
-  Linkedin, 
-  Link as LinkIcon, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Plus,
+  Filter,
+  CalendarDays,
+  Instagram,
+  Facebook,
+  Linkedin,
+  Link as LinkIcon,
+  CheckCircle2,
+  Clock,
   ExternalLink,
   List,
   AlertCircle,
-  MessageCircle,
   MapPin,
   Store,
   Save
 } from 'lucide-react';
-import { usePdvPosts, useRecurrentPdvs, useCreatePdvPost, useCreateRecurrentPdv, useUpdatePdvPostStatus } from '../hooks/usePdv';
+import { usePdvPosts, useRecurrentPdvs, usePdvMutations } from '../hooks';
 import { REP_NAMES } from '@/shared/utils/legacy.constants';
 import type { PdvTab, PdvPlatform } from '../types';
 
+// WhatsApp Icon Component
 const WhatsAppIcon = ({ size = 14, className = "" }: { size?: number, className?: string }) => (
-    <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        width={size} 
-        height={size} 
-        viewBox="0 0 24 24" 
-        fill="currentColor" 
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="currentColor"
         className={className}
     >
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.506.709.312 1.262.497 1.696.635.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.89-5.335 11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.506.709.312 1.262.497 1.696.635.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
     </svg>
 );
 
 const PdvTrackingView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PdvTab>('posts');
-  const { data: posts = [] } = usePdvPosts();
-  const { data: pdvList = [] } = useRecurrentPdvs();
+  const { data: postsData = { posts: [], meta: { total: 0, page: 1, limit: 10, total_pages: 1 } } } = usePdvPosts();
+  const { data: pdvListData = { pdvs: [], meta: { total: 0, page: 1, limit: 10, total_pages: 1 } } } = useRecurrentPdvs();
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingPdv, setIsAddingPdv] = useState(false);
   
@@ -59,23 +59,18 @@ const PdvTrackingView: React.FC = () => {
   const [newPdvRep, setNewPdvRep] = useState(REP_NAMES[0]);
   const [newPdvCity, setNewPdvCity] = useState('');
   
-  const createPdvPostMutation = useCreatePdvPost();
-  const createRecurrentPdvMutation = useCreateRecurrentPdv();
-  const updatePdvPostStatusMutation = useUpdatePdvPostStatus();
+  const { createPost, createRecurrent } = usePdvMutations();
   
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newPost: PdvPost = {
-        id: Date.now().toString(),
-        repName: newPostRep,
-        pdvName: newPostPdv,
-        postDate: newPostDate,
-        month: 'NOV', // Defaulting to NOV for new entries in this context
-        platform: newPostPlatform,
-        link: newPostLink,
-        status: 'pending'
+    const newPost = {
+      rep_name: newPostRep,
+      pdv_name: newPostPdv,
+      post_date: newPostDate,
+      platform: newPostPlatform,
+      link: newPostLink || undefined,
     };
-    createPdvPostMutation.mutate(newPost, {
+    createPost(newPost, {
       onSuccess: () => {
         setIsAdding(false);
         // Reset form
@@ -90,14 +85,13 @@ const PdvTrackingView: React.FC = () => {
     e.preventDefault();
     if(!newPdvName) return;
     
-    const newPdv: RecurrentPdv = {
-        id: Date.now().toString(),
-        name: newPdvName,
-        repName: newPdvRep,
-        city: newPdvCity
+    const newPdv = {
+      name: newPdvName,
+      rep_name: newPdvRep,
+      city: newPdvCity || undefined,
     };
     
-    createRecurrentPdvMutation.mutate(newPdv, {
+    createRecurrent(newPdv, {
       onSuccess: () => {
         setIsAddingPdv(false);
         setNewPdvName('');
@@ -115,8 +109,8 @@ const PdvTrackingView: React.FC = () => {
     } catch (error) {}
   };
   
-  const filteredPosts = posts.filter(post => {
-      const matchRep = selectedRep === 'Todos' || post.repName === selectedRep;
+  const filteredPosts = postsData.posts.filter(post => {
+      const matchRep = selectedRep === 'Todos' || post.rep_name === selectedRep;
       const matchMonth = selectedMonth === 'Todos' || post.month === selectedMonth;
       return matchRep && matchMonth;
   });
@@ -126,6 +120,8 @@ const PdvTrackingView: React.FC = () => {
           case 'instagram': return <Instagram size={16} className="text-pink-400" />;
           case 'facebook': return <Facebook size={16} className="text-blue-400" />;
           case 'linkedin': return <Linkedin size={16} className="text-blue-600" />;
+          case 'youtube': return <LinkIcon size={16} className="text-red-500" />;
+          case 'tiktok': return <LinkIcon size={16} className="text-gray-400" />;
           default: return <LinkIcon size={16} className="text-gray-400" />;
       }
   };
@@ -282,6 +278,7 @@ const PdvTrackingView: React.FC = () => {
                                         <option value="instagram">Instagram</option>
                                         <option value="facebook">Facebook</option>
                                         <option value="linkedin">LinkedIn</option>
+                                        <option value="youtube">YouTube</option>
                                         <option value="tiktok">TikTok</option>
                                     </select>
                                 </div>
@@ -344,15 +341,15 @@ const PdvTrackingView: React.FC = () => {
                                 ) : (
                                     filteredPosts.map(post => {
                                         // Lookup City info if available in Recurrent list, otherwise empty
-                                        const city = pdvList.find(p => p.name === post.pdvName)?.city || '-';
+                                        const city = pdvListData.pdvs.find(p => p.name === post.pdv_name)?.city || '-';
                                          
                                         return (
                                             <tr key={post.id} className="hover:bg-[#20232b] transition-colors">
                                                 <td className="px-6 py-4 font-medium text-gray-200">
-                                                    {post.pdvName}
+                                                    {post.pdv_name}
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-400">
-                                                    {post.repName}
+                                                    {post.rep_name}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="flex items-center gap-1.5 bg-[#0f1115] px-2 py-1 rounded w-fit text-xs border border-gray-800 text-gray-300">
@@ -361,7 +358,7 @@ const PdvTrackingView: React.FC = () => {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-400">
-                                                    {post.postDate.split('-').reverse().join('/')}
+                                                    {post.post_date.split('-').reverse().join('/')}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2 text-gray-300">
@@ -370,9 +367,21 @@ const PdvTrackingView: React.FC = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    {post.status === 'verified' ? (
+                                                    {post.status === 'approved' ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
-                                                                    <CheckCircle2 size={12} /> Verificado
+                                                                    <CheckCircle2 size={12} /> Aprovado
+                                                        </span>
+                                                    ) : post.status === 'rejected' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-medium">
+                                                                    <Clock size={12} /> Rejeitado
+                                                        </span>
+                                                    ) : post.status === 'published' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-medium">
+                                                                    <CheckCircle2 size={12} /> Publicado
+                                                        </span>
+                                                    ) : post.status === 'cancelled' ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-500/10 text-gray-400 border border-gray-500/20 text-xs font-medium">
+                                                                    <Clock size={12} /> Cancelado
                                                         </span>
                                                     ) : (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-medium">
@@ -484,13 +493,13 @@ const PdvTrackingView: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-800">
-                                {pdvList.filter(pdv => !posts.some(p => 
-                                    p.pdvName.toLowerCase().includes(pdv.name.toLowerCase()) && 
+                                {pdvListData.pdvs.filter(pdv => !postsData.posts.some(p =>
+                                    p.pdv_name.toLowerCase().includes(pdv.name.toLowerCase()) &&
                                     p.month === missingMonth
                                 )).map((pdv) => (
                                     <tr key={pdv.id} className="hover:bg-[#20232b] transition-colors group">
                                         <td className="px-6 py-4 text-gray-200 font-medium">{pdv.name}</td>
-                                        <td className="px-6 py-4 text-gray-300">{pdv.repName}</td>
+                                        <td className="px-6 py-4 text-gray-300">{pdv.rep_name}</td>
                                         <td className="px-6 py-4">
                                             <span className="flex items-center gap-1.5 bg-[#0f1115] px-2 py-1 rounded w-fit text-xs border border-gray-800 text-gray-300">
                                                 <MapPin size={10} className="text-gray-500" />

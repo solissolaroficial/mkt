@@ -1,9 +1,15 @@
 export { default as PdvTrackingView } from './ui/PdvTrackingView';
 
-export { usePdvPosts, useRecurrentPdvs, useCreatePdvPost, useCreateRecurrentPdv, useUpdatePdvPostStatus } from './hooks/usePdv';
+export {
+  usePdvPosts,
+  usePdvPost,
+  useRecurrentPdvs,
+  useRecurrentPdv,
+  usePdvMutations
+} from './hooks';
 
-export type { 
-  PdvPost, 
+export type {
+  PdvPost,
   RecurrentPdv,
   PdvTab,
   PdvPlatform

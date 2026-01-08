@@ -3,6 +3,7 @@ package pdv
 import (
 	"context"
 
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -26,24 +27,28 @@ func NewUpdatePdvPostStatus(gateway gateway.PdvPostGateway) *UpdatePdvPostStatus
 }
 
 // Execute atualiza o status de um post de PDV
-func (uc *UpdatePdvPostStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) error {
+func (uc *UpdatePdvPostStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) (*entity.PdvPost, error) {
 	// Buscar post existente
 	post, err := uc.gateway.FindByID(ctx, input.PostID)
 	if err != nil {
-		return domainErrors.ErrPdvPostNotFound
+		return nil, domainErrors.ErrPdvPostNotFound
 	}
 
 	// Validar e converter status
 	newStatus, err := valueobject.NewPdvStatus(input.NewStatus)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Atualizar status usando método da entity
 	if err := post.UpdateStatus(newStatus); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Salvar via gateway
-	return uc.gateway.Update(ctx, post)
+	if err := uc.gateway.Update(ctx, post); err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }

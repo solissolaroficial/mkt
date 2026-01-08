@@ -104,7 +104,6 @@ export interface Notification {
   archived: boolean;
   timestamp: string;
 }
-
 export interface Task {
   id: string;
   title: string;
@@ -126,23 +125,113 @@ export interface Task {
 
 export interface PdvPost {
   id: string;
-  repName: string;
-  pdvName: string;
-  postDate: string; // YYYY-MM-DD
-  month: string;
-  platform: 'instagram' | 'facebook' | 'linkedin' | 'tiktok';
-  link: string;
-  proofUrl?: string; // URL da imagem ou anexo
-  status: 'verified' | 'pending';
+  rep_name: string;
+  pdv_name: string;
+  post_date: string; // YYYY-MM-DD
+  month: string; // JAN, FEV, MAR, ABR, MAI, JUN, JUL, AGO, SET, OUT, NOV, DEZ
+  platform: 'instagram' | 'facebook' | 'linkedin' | 'youtube' | 'tiktok';
+  link?: string; // Opcional, max 500 caracteres
+  proof_url?: string; // Opcional, max 500 caracteres
+  status: 'pending' | 'approved' | 'rejected' | 'published' | 'cancelled';
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
 }
 
 export interface RecurrentPdv {
     id: string;
     name: string;
-    repName: string;
+    rep_name: string;
     city?: string;
     followers?: number;
-    instagramProfile?: string;
+    instagram_profile?: string;
+    created_at: string; // ISO 8601
+    updated_at: string; // ISO 8601
+}
+
+// ============================================
+// PDV Post Types (Backend Integration)
+// ============================================
+
+// Interface para resposta paginada de posts PDV
+export interface PdvPostListResponse {
+  posts: PdvPost[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+// Interface para resposta paginada de PDVs recorrentes
+export interface RecurrentPdvListResponse {
+  pdvs: RecurrentPdv[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+// Interface para filtros de posts PDV
+export interface PdvPostFilters {
+  rep_name?: string;
+  month?: string;
+  platform?: string;
+  status?: string;
+  start_date?: string;
+  end_date?: string;
+  page?: number;
+  limit?: number;
+  sort_by?: string;
+  sort_order?: string;
+}
+
+// Interface para filtros de PDVs recorrentes
+export interface RecurrentPdvFilters {
+  rep_name?: string;
+  city?: string;
+  page?: number;
+  limit?: number;
+  sort_by?: string;
+  sort_order?: string;
+}
+
+// Interface para request de criação de post PDV
+export interface CreatePdvPostRequest {
+  rep_name: string;
+  pdv_name: string;
+  post_date: string;
+  platform: string;
+  link?: string;
+  proof_url?: string;
+}
+
+// Interface para request de atualização de post PDV
+export interface UpdatePdvPostRequest {
+  rep_name?: string;
+  pdv_name?: string;
+  post_date?: string;
+  platform?: string;
+  link?: string;
+  proof_url?: string;
+}
+
+// Interface para request de criação de PDV recorrente
+export interface CreateRecurrentPdvRequest {
+  name: string;
+  rep_name: string;
+  city?: string;
+}
+
+// Interface para request de atualização de PDV recorrente
+export interface UpdateRecurrentPdvRequest {
+  name?: string;
+  rep_name?: string;
+  city?: string;
+  followers?: number;
+  instagram_profile?: string;
 }
 
 export interface ShowroomItem {

@@ -787,13 +787,13 @@ export const ANNUAL_CHANNEL_DATA: ChannelPerformance[] = [
 ];
 
 export const MOCK_PDV_POSTS: PdvPost[] = [
-    { id: '1', repName: 'André', pdvName: 'Elétrica Silva', postDate: '2025-11-15', month: 'NOV', platform: 'instagram', link: 'https://instagram.com/p/123', status: 'verified' },
-    { id: '2', repName: 'César', pdvName: 'Solar Tech', postDate: '2025-11-18', month: 'NOV', platform: 'facebook', link: '', status: 'pending' },
+    { id: '1', rep_name: 'André', pdv_name: 'Elétrica Silva', post_date: '2025-11-15', month: 'NOV', platform: 'instagram', link: 'https://instagram.com/p/123', status: 'approved', created_at: '2025-11-15T10:00:00Z', updated_at: '2025-11-15T10:00:00Z' },
+    { id: '2', rep_name: 'César', pdv_name: 'Solar Tech', post_date: '2025-11-18', month: 'NOV', platform: 'facebook', status: 'pending', created_at: '2025-11-18T14:00:00Z', updated_at: '2025-11-18T14:00:00Z' },
 ];
 
 export const RECURRENT_PDVS: RecurrentPdv[] = [
-    { id: '1', name: 'Elétrica Silva', repName: 'André', city: 'Recife - PE' },
-    { id: '2', name: 'Solar Tech', repName: 'César', city: 'São Paulo - SP' },
+    { id: '1', name: 'Elétrica Silva', rep_name: 'André', city: 'Recife - PE', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+    { id: '2', name: 'Solar Tech', rep_name: 'César', city: 'São Paulo - SP', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
 ];
 
 export const MOCK_SHOWROOM_ITEMS: ShowroomItem[] = [
