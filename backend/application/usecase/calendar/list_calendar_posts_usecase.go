@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
-	"github.com/seu-usuario/solis-backend/core/domain/repository/criteria"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
@@ -35,7 +35,7 @@ func NewListCalendarPosts(gateway gateway.CalendarPostGateway) *ListCalendarPost
 
 func (uc *ListCalendarPostsUseCase) Execute(ctx context.Context, input ListCalendarPostsInput) ([]*entity.CalendarPost, int64, error) {
 	// Criar criteria
-	crit := criteria.NewCalendarPostCriteria()
+	crit := domain.NewCalendarPostCriteria()
 
 	if input.Category != nil {
 		category, err := valueobject.NewPostCategory(*input.Category)

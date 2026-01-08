@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  ChevronLeft, 
-  ChevronRight, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  Star, 
-  Instagram, 
-  Youtube, 
-  Scissors, 
-  User, 
-  Users, 
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Star,
+  Instagram,
+  Youtube,
+  Scissors,
+  User,
+  Users,
   Megaphone,
   X,
   Send,
@@ -48,9 +49,11 @@ import {
   Signal,
   Search
 } from 'lucide-react';
-import type { CalendarPost, PostCategory, PostHistoryEvent, PostStatus, PostType } from '@/shared/types/legacy.types';
-import { ALLOWED_USERS } from '@/shared/utils/legacy.constants';
+import type { CalendarPost, PostCategory, PostHistoryEvent, PostStatus, PostType, PublicUser } from '@/shared/types/legacy.types';
 import type { PostCalendarViewProps } from '../types';
+import { useUsers } from '@/features/users/hooks';
+import type { AppUser } from '@/shared/types/user.types';
+import type { CalendarPostRequest } from '@/shared/types/legacy.types';
 
 const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -129,22 +132,54 @@ const TikTokIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePosts }) => {
+const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, mutations, selectedCategory = 'all', setSelectedCategory, selectedType = 'all', setSelectedType, selectedAssignee = 'all', setSelectedAssignee }) => {
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 1)); // Dec 2025 default
   const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
   const [adjustComment, setAdjustComment] = useState('');
   const [viewMode, setViewMode] = useState<'calendar' | 'feed'>('calendar');
   
-  // Filters
-  const [selectedCategory, setSelectedCategory] = useState<PostCategory | 'all'>('all');
-  const [selectedType, setSelectedType] = useState<PostType | 'all'>('all');
-  const [selectedAssignee, setSelectedAssignee] = useState<string>('all');
+  // Load users from system
+  const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
+  
+  // Filters (use props if provided, otherwise use local state for backward compatibility)
+  const [localCategory, setLocalCategory] = useState<PostCategory | 'all'>('all');
+  const [localType, setLocalType] = useState<PostType | 'all'>('all');
+  const [localAssignee, setLocalAssignee] = useState<string>('all');
+  
+  const categoryFilter = selectedCategory !== undefined ? selectedCategory : localCategory;
+  const typeFilter = selectedType !== undefined ? selectedType : localType;
+  const assigneeFilter = selectedAssignee !== undefined ? selectedAssignee : localAssignee;
+  
+  const handleCategoryChange = (value: PostCategory | 'all') => {
+    if (setSelectedCategory) {
+      setSelectedCategory(value);
+    } else {
+      setLocalCategory(value);
+    }
+  };
+  
+  const handleTypeChange = (value: PostType | 'all') => {
+    if (setSelectedType) {
+      setSelectedType(value);
+    } else {
+      setLocalType(value);
+    }
+  };
+  
+  const handleAssigneeChange = (value: string) => {
+    if (setSelectedAssignee) {
+      setSelectedAssignee(value);
+    } else {
+      setLocalAssignee(value);
+    }
+  };
   
   // Add Post State
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostDescription, setNewPostDescription] = useState('');
-  const [newPostAssignee, setNewPostAssignee] = useState('Jackson');
+  const [newPostAssignee, setNewPostAssignee] = useState<string>(''); // UUID instead of name
   const [newPostDate, setNewPostDate] = useState('');
   const [newPostCategory, setNewPostCategory] = useState<PostCategory>('official');
   const [newPostType, setNewPostType] = useState<PostType>('static');
@@ -183,7 +218,15 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
   ];
 
   // Get unique assignees for filter
-  const uniqueAssignees = Array.from(new Set(posts.map(p => p.assignee).filter(Boolean))) as string[];
+  const uniqueAssignees = Array.from(new Set(posts.map(p => p.assignee?.name).filter(Boolean))) as string[];
+
+  // Filter posts locally (only if filters are not provided via props)
+  const filteredPosts = posts.filter(p => {
+    const matchCat = categoryFilter === 'all' || p.category === categoryFilter;
+    const matchType = typeFilter === 'all' || p.type === typeFilter;
+    const matchAssignee = assigneeFilter === 'all' || p.assignee?.name === assigneeFilter;
+    return matchCat && matchType && matchAssignee;
+  });
 
   // --- CALENDAR LOGIC ---
   const getDaysInMonth = (date: Date) => {
@@ -221,99 +264,104 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
   };
 
   // --- ACTIONS ---
-  const handleStatusChange = (newStatus: PostStatus, comment?: string) => {
-    if (!selectedPost) return;
+  const handleStatusChange = async (newStatus: PostStatus, comment?: string) => {
+    if (!selectedPost || !mutations) return;
     
     // If publishing, open confirmation modal
     if (newStatus === 'published') {
-        setPublishingPlatforms(selectedPost.publishedPlatforms || []);
+        setPublishingPlatforms(selectedPost.published_platforms || []);
         setIsPublishingModalOpen(true);
-        return; 
+        return;
     }
 
-    const actionMap: Record<PostStatus, PostHistoryEvent['action']> = {
-        'in_progress': 'status_change',
-        'review': 'status_change',
-        'adjust': 'adjust_request',
-        'approved': 'approved',
-        'published': 'published'
-    };
-
-    const newHistory: PostHistoryEvent = {
-        id: Date.now().toString(),
-        action: actionMap[newStatus],
-        user: 'Jackson',
-        text: comment || `Alterou status para ${newStatus}`,
-        timestamp: new Date().toLocaleString()
-    };
+    // Use backend mutation for status changes
+    const result = await new Promise<any>((resolve, reject) => {
+        mutations.updateStatus({
+            id: selectedPost.id,
+            request: {
+                status: newStatus,
+                text: comment
+            }
+        }, {
+            onSuccess: resolve,
+            onError: reject
+        });
+    });
     
-    const updatedPosts = posts.map(p =>
-        p.id === selectedPost.id
-            ? { ...p, status: newStatus, history: [...p.history, newHistory] } as CalendarPost
-            : p
-    );
-    onUpdatePosts(updatedPosts);
-    setSelectedPost(updatedPosts.find(p => p.id === selectedPost.id) || null);
+    // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+    if (result) {
+        setSelectedPost(result);
+    }
+    
     if(newStatus === 'adjust') setAdjustComment('');
   };
 
-  const confirmPublishing = () => {
-    if (!selectedPost) return; 
+  const confirmPublishing = async () => {
+    if (!selectedPost || !mutations) return;
 
-    const newHistory: PostHistoryEvent = {
-        id: Date.now().toString(),
-        action: 'published',
-        user: 'Jackson',
-        text: 'Postagem publicada!',
-        timestamp: new Date().toLocaleString()
-    };
-
-    const updatedPosts = posts.map(p =>
-        p.id === selectedPost.id
-            ? {
-                ...p,
-                status: 'published' as PostStatus,
-                publishedPlatforms: publishingPlatforms, // Save as confirmed platforms
-                history: [...p.history, newHistory]
-              } as CalendarPost
-            : p
-    );
-
-    onUpdatePosts(updatedPosts);
-    setSelectedPost(updatedPosts.find(p => p.id === selectedPost.id) || null);
+    // Use backend mutation to confirm publishing
+    const result = await new Promise<any>((resolve, reject) => {
+        mutations.confirmPublishing(selectedPost.id, publishingPlatforms, {
+            onSuccess: resolve,
+            onError: reject
+        });
+    });
+    
+    // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+    if (result) {
+        setSelectedPost(result);
+    }
+    
     setIsPublishingModalOpen(false);
   };
 
-  const attachImage = () => {
-      if (!selectedPost) return;
+  const attachImage = async () => {
+      if (!selectedPost || !mutations) return;
       // Simulate attaching an image
-      const updatedPosts = posts.map(p => 
-        p.id === selectedPost.id 
-            ? { ...p, image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800' } // Dummy Image
-            : p
-      );
-      onUpdatePosts(updatedPosts);
-      setSelectedPost(updatedPosts.find(p => p.id === selectedPost.id) || null);
+      const result = await new Promise<any>((resolve, reject) => {
+          mutations.updatePost({
+              id: selectedPost.id,
+              data: {
+                  image_url: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800'
+              }
+          }, {
+              onSuccess: resolve,
+              onError: reject
+          });
+      });
+      
+      // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+      if (result) {
+          setSelectedPost(result);
+      }
   };
 
-  const handleChangePhoto = () => {
-      if (!selectedPost) return;
+  const handleChangePhoto = async () => {
+      if (!selectedPost || !mutations) return;
       // Mock upload/change
-      const newUrl = window.prompt("Insira a URL da nova imagem:", selectedPost.image || '');
+      const newUrl = window.prompt("Insira a URL da nova imagem:", selectedPost.image_url || '');
       if (newUrl) {
-          const updatedPosts = posts.map(p => 
-            p.id === selectedPost.id ? { ...p, image: newUrl } : p
-          );
-          onUpdatePosts(updatedPosts);
-          setSelectedPost({ ...selectedPost, image: newUrl });
+          const result = await new Promise<any>((resolve, reject) => {
+              mutations.updatePost({
+                  id: selectedPost.id,
+                  data: { image_url: newUrl }
+              }, {
+                  onSuccess: resolve,
+                  onError: reject
+              });
+          });
+          
+          // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+          if (result) {
+              setSelectedPost(result);
+          }
       }
   };
 
   const handleDeletePost = () => {
-      if (!selectedPost) return;
+      if (!selectedPost || !mutations) return;
       if (window.confirm("Tem certeza que deseja excluir esta postagem? Esta ação não pode ser desfeita.")) {
-          const updatedPosts = posts.filter(p => p.id !== selectedPost.id);
-          onUpdatePosts(updatedPosts);
+          mutations.deletePost(selectedPost.id);
           setSelectedPost(null);
       }
   };
@@ -326,13 +374,23 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
       }
   };
 
-  const saveDescription = () => {
-      if (selectedPost) {
-          const updatedPosts = posts.map(p => 
-            p.id === selectedPost.id ? { ...p, description: editDescValue } : p
-          );
-          onUpdatePosts(updatedPosts);
-          setSelectedPost({ ...selectedPost, description: editDescValue });
+  const saveDescription = async () => {
+      if (selectedPost && mutations) {
+          const result = await new Promise<any>((resolve, reject) => {
+              mutations.updatePost({
+                  id: selectedPost.id,
+                  data: { description: editDescValue }
+              }, {
+                  onSuccess: resolve,
+                  onError: reject
+              });
+          });
+          
+          // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+          if (result) {
+              setSelectedPost(result);
+          }
+          
           setIsEditingDesc(false);
       }
   };
@@ -345,13 +403,22 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
       }
   };
 
-  const saveTitle = () => {
-      if (selectedPost && editTitleValue.trim() !== '') {
-          const updatedPosts = posts.map(p => 
-            p.id === selectedPost.id ? { ...p, title: editTitleValue } : p
-          );
-          onUpdatePosts(updatedPosts);
-          setSelectedPost({ ...selectedPost, title: editTitleValue });
+  const saveTitle = async () => {
+      if (selectedPost && mutations && editTitleValue.trim() !== '') {
+          const result = await new Promise<any>((resolve, reject) => {
+              mutations.updatePost({
+                  id: selectedPost.id,
+                  data: { title: editTitleValue }
+              }, {
+                  onSuccess: resolve,
+                  onError: reject
+              });
+          });
+          
+          // Update selectedPost with the returned data (result is already the CalendarPost, not { data: CalendarPost })
+          if (result) {
+              setSelectedPost(result);
+          }
       }
       setIsEditingTitle(false);
   };
@@ -384,10 +451,13 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPostTitle || !newPostDate) return; 
+    if (!newPostTitle || !newPostDate) return;
 
-    const newPost: CalendarPost = {
-        id: Date.now().toString(),
+    // Map selected assignee UUID (or undefined if not selected)
+    const assigneeID = newPostAssignee || undefined;
+
+    // Use backend mutation to create post
+    mutations?.createPost({
         title: newPostTitle,
         description: newPostDescription,
         date: newPostDate,
@@ -395,20 +465,10 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
         caption: '',
         category: newPostCategory,
         type: newPostType,
-        status: 'in_progress',
-        assignee: newPostAssignee,
-        // No image initially
         platforms: newPostPlatforms,
-        publishedPlatforms: [], // Starts empty
-        history: [{
-            id: Date.now().toString(),
-            action: 'upload',
-            user: 'Jackson',
-            timestamp: new Date().toLocaleString()
-        }]
-    };
+        assignee_id: assigneeID
+    });
 
-    onUpdatePosts([...posts, newPost]);
     setIsAddingPost(false);
     setNewPostTitle('');
     setNewPostDescription('');
@@ -416,15 +476,8 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
     setNewPostPlatforms([]);
     setNewPostCategory('official');
     setNewPostType('static');
-    setNewPostAssignee('Jackson');
+    setNewPostAssignee('');
   };
-
-  const filteredPosts = posts.filter(p => {
-      const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
-      const matchType = selectedType === 'all' || p.type === selectedType;
-      const matchAssignee = selectedAssignee === 'all' || p.assignee === selectedAssignee;
-      return matchCat && matchType && matchAssignee;
-  });
 
   // Posts for Feed Preview (sorted new to old) - FILTER BY CURRENT MONTH
   const feedPosts = [...filteredPosts]
@@ -439,7 +492,7 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
     .sort((a, b) => new Date(b.date + 'T' + b.time).getTime() - new Date(a.date + 'T' + a.time).getTime());
 
   // Determine current profile for preview based on category filter
-  const currentProfileKey = selectedCategory === 'all' ? 'official' : selectedCategory;
+  const currentProfileKey = categoryFilter === 'all' ? 'official' : categoryFilter;
   const currentProfile = PROFILE_DATA[currentProfileKey] || PROFILE_DATA['official'];
  
   return (
@@ -481,9 +534,9 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
 
                 {/* Category Filter */}
                 <div className="relative">
-                    <select 
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value as any)}
+                    <select
+                        value={categoryFilter}
+                        onChange={(e) => handleCategoryChange(e.target.value as any)}
                         className="appearance-none bg-[#0f1115] border border-gray-700 text-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1e5144] cursor-pointer hover:border-gray-500 transition-colors"
                     >
                         <option value="all">Todas Categorias</option>
@@ -493,12 +546,12 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                     </select>
                     <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
-
+ 
                 {/* Type Filter */}
                 <div className="relative">
-                    <select 
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value as any)}
+                    <select
+                        value={typeFilter}
+                        onChange={(e) => handleTypeChange(e.target.value as any)}
                         className="appearance-none bg-[#0f1115] border border-gray-700 text-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1e5144] cursor-pointer hover:border-gray-500 transition-colors"
                     >
                         <option value="all">Todos Tipos</option>
@@ -508,12 +561,12 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                     </select>
                     <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
-
+ 
                 {/* Assignee/Supplier Filter */}
                 <div className="relative">
-                    <select 
-                        value={selectedAssignee}
-                        onChange={(e) => setSelectedAssignee(e.target.value)}
+                    <select
+                        value={assigneeFilter}
+                        onChange={(e) => handleAssigneeChange(e.target.value)}
                         className="appearance-none bg-[#0f1115] border border-gray-700 text-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1e5144] cursor-pointer hover:border-gray-500 transition-colors"
                     >
                         <option value="all">Todos Fornecedores</option>
@@ -620,7 +673,7 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                                             const TypeIcon = typeConfig.icon;
  
                                             // Check publication status for border color
-                                            const isPendingPlatforms = (post.platforms?.length || 0) > (post.publishedPlatforms?.length || 0);
+                                            const isPendingPlatforms = (post.platforms?.length || 0) > (post.published_platforms?.length || 0);
                                             const isPublished = post.status === 'published';
                                             
                                             let statusBorder = catConfig.border;
@@ -743,24 +796,25 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                         <div className="flex-grow overflow-y-auto custom-scrollbar bg-black">
                             <div className="grid grid-cols-3 gap-0.5">
                                 {feedPosts.map(post => {
-                                    const TypeIcon = TYPE_CONFIG[post.type].icon;
-                                    return (
-                                        <div 
-                                            key={post.id} 
-                                            className="aspect-square bg-[#121212] relative cursor-pointer group"
-                                            onClick={() => setSelectedPost(post)}
-                                        >
-                                            {post.image ? (
-                                                <img src={post.image} alt="" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-                                                    <TypeIcon size={24} className={CATEGORY_CONFIG[post.category].color} />
-                                                    <span className="text-[8px] text-gray-400 mt-1 line-clamp-2">{post.title}</span>
-                                                </div>
-                                            )}
-                                            {/* Overlay Date */}
-                                            <div className="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[8px] text-white font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {post.date.split('-').slice(1).reverse().join('/')}
+                                        const TypeIcon = TYPE_CONFIG[post.type].icon;
+                                        console.log('[POSTCALENDARVIEW] Rendering post in feed:', post.id, 'date:', post.date);
+                                        return (
+                                            <div
+                                                key={post.id}
+                                                className="aspect-square bg-[#121212] relative cursor-pointer group"
+                                                onClick={() => setSelectedPost(post)}
+                                            >
+                                                {post.image_url ? (
+                                                    <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                                                        <TypeIcon size={24} className={CATEGORY_CONFIG[post.category].color} />
+                                                        <span className="text-[8px] text-gray-400 mt-1 line-clamp-2">{post.title}</span>
+                                                    </div>
+                                                )}
+                                                {/* Overlay Date */}
+                                                <div className="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[8px] text-white font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {post.date ? post.date.split('-').slice(1).reverse().join('/') : 'N/A'}
                                             </div>
                                             {/* Type Icon Overlay */}
                                             <div className="absolute top-1 right-1 text-white drop-shadow-md">
@@ -835,12 +889,18 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                         </div>
                         <div>
                              <label className="block text-xs text-gray-400 uppercase mb-1">Responsável</label>
-                             <select 
+                             <select
                                  value={newPostAssignee}
                                  onChange={(e) => setNewPostAssignee(e.target.value)}
                                  className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
+                                 disabled={isLoadingUsers}
                              >
-                                 {ALLOWED_USERS.map(u => <option key={u} value={u}>{u}</option>)}
+                                 <option value="">Selecione um responsável</option>
+                                 {appUsers?.map(user => (
+                                     <option key={user.id} value={user.id}>
+                                         {user.name}
+                                     </option>
+                                 ))}
                              </select>
                         </div>
                      </div>
@@ -960,10 +1020,10 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                   
                   {/* Left: Preview Image */}
                   <div className="w-full md:w-1/2 bg-black flex items-center justify-center relative group">
-                      {selectedPost.image ? (
+                      {selectedPost.image_url ? (
                           <>
-                              <img 
-                                  src={selectedPost.image} 
+                              <img
+                                  src={selectedPost.image_url}
                                   alt={selectedPost.title} 
                                   className="max-h-full max-w-full object-contain"
                               />
@@ -1025,10 +1085,13 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                                   )}
                               </div>
                               <div className="flex items-center gap-4 text-sm text-gray-400 mb-3 flex-wrap">
-                                  <span className="flex items-center gap-1"><Calendar size={14}/> {selectedPost.date.split('-').reverse().join('/')}</span>
+                                  <span className="flex items-center gap-1">
+                                      <Calendar size={14}/>
+                                      {selectedPost.date ? selectedPost.date.split('-').reverse().join('/') : 'N/A'}
+                                  </span>
                                   <span className="flex items-center gap-1"><Clock size={14}/> {selectedPost.time}</span>
                                   {selectedPost.assignee && (
-                                      <span className="flex items-center gap-1 border-l border-gray-700 pl-4"><User size={14}/> {selectedPost.assignee}</span>
+                                      <span className="flex items-center gap-1 border-l border-gray-700 pl-4"><User size={14}/> {selectedPost.assignee.name}</span>
                                   )}
                               </div>
                               
@@ -1065,7 +1128,7 @@ const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, onUpdatePost
                                       const iconData = socialIcons.find(s => s.id === platform);
                                       if(!iconData) return null;
                                        
-                                      const isPublished = selectedPost.publishedPlatforms?.includes(platform);
+                                      const isPublished = selectedPost.published_platforms?.includes(platform);
                                        
                                       return (
                                           <div 

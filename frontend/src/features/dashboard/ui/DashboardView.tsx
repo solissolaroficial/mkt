@@ -113,7 +113,7 @@ const DashboardView: React.FC = () => {
         </div>
         <div className="h-auto">
           <UpcomingPostsWidget
-            posts={postsData || []}
+            posts={postsData?.data || []}
             onViewCalendar={() => navigate('/calendar')}
           />
         </div>

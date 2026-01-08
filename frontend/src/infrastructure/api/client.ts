@@ -23,8 +23,14 @@ apiClient.interceptors.request.use(
 
 // Response interceptor - trata erro 401 (não autorizado)
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('[AXIOS INTERCEPTOR] Response:', response);
+    console.log('[AXIOS INTERCEPTOR] Response.data:', response.data);
+    console.log('[AXIOS INTERCEPTOR] Response.config.url:', response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('[AXIOS INTERCEPTOR] Error:', error);
     if (error.response?.status === 401) {
       // Remove token inválido e redireciona para login
       localStorage.removeItem('auth_token');

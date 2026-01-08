@@ -243,16 +243,26 @@ export interface CalendarPost {
     date: string; // YYYY-MM-DD
     time: string; // HH:MM
     title: string;
-    description?: string; 
+    description?: string;
     caption: string;
     category: PostCategory;
     type: PostType; // Novo campo Tipo
     status: PostStatus;
-    image?: string; 
-    platforms?: string[]; 
-    publishedPlatforms?: string[]; 
-    assignee?: string; 
-    history: PostHistoryEvent[];
+    image_url?: string; // Renomeado de image para image_url (compatível com backend)
+    platforms?: string[];
+    published_platforms?: string[]; // Renomeado de publishedPlatforms para published_platforms (compatível com backend)
+    assignee_id?: string; // ID do responsável (compatível com backend)
+    assignee?: PublicUser; // Objeto com dados do responsável (compatível com backend)
+    history?: PostHistoryEvent[];
+    created_at: string; // Timestamp de criação (compatível com backend)
+    updated_at: string; // Timestamp de atualização (compatível com backend)
+}
+
+// Tipo específico para Assignee (responsável)
+export interface PublicUser {
+    id: string;
+    name: string;
+    email: string;
 }
 
 export interface SocialBenchmarking {
@@ -288,4 +298,52 @@ export interface BudgetItem {
   desc: string;
   vals: number[]; // Orçado
   realizedVals: number[]; // Realizado
+}
+
+// ============================================
+// Calendar Post Types (Backend Integration)
+// ============================================
+
+// Interface para filtros de posts do calendário
+export interface CalendarFilters {
+  category?: string; // Filtrar por categoria (official, solis_voce, leonardo, luiz)
+  type?: string; // Filtrar por tipo (video, static, carousel, story, article_linkedin, article_blog)
+  status?: string; // Filtrar por status (in_progress, review, adjust, approved, published)
+  assignee_id?: string; // Filtrar por responsável
+  start_date?: string; // Data inicial (YYYY-MM-DD)
+  end_date?: string; // Data final (YYYY-MM-DD)
+  platform?: string; // Filtrar por plataforma (instagram, facebook, linkedin, tiktok)
+  page?: number; // Número da página
+  limit?: number; // Itens por página
+  sort_by?: string; // Campo para ordenação
+  sort_order?: string; // Ordem (asc, desc)
+}
+
+// Interface para resposta paginada do backend
+export interface CalendarPostsListResponse {
+  data: CalendarPost[]; // Lista de posts
+  total: number; // Total de itens
+  page: number; // Página atual
+  limit: number; // Itens por página
+  total_pages: number; // Total de páginas
+}
+
+// Interface para request de criação/atualização de post
+export interface CalendarPostRequest {
+  title: string; // Título do post
+  description?: string; // Descrição opcional
+  date: string; // Data do post (YYYY-MM-DD)
+  time: string; // Hora do post (HH:MM)
+  caption?: string; // Caption opcional
+  category: string; // Categoria (official, solis_voce, leonardo, luiz)
+  type: string; // Tipo (video, static, carousel, story, article_linkedin, article_blog)
+  platforms: string[]; // Lista de plataformas
+  image_url?: string; // URL da imagem opcional
+  assignee_id?: string; // ID do responsável opcional
+}
+
+// Interface para request de atualização de status
+export interface UpdateStatusRequest {
+  status: string; // Novo status (in_progress, review, adjust, approved, published)
+  text?: string; // Texto de ajuste (obrigatório quando status = adjust)
 }

@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/seu-usuario/solis-backend/core/domain/repository/criteria"
+	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
@@ -14,7 +14,7 @@ type CreateCalendarPostRequest struct {
 	Caption     *string  `json:"caption"`
 	Category    string   `json:"category" validate:"required,oneof=official solis_voce leonardo luiz"`
 	Type        string   `json:"type" validate:"required,oneof=video static carousel story article_linkedin article_blog"`
-	AssigneeID  string   `json:"assignee_id" validate:"required"`
+	AssigneeID  string   `json:"assignee_id"`
 	Platforms   []string `json:"platforms" validate:"required"`
 	ImageURL    *string  `json:"image_url"`
 }
@@ -57,8 +57,8 @@ type ListCalendarPostsRequest struct {
 }
 
 // ToCriteria converte a requisição para CalendarPostCriteria
-func (r *ListCalendarPostsRequest) ToCriteria() (*criteria.CalendarPostCriteria, error) {
-	crit := criteria.NewCalendarPostCriteria()
+func (r *ListCalendarPostsRequest) ToCriteria() (*domain.CalendarPostCriteria, error) {
+	crit := domain.NewCalendarPostCriteria()
 
 	if r.Category != nil {
 		category, err := valueobject.NewPostCategory(*r.Category)

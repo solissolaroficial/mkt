@@ -3,8 +3,8 @@ package gateway
 import (
 	"context"
 
+	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
-	"github.com/seu-usuario/solis-backend/core/domain/repository/criteria"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
@@ -18,11 +18,11 @@ type CalendarPostGateway interface {
 	// Queries
 	FindByCriteria(
 		ctx context.Context,
-		criteria *criteria.CalendarPostCriteria,
+		criteria *domain.CalendarPostCriteria,
 		pagination *valueobject.Pagination,
 		sortOrder *valueobject.SortOrder,
 	) ([]*entity.CalendarPost, error)
-	CountByCriteria(ctx context.Context, criteria *criteria.CalendarPostCriteria) (int64, error)
+	CountByCriteria(ctx context.Context, criteria *domain.CalendarPostCriteria) (int64, error)
 
 	// Utilities
 	ExistsByID(ctx context.Context, id string) (bool, error)

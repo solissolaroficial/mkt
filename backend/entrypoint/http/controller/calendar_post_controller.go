@@ -184,7 +184,7 @@ func (c *CalendarPostController) UpdateStatus(ctx *fiber.Ctx) error {
 		Comment:   nil,
 	}
 
-	err = c.updateCalendarPostStatusUseCase.Execute(ctx.Context(), input)
+	post, err := c.updateCalendarPostStatusUseCase.Execute(ctx.Context(), input)
 	if err != nil {
 		log.Printf("Error updating status for calendar post %s: %v", id, err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(calendarresponse.ErrorResponse{
@@ -193,9 +193,7 @@ func (c *CalendarPostController) UpdateStatus(ctx *fiber.Ctx) error {
 	}
 
 	log.Printf("Calendar post status updated successfully: %s to %s", id, req.Status)
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Status updated successfully",
-	})
+	return ctx.JSON(c.mapper.ToCalendarPostResponse(post))
 }
 
 // ConfirmPublishing confirma a publicação de um post
@@ -232,7 +230,7 @@ func (c *CalendarPostController) ConfirmPublishing(ctx *fiber.Ctx) error {
 		User:      userEmail,
 	}
 
-	err = c.confirmCalendarPostPublishingUseCase.Execute(ctx.Context(), input)
+	post, err := c.confirmCalendarPostPublishingUseCase.Execute(ctx.Context(), input)
 	if err != nil {
 		log.Printf("Error confirming publishing for calendar post %s: %v", id, err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(calendarresponse.ErrorResponse{
@@ -241,9 +239,7 @@ func (c *CalendarPostController) ConfirmPublishing(ctx *fiber.Ctx) error {
 	}
 
 	log.Printf("Calendar post publishing confirmed successfully: %s", id)
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Publishing confirmed successfully",
-	})
+	return ctx.JSON(c.mapper.ToCalendarPostResponse(post))
 }
 
 // Delete deleta um post

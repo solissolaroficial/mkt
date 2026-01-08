@@ -3,6 +3,7 @@ package calendar
 import (
 	"context"
 
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -23,22 +24,22 @@ func NewUpdateCalendarPostStatus(gateway gateway.CalendarPostGateway) *UpdateCal
 	return &UpdateCalendarPostStatusUseCase{gateway: gateway}
 }
 
-func (uc *UpdateCalendarPostStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) error {
+func (uc *UpdateCalendarPostStatusUseCase) Execute(ctx context.Context, input UpdateStatusInput) (*entity.CalendarPost, error) {
 	// Buscar post existente
 	post, err := uc.gateway.FindByID(ctx, input.PostID)
 	if err != nil {
-		return domainErrors.ErrCalendarPostNotFound
+		return nil, domainErrors.ErrCalendarPostNotFound
 	}
 
 	// Validar e converter status
 	newStatus, err := valueobject.NewPostStatus(input.NewStatus)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Atualizar status usando método da entity
 	if err := post.UpdateStatus(newStatus); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Adicionar evento ao histórico
@@ -47,7 +48,11 @@ func (uc *UpdateCalendarPostStatusUseCase) Execute(ctx context.Context, input Up
 	post.AddHistoryEvent(historyEvent)
 
 	// Salvar via gateway
-	return uc.gateway.Update(ctx, post)
+	if err := uc.gateway.Update(ctx, post); err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }
 
 func (uc *UpdateCalendarPostStatusUseCase) mapStatusToAction(status valueobject.PostStatus) string {

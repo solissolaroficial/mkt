@@ -45,9 +45,7 @@ func NewCalendarPost(
 		return nil, errors.New("title is required")
 	}
 
-	if assigneeID == nil {
-		return nil, errors.New("assignee is required")
-	}
+	// assigneeID agora é opcional
 
 	post := &CalendarPost{
 		id:                 uuid.New(),
@@ -147,9 +145,7 @@ func (p *CalendarPost) Validate() error {
 		return errors.New("title must be at most 500 characters")
 	}
 
-	if p.assigneeID == nil {
-		return errors.New("assignee is required")
-	}
+	// assigneeID agora é opcional
 
 	if !p.category.IsValid() {
 		return errors.New("invalid category")

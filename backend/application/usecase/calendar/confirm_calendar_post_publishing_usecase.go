@@ -3,6 +3,7 @@ package calendar
 import (
 	"context"
 
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -22,26 +23,26 @@ func NewConfirmCalendarPostPublishing(gateway gateway.CalendarPostGateway) *Conf
 	return &ConfirmCalendarPostPublishingUseCase{gateway: gateway}
 }
 
-func (uc *ConfirmCalendarPostPublishingUseCase) Execute(ctx context.Context, input ConfirmPublishingInput) error {
+func (uc *ConfirmCalendarPostPublishingUseCase) Execute(ctx context.Context, input ConfirmPublishingInput) (*entity.CalendarPost, error) {
 	// Buscar post existente
 	post, err := uc.gateway.FindByID(ctx, input.PostID)
 	if err != nil {
-		return domainErrors.ErrCalendarPostNotFound
+		return nil, domainErrors.ErrCalendarPostNotFound
 	}
 
 	// Validar plataformas
 	if err := valueobject.ValidatePlatforms(input.Platforms); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Atualizar plataformas publicadas
 	if err := post.UpdatePublishedPlatforms(input.Platforms); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Atualizar status para publicado
 	if err := post.UpdateStatus(valueobject.StatusPublished); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Adicionar evento ao histórico
@@ -49,5 +50,9 @@ func (uc *ConfirmCalendarPostPublishingUseCase) Execute(ctx context.Context, inp
 	post.AddHistoryEvent(historyEvent)
 
 	// Salvar via gateway
-	return uc.gateway.Update(ctx, post)
+	if err := uc.gateway.Update(ctx, post); err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }

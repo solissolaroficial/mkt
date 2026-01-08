@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	calendarerrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
-	"github.com/seu-usuario/solis-backend/core/domain/repository/criteria"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/mapper"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
@@ -96,7 +96,7 @@ func (g *calendarPostGatewayImpl) Delete(ctx context.Context, id string) error {
 // FindByCriteria busca posts usando o padrão Criteria.
 // Aplica filtros dinâmicos baseados nos critérios fornecidos,
 // suporta paginação e ordenação, e faz eager loading do Assignee.
-func (g *calendarPostGatewayImpl) FindByCriteria(ctx context.Context, crit *criteria.CalendarPostCriteria, pagination *valueobject.Pagination, sortOrder *valueobject.SortOrder) ([]*entity.CalendarPost, error) {
+func (g *calendarPostGatewayImpl) FindByCriteria(ctx context.Context, crit *domain.CalendarPostCriteria, pagination *valueobject.Pagination, sortOrder *valueobject.SortOrder) ([]*entity.CalendarPost, error) {
 	var postModels []model.CalendarPostModel
 
 	// Build query
@@ -159,7 +159,7 @@ func (g *calendarPostGatewayImpl) FindByCriteria(ctx context.Context, crit *crit
 
 // CountByCriteria conta posts usando o padrão Criteria.
 // Aplica os mesmos filtros de FindByCriteria mas retorna apenas o total de registros.
-func (g *calendarPostGatewayImpl) CountByCriteria(ctx context.Context, crit *criteria.CalendarPostCriteria) (int64, error) {
+func (g *calendarPostGatewayImpl) CountByCriteria(ctx context.Context, crit *domain.CalendarPostCriteria) (int64, error) {
 	var total int64
 
 	// Build query

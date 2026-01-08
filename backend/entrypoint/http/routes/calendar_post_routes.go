@@ -32,14 +32,14 @@ func SetupCalendarPostRoutes(router fiber.Router, calendarPostController *contro
 	// Aplicar middleware de autorização (admin ou marketing)
 	calendarPosts.Use(middleware.RequireMarketing())
 
-	// CRUD de CalendarPosts
+	// Rotas especiais de CalendarPosts (mais específicas primeiro)
+	calendarPosts.Put("/:id/status", calendarPostController.UpdateStatus)
+	calendarPosts.Post("/:id/confirm-publishing", calendarPostController.ConfirmPublishing)
+
+	// CRUD de CalendarPosts (rotas genéricas depois)
 	calendarPosts.Post("/", calendarPostController.Create)
 	calendarPosts.Get("/:id", calendarPostController.Get)
 	calendarPosts.Put("/:id", calendarPostController.Update)
 	calendarPosts.Delete("/:id", calendarPostController.Delete)
 	calendarPosts.Get("/", calendarPostController.List)
-
-	// Rotas especiais de CalendarPosts
-	calendarPosts.Put("/:id/status", calendarPostController.UpdateStatus)
-	calendarPosts.Put("/:id/confirm-publishing", calendarPostController.ConfirmPublishing)
 }

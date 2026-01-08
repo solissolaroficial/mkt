@@ -39,30 +39,9 @@ func (s PostStatus) IsValid() bool {
 }
 
 // CanTransitionTo valida se é possível fazer a transição de status
+// Permite QUALQUER transição de status, desde que o novo status seja válido
 func (s PostStatus) CanTransitionTo(newStatus PostStatus) bool {
-	// Regras de transição:
-	// in_progress -> review -> adjust -> approved -> published
-	// approved -> published
-	// adjust -> review
-
-	transitions := map[PostStatus][]PostStatus{
-		StatusInProgress: {StatusReview},
-		StatusReview:     {StatusAdjust, StatusApproved},
-		StatusAdjust:     {StatusReview},
-		StatusApproved:   {StatusPublished},
-		StatusPublished:  {}, // Status final
-	}
-
-	allowed, exists := transitions[s]
-	if !exists {
-		return false
-	}
-
-	for _, status := range allowed {
-		if status == newStatus {
-			return true
-		}
-	}
-
-	return false
+	// Apenas valida que o novo status é válido
+	// Não há restrições de transição - permite qualquer mudança de status
+	return newStatus.IsValid()
 }
