@@ -6,7 +6,7 @@ import (
 )
 
 // SeedAll runs all seeders in the correct order
-func SeedAll(ctx context.Context, userSeeder *UserSeeder, kpiSeeder *KpiSeeder) error {
+func SeedAll(ctx context.Context, userSeeder *UserSeeder, kpiSeeder *KpiSeeder, socialBenchmarkingSeeder *SocialBenchmarkingSeeder) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
 
@@ -24,6 +24,14 @@ func SeedAll(ctx context.Context, userSeeder *UserSeeder, kpiSeeder *KpiSeeder) 
 		return err
 	}
 	log.Println("✅ KPIs seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 3: Seed Social Benchmarkings
+	if err := socialBenchmarkingSeeder.Seed(ctx); err != nil {
+		log.Printf("❌ Error seeding social benchmarkings: %v", err)
+		return err
+	}
+	log.Println("✅ Social benchmarkings seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")

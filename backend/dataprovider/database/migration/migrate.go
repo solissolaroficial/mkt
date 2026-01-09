@@ -24,6 +24,7 @@ func RunMigrations(db *gorm.DB) error {
 		&model.CalendarPostModel{},
 		&model.PdvPostModel{},
 		&model.RecurrentPdvModel{},
+		&model.SocialBenchmarkingModel{},
 	)
 
 	if err != nil {
