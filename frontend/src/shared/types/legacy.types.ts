@@ -354,11 +354,61 @@ export interface PublicUser {
     email: string;
 }
 
+// ============================================
+// Social Benchmarking Types (Backend Integration)
+// ============================================
+
+// Interface principal (ATUALIZADA - compatível com backend)
 export interface SocialBenchmarking {
-    brand: string;
-    avgLikes: number;
-    avgComments: number;
-    followers?: number;
+  id: string;
+  brand_name: string;
+  avg_likes: number;
+  avg_comments: number;
+  followers?: number;
+  engagement_rate: number;
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+}
+
+// Interface para resposta paginada
+// NOTA CRÍTICA: O backend usa o campo "benchmarkings" (plural), NÃO "data"
+// Verificado em: backend/entrypoint/http/payload/response/social_response.go:16
+export interface SocialBenchmarkingListResponse {
+  benchmarkings: SocialBenchmarking[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+// Interface para filtros
+export interface SocialBenchmarkingFilters {
+  brand_name?: string;
+  start_date?: string; // YYYY-MM-DD
+  end_date?: string;   // YYYY-MM-DD
+  active?: boolean;     // true = ativos, false = deletados
+  page?: number;
+  limit?: number;
+  sort_by?: 'engagement_rate' | 'avg_likes' | 'avg_comments' | 'created_at';
+  sort_order?: 'asc' | 'desc';
+}
+
+// Interface para request de criação
+export interface CreateSocialBenchmarkingRequest {
+  brand_name: string;
+  avg_likes: number;
+  avg_comments: number;
+  followers?: number;
+}
+
+// Interface para request de atualização (partial update)
+export interface UpdateSocialBenchmarkingRequest {
+  brand_name?: string;
+  avg_likes?: number;
+  avg_comments?: number;
+  followers?: number;
 }
 
 export interface ProgramCredential {

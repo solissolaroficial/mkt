@@ -729,10 +729,46 @@ export const REPS_MARKETING_DATA: RepTableData = {
 };
 
 export const SOCIAL_MEDIA_RANKING: SocialBenchmarking[] = [
-    { brand: 'Solis Solar', avgLikes: 145.5, avgComments: 12.3, followers: 15400 },
-    { brand: 'Competitor A', avgLikes: 120.2, avgComments: 8.5, followers: 12000 },
-    { brand: 'Competitor B', avgLikes: 98.4, avgComments: 5.2, followers: 8500 },
-    { brand: 'Competitor C', avgLikes: 210.8, avgComments: 18.9, followers: 25000 },
+    {
+        id: '1',
+        brand_name: 'Solis Solar',
+        avg_likes: 145.5,
+        avg_comments: 12.3,
+        followers: 15400,
+        engagement_rate: 1.03,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z'
+    },
+    {
+        id: '2',
+        brand_name: 'Competitor A',
+        avg_likes: 120.2,
+        avg_comments: 8.5,
+        followers: 12000,
+        engagement_rate: 1.07,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z'
+    },
+    {
+        id: '3',
+        brand_name: 'Competitor B',
+        avg_likes: 98.4,
+        avg_comments: 5.2,
+        followers: 8500,
+        engagement_rate: 1.22,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z'
+    },
+    {
+        id: '4',
+        brand_name: 'Competitor C',
+        avg_likes: 210.8,
+        avg_comments: 18.9,
+        followers: 25000,
+        engagement_rate: 0.92,
+        created_at: '2025-01-01T00:00:00Z',
+        updated_at: '2025-01-01T00:00:00Z'
+    },
 ];
 
 export const MOCK_CALENDAR_POSTS: CalendarPost[] = [

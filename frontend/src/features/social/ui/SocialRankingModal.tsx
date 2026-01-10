@@ -43,7 +43,7 @@ const SocialRankingModal: React.FC<SocialRankingModalProps> = ({ isOpen, onClose
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                         {data.map((item, index) => {
-                            const isSolis = item.brand === 'Solis Solar';
+                            const isSolis = item.brand_name === 'Solis Solar';
                             return (
                                 <tr 
                                     key={index} 
@@ -55,19 +55,19 @@ const SocialRankingModal: React.FC<SocialRankingModalProps> = ({ isOpen, onClose
                                     <td className="px-6 py-4 text-gray-500 font-mono">#{index + 1}</td>
                                     <td className="px-6 py-4">
                                         <span className={`font-semibold ${isSolis ? 'text-purple-400' : 'text-gray-300'}`}>
-                                            {item.brand}
+                                            {item.brand_name}
                                         </span>
                                         {isSolis && <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-purple-500 text-white font-bold uppercase">Você</span>}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 text-gray-300">
-                                            {item.avgLikes.toFixed(2)}
+                                            {item.avg_likes.toFixed(2)}
                                             <ThumbsUp size={14} className="text-gray-600" />
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 text-gray-300">
-                                            {item.avgComments.toFixed(2)}
+                                            {item.avg_comments.toFixed(2)}
                                             <MessageCircle size={14} className="text-gray-600" />
                                         </div>
                                     </td>

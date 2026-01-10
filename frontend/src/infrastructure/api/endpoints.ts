@@ -36,4 +36,11 @@ export const ENDPOINTS = {
     UPDATE_RECURRENT: (id: string) => `/api/pdv/recurrent/${id}`,
     DELETE_RECURRENT: (id: string) => `/api/pdv/recurrent/${id}`,
   } as const,
+  SOCIAL: {
+    LIST: '/api/social/benchmarking',
+    GET: (id: string) => `/api/social/benchmarking/${id}`,
+    CREATE: '/api/social/benchmarking',
+    UPDATE: (id: string) => `/api/social/benchmarking/${id}`,
+    DELETE: (id: string) => `/api/social/benchmarking/${id}`,
+  } as const,
 } as const;
