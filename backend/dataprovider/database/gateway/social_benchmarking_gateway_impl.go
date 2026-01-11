@@ -172,3 +172,15 @@ func (g *socialBenchmarkingGatewayImpl) ExistsByID(ctx context.Context, id strin
 
 	return count > 0, nil
 }
+
+func (g *socialBenchmarkingGatewayImpl) GetByBrand(brandName string) (*entity.SocialBenchmarking, error) {
+	var benchmarkingModel model.SocialBenchmarkingModel
+	err := g.db.Where("brand_name = ? AND deleted_at IS NULL", brandName).First(&benchmarkingModel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domainErrors.ErrSocialBenchmarkingNotFound
+		}
+		return nil, err
+	}
+	return g.mapper.ModelToEntity(&benchmarkingModel)
+}

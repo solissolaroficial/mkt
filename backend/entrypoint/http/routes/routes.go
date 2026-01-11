@@ -19,6 +19,7 @@ type Controllers struct {
 	CalendarPostController *controller.CalendarPostController
 	PdvController          *controller.PdvController
 	SocialController       *controller.SocialController
+	SocialPostController   *controller.SocialPostController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -52,6 +53,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupCalendarPostRoutes(protected, controllers.CalendarPostController)
 	SetupPdvRoutes(protected, controllers.PdvController)
 	SetupSocialRoutes(protected, controllers.SocialController)
+	RegisterSocialPostRoutes(protected, controllers.SocialPostController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

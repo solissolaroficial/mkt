@@ -26,4 +26,5 @@ type SocialBenchmarkingGateway interface {
 
 	// Utilities
 	ExistsByID(ctx context.Context, id string) (bool, error)
+	GetByBrand(brandName string) (*entity.SocialBenchmarking, error)
 }

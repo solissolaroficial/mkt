@@ -6,6 +6,14 @@ import type {
   SocialBenchmarkingFilters,
   CreateSocialBenchmarkingRequest,
   UpdateSocialBenchmarkingRequest,
+  SocialPost,
+  SocialPostListResponse,
+  SocialPostFilters,
+  CreateSocialPostRequest,
+  UpdateSocialPostRequest,
+  SocialDailyAggregation,
+  SocialDailyAggregationListResponse,
+  SocialDailyAggregationFilters,
 } from '@/shared/types/legacy.types';
 
 export const socialService = {
@@ -58,5 +66,99 @@ export const socialService = {
   delete: async (id: string): Promise<void> => {
     console.log('[SOCIAL SERVICE] delete called with id:', id);
     await apiClient.delete(ENDPOINTS.SOCIAL.DELETE(id));
+  },
+
+  // ============================================
+  // Social Posts
+  // ============================================
+
+  /**
+   * GET /api/social/posts (com filtros e paginação)
+   */
+  listPosts: async (params?: SocialPostFilters): Promise<SocialPostListResponse> => {
+    console.log('[SOCIAL SERVICE] listPosts called with params:', params);
+    const response = await apiClient.get<SocialPostListResponse>(
+      ENDPOINTS.SOCIAL.LIST_POSTS,
+      { params }
+    );
+    console.log('[SOCIAL SERVICE] listPosts response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * GET /api/social/posts/:id
+   */
+  getPostById: async (id: string): Promise<SocialPost> => {
+    console.log('[SOCIAL SERVICE] getPostById called with id:', id);
+    const response = await apiClient.get<SocialPost>(ENDPOINTS.SOCIAL.GET_POST(id));
+    console.log('[SOCIAL SERVICE] getPostById response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * POST /api/social/posts
+   */
+  createPost: async (data: CreateSocialPostRequest): Promise<SocialPost> => {
+    console.log('[SOCIAL SERVICE] createPost called with data:', data);
+    const response = await apiClient.post<SocialPost>(ENDPOINTS.SOCIAL.CREATE_POST, data);
+    console.log('[SOCIAL SERVICE] createPost response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * PUT /api/social/posts/:id
+   */
+  updatePost: async (id: string, data: UpdateSocialPostRequest): Promise<SocialPost> => {
+    console.log('[SOCIAL SERVICE] updatePost called with id:', id, 'data:', data);
+    const response = await apiClient.put<SocialPost>(ENDPOINTS.SOCIAL.UPDATE_POST(id), data);
+    console.log('[SOCIAL SERVICE] updatePost response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/social/posts/:id
+   */
+  deletePost: async (id: string): Promise<void> => {
+    console.log('[SOCIAL SERVICE] deletePost called with id:', id);
+    await apiClient.delete(ENDPOINTS.SOCIAL.DELETE_POST(id));
+  },
+
+  // ============================================
+  // Social Daily Aggregations
+  // ============================================
+
+  /**
+   * GET /api/social/daily-aggregations (com filtros e paginação)
+   */
+  listAggregations: async (params?: SocialDailyAggregationFilters): Promise<SocialDailyAggregationListResponse> => {
+    console.log('[SOCIAL SERVICE] listAggregations called with params:', params);
+    const response = await apiClient.get<SocialDailyAggregationListResponse>(
+      ENDPOINTS.SOCIAL.LIST_AGGREGATIONS,
+      { params }
+    );
+    console.log('[SOCIAL SERVICE] listAggregations response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * GET /api/social/daily-aggregations/:id
+   */
+  getAggregationById: async (id: string): Promise<SocialDailyAggregation> => {
+    console.log('[SOCIAL SERVICE] getAggregationById called with id:', id);
+    const response = await apiClient.get<SocialDailyAggregation>(ENDPOINTS.SOCIAL.GET_AGGREGATION(id));
+    console.log('[SOCIAL SERVICE] getAggregationById response.data:', response.data);
+    return response.data;
+  },
+
+  /**
+   * POST /api/social/daily-aggregations/recalculate/:brandName/:date
+   */
+  recalculateAggregations: async (brandName: string, date: string): Promise<SocialDailyAggregation> => {
+    console.log('[SOCIAL SERVICE] recalculateAggregations called with brandName:', brandName, 'date:', date);
+    const response = await apiClient.post<SocialDailyAggregation>(
+      ENDPOINTS.SOCIAL.RECALCULATE_AGGREGATIONS(brandName, date)
+    );
+    console.log('[SOCIAL SERVICE] recalculateAggregations response.data:', response.data);
+    return response.data;
   },
 };

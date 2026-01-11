@@ -37,10 +37,22 @@ export const ENDPOINTS = {
     DELETE_RECURRENT: (id: string) => `/api/pdv/recurrent/${id}`,
   } as const,
   SOCIAL: {
+    // Social Benchmarking
     LIST: '/api/social/benchmarking',
     GET: (id: string) => `/api/social/benchmarking/${id}`,
     CREATE: '/api/social/benchmarking',
     UPDATE: (id: string) => `/api/social/benchmarking/${id}`,
     DELETE: (id: string) => `/api/social/benchmarking/${id}`,
+    // Social Posts
+    LIST_POSTS: '/api/social/posts',
+    GET_POST: (id: string) => `/api/social/posts/${id}`,
+    CREATE_POST: '/api/social/posts',
+    UPDATE_POST: (id: string) => `/api/social/posts/${id}`,
+    DELETE_POST: (id: string) => `/api/social/posts/${id}`,
+    // Social Daily Aggregations
+    LIST_AGGREGATIONS: '/api/social/daily-aggregations',
+    GET_AGGREGATION: (id: string) => `/api/social/daily-aggregations/${id}`,
+    RECALCULATE_AGGREGATIONS: (brandName: string, date: string) =>
+      `/api/social/daily-aggregations/recalculate/${brandName}/${date}`,
   } as const,
 } as const;

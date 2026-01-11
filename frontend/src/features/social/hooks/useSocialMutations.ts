@@ -6,6 +6,10 @@ import type {
   SocialBenchmarking,
   CreateSocialBenchmarkingRequest,
   UpdateSocialBenchmarkingRequest,
+  SocialPost,
+  CreateSocialPostRequest,
+  UpdateSocialPostRequest,
+  SocialDailyAggregation,
 } from '@/shared/types/legacy.types';
 
 export const useSocialMutations = (setError?: any) => {
@@ -62,7 +66,79 @@ export const useSocialMutations = (setError?: any) => {
     },
   });
 
+  // ============================================
+  // Social Posts Mutations
+  // ============================================
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: (data: CreateSocialPostRequest) => socialService.createPost(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
+      showSuccess('Post criado com sucesso!');
+    },
+    onError: (error: any) => {
+      if (error.response?.data) {
+        handleBackendErrors(error.response.data);
+      } else {
+        showError('Erro ao criar post');
+      }
+    },
+  });
+
+  // Update post mutation
+  const updatePostMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateSocialPostRequest }) =>
+      socialService.updatePost(id, data),
+    onSuccess: (result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['social-post', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
+      showSuccess('Post atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      if (error.response?.data) {
+        handleBackendErrors(error.response.data);
+      } else {
+        showError('Erro ao atualizar post');
+      }
+    },
+  });
+
+  // Delete post mutation
+  const deletePostMutation = useMutation({
+    mutationFn: (id: string) => socialService.deletePost(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
+      showSuccess('Post deletado com sucesso!');
+    },
+    onError: () => {
+      showError('Erro ao deletar post');
+    },
+  });
+
+  // ============================================
+  // Social Daily Aggregations Mutations
+  // ============================================
+
+  // Recalculate aggregations mutation
+  const recalculateAggregationsMutation = useMutation({
+    mutationFn: ({ brandName, date }: { brandName: string; date: string }) =>
+      socialService.recalculateAggregations(brandName, date),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
+      queryClient.invalidateQueries({ queryKey: ['social-benchmarkings'] });
+      showSuccess('Agregações recalculadas com sucesso!');
+    },
+    onError: () => {
+      showError('Erro ao recalcular agregações');
+    },
+  });
+
   return {
+    // Social Benchmarking
     create: (data: CreateSocialBenchmarkingRequest, options?: { onSuccess?: (result: SocialBenchmarking) => void; onError?: (error: any) => void }) =>
       createMutation.mutate(data, {
         onSuccess: (result) => {
@@ -82,9 +158,46 @@ export const useSocialMutations = (setError?: any) => {
         },
       }),
     delete: (id: string) => deleteMutation.mutate(id),
+
+    // Social Posts
+    createPost: (data: CreateSocialPostRequest, options?: { onSuccess?: (result: SocialPost) => void; onError?: (error: any) => void }) =>
+      createPostMutation.mutate(data, {
+        onSuccess: (result) => {
+          options?.onSuccess?.(result);
+        },
+        onError: (error) => {
+          options?.onError?.(error);
+        },
+      }),
+    updatePost: (variables: { id: string; data: UpdateSocialPostRequest }, options?: { onSuccess?: (result: SocialPost) => void; onError?: (error: any) => void }) =>
+      updatePostMutation.mutate(variables, {
+        onSuccess: (result) => {
+          options?.onSuccess?.(result);
+        },
+        onError: (error) => {
+          options?.onError?.(error);
+        },
+      }),
+    deletePost: (id: string) => deletePostMutation.mutate(id),
+
+    // Social Daily Aggregations
+    recalculateAggregations: (brandName: string, date: string, options?: { onSuccess?: (result: SocialDailyAggregation) => void; onError?: (error: any) => void }) =>
+      recalculateAggregationsMutation.mutate({ brandName, date }, {
+        onSuccess: (result) => {
+          options?.onSuccess?.(result);
+        },
+        onError: (error) => {
+          options?.onError?.(error);
+        },
+      }),
+
     // Loading states
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isCreatingPost: createPostMutation.isPending,
+    isUpdatingPost: updatePostMutation.isPending,
+    isDeletingPost: deletePostMutation.isPending,
+    isRecalculatingAggregations: recalculateAggregationsMutation.isPending,
   };
 };

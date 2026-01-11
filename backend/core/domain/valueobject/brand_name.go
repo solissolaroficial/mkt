@@ -39,15 +39,16 @@ func NewBrandName(name string) (*BrandName, error) {
 	return &BrandName{name: trimmed}, nil
 }
 
-func ReconstructBrandName(name string) *BrandName {
-	// Assume que dados do banco são válidos
-	return &BrandName{name: name}
-}
-
 func (b *BrandName) Value() string {
 	return b.name
 }
 
 func (b *BrandName) String() string {
 	return b.name
+}
+
+// ReconstructBrandName creates a BrandName from a string without validation
+// This is used when reconstructing entities from database
+func ReconstructBrandName(name string) *BrandName {
+	return &BrandName{name: name}
 }

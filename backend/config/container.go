@@ -37,17 +37,19 @@ type Container struct {
 	JwtService    service.JWTService
 
 	// Gateways
-	UserGateway               gateway.UserGateway
-	KpiGateway                gateway.KpiGateway
-	MonthlyDataGateway        gateway.MonthlyDataGateway
-	TaskGateway               gateway.TaskGateway
-	SubtaskGateway            gateway.SubtaskGateway
-	CommentGateway            gateway.CommentGateway
-	NotificationGateway       gateway.NotificationGateway
-	CalendarPostGateway       gateway.CalendarPostGateway
-	PdvPostGateway            gateway.PdvPostGateway
-	RecurrentPdvGateway       gateway.RecurrentPdvGateway
-	SocialBenchmarkingGateway gateway.SocialBenchmarkingGateway
+	UserGateway                   gateway.UserGateway
+	KpiGateway                    gateway.KpiGateway
+	MonthlyDataGateway            gateway.MonthlyDataGateway
+	TaskGateway                   gateway.TaskGateway
+	SubtaskGateway                gateway.SubtaskGateway
+	CommentGateway                gateway.CommentGateway
+	NotificationGateway           gateway.NotificationGateway
+	CalendarPostGateway           gateway.CalendarPostGateway
+	PdvPostGateway                gateway.PdvPostGateway
+	RecurrentPdvGateway           gateway.RecurrentPdvGateway
+	SocialBenchmarkingGateway     gateway.SocialBenchmarkingGateway
+	SocialPostGateway             gateway.SocialPostGateway
+	SocialDailyAggregationGateway gateway.SocialDailyAggregationGateway
 
 	// Seeders
 	UserSeeder               *seeders.UserSeeder
@@ -59,6 +61,25 @@ type Container struct {
 
 	// Use Cases - Users
 	ListUsersUseCase *users.ListUsersUseCase
+
+	// Use Cases - Social Benchmarking
+	CreateSocialBenchmarkingUseCase *social.CreateSocialBenchmarkingUseCase
+	ListSocialBenchmarkingsUseCase  *social.ListSocialBenchmarkingsUseCase
+	GetSocialBenchmarkingUseCase    *social.GetSocialBenchmarkingUseCase
+	UpdateSocialBenchmarkingUseCase *social.UpdateSocialBenchmarkingUseCase
+	DeleteSocialBenchmarkingUseCase *social.DeleteSocialBenchmarkingUseCase
+
+	// Use Cases - Social Posts
+	CreateSocialPostUseCase *social.CreateSocialPostUseCase
+	GetSocialPostUseCase    *social.GetSocialPostUseCase
+	ListSocialPostsUseCase  *social.ListSocialPostsUseCase
+	UpdateSocialPostUseCase *social.UpdateSocialPostUseCase
+	DeleteSocialPostUseCase *social.DeleteSocialPostUseCase
+
+	// Use Cases - Social Daily Aggregations
+	RecalculateDailyAggregationsUseCase *social.RecalculateDailyAggregationsUseCase
+	ListSocialDailyAggregationsUseCase  *social.ListSocialDailyAggregationsUseCase
+	GetSocialDailyAggregationUseCase    *social.GetSocialDailyAggregationUseCase
 
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
@@ -115,6 +136,7 @@ type Container struct {
 	CalendarPostController *controller.CalendarPostController
 	PdvController          *controller.PdvController
 	SocialController       *controller.SocialController
+	SocialPostController   *controller.SocialPostController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -151,6 +173,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 	pdvPostGateway := dbgateway.NewPdvPostGateway(db)
 	recurrentPdvGateway := dbgateway.NewRecurrentPdvGateway(db)
 	socialBenchmarkingGateway := dbgateway.NewSocialBenchmarkingGateway(db)
+	socialPostGateway := dbgateway.NewSocialPostGateway(db)
+	socialDailyAggregationGateway := dbgateway.NewSocialDailyAggregationGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -218,8 +242,6 @@ func NewContainer(cfg *Config) (*Container, error) {
 	listCalendarPostsUseCase := calendar.NewListCalendarPosts(calendarPostGateway)
 
 	// PDV Use Cases - PdvPost
-
-	// PDV Use Cases - PdvPost
 	createPdvPostUseCase := usecasepdv.NewCreatePdvPost(pdvPostGateway)
 	listPdvPostsUseCase := usecasepdv.NewListPdvPosts(pdvPostGateway)
 	getPdvPostUseCase := usecasepdv.NewGetPdvPost(pdvPostGateway)
@@ -241,9 +263,21 @@ func NewContainer(cfg *Config) (*Container, error) {
 	updateSocialBenchmarkingUseCase := social.NewUpdateSocialBenchmarking(socialBenchmarkingGateway)
 	deleteSocialBenchmarkingUseCase := social.NewDeleteSocialBenchmarking(socialBenchmarkingGateway)
 
+	// Social Daily Aggregation Use Cases (must be before Social Post Use Cases)
+	recalculateDailyAggregationsUseCase := social.NewRecalculateDailyAggregationsUseCase(socialPostGateway, socialDailyAggregationGateway, socialBenchmarkingGateway)
+	listSocialDailyAggregationsUseCase := social.NewListSocialDailyAggregationsUseCase(socialDailyAggregationGateway)
+	getSocialDailyAggregationUseCase := social.NewGetSocialDailyAggregationUseCase(socialDailyAggregationGateway)
+
+	// Social Post Use Cases
+	createSocialPostUseCase := social.NewCreateSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
+	getSocialPostUseCase := social.NewGetSocialPostUseCase(socialPostGateway)
+	listSocialPostsUseCase := social.NewListSocialPostsUseCase(socialPostGateway)
+	updateSocialPostUseCase := social.NewUpdateSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
+	deleteSocialPostUseCase := social.NewDeleteSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
+
 	log.Println("✅ Use cases initialized")
 
-	//5. Controllers (dependem de use cases)
+	// 5. Controllers (dependem de use cases)
 	authController := controller.NewAuthController(loginUseCase)
 	kpiController := controller.NewKpiController(
 		createKpiUseCase,
@@ -322,7 +356,20 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteSocialBenchmarkingUseCase,
 	)
 
+	// Social Post Controller
+	socialPostController := controller.NewSocialPostController(
+		createSocialPostUseCase,
+		updateSocialPostUseCase,
+		deleteSocialPostUseCase,
+		listSocialPostsUseCase,
+		getSocialPostUseCase,
+		recalculateDailyAggregationsUseCase,
+		listSocialDailyAggregationsUseCase,
+		getSocialDailyAggregationUseCase,
+	)
+
 	log.Println("✅ Controllers initialized")
+
 	// 6. Middlewares (dependem de services)
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	corsMiddleware := middleware.NewCorsMiddleware()
@@ -347,6 +394,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 		KpiSeeder:                            kpiSeeder,
 		SocialBenchmarkingSeeder:             socialBenchmarkingSeeder,
 		SocialBenchmarkingGateway:            socialBenchmarkingGateway,
+		SocialPostGateway:                    socialPostGateway,
+		SocialDailyAggregationGateway:        socialDailyAggregationGateway,
 		LoginUseCase:                         loginUseCase,
 		CreateKpiUseCase:                     createKpiUseCase,
 		GetKpiUseCase:                        getKpiUseCase,
@@ -396,6 +445,20 @@ func NewContainer(cfg *Config) (*Container, error) {
 		CalendarPostController:               calendarPostController,
 		PdvController:                        pdvController,
 		SocialController:                     socialController,
+		SocialPostController:                 socialPostController,
+		CreateSocialBenchmarkingUseCase:      createSocialBenchmarkingUseCase,
+		ListSocialBenchmarkingsUseCase:       listSocialBenchmarkingsUseCase,
+		GetSocialBenchmarkingUseCase:         getSocialBenchmarkingUseCase,
+		UpdateSocialBenchmarkingUseCase:      updateSocialBenchmarkingUseCase,
+		DeleteSocialBenchmarkingUseCase:      deleteSocialBenchmarkingUseCase,
+		CreateSocialPostUseCase:              createSocialPostUseCase,
+		GetSocialPostUseCase:                 getSocialPostUseCase,
+		ListSocialPostsUseCase:               listSocialPostsUseCase,
+		UpdateSocialPostUseCase:              updateSocialPostUseCase,
+		DeleteSocialPostUseCase:              deleteSocialPostUseCase,
+		RecalculateDailyAggregationsUseCase:  recalculateDailyAggregationsUseCase,
+		ListSocialDailyAggregationsUseCase:   listSocialDailyAggregationsUseCase,
+		GetSocialDailyAggregationUseCase:     getSocialDailyAggregationUseCase,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -462,6 +525,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		CalendarPostController: c.CalendarPostController,
 		PdvController:          c.PdvController,
 		SocialController:       c.SocialController,
+		SocialPostController:   c.SocialPostController,
 	}
 }
 

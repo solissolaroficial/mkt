@@ -486,3 +486,133 @@ export interface UpdateStatusRequest {
   status: string; // Novo status (in_progress, review, adjust, approved, published)
   text?: string; // Texto de ajuste (obrigatório quando status = adjust)
 }
+
+// ============================================
+// Social Post Types (Backend Integration)
+// ============================================
+
+// Tipo para plataformas de social media
+export type SocialPlatform = 'instagram' | 'facebook' | 'linkedin' | 'tiktok' | 'twitter';
+
+// Tipo para tipos de post de social media
+export type SocialPostType = 'image' | 'video' | 'carousel' | 'reel' | 'story';
+
+// Interface principal para SocialPost
+export interface SocialPost {
+  id: string;
+  brand_name: string;
+  platform: SocialPlatform;
+  post_date: string; // YYYY-MM-DD
+  post_time?: string; // HH:MM:SS (opcional)
+  likes: number;
+  comments: number;
+  shares?: number; // Opcional
+  post_type: SocialPostType;
+  caption?: string; // Opcional
+  followers_at_post?: number; // Opcional
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+}
+
+// Interface para resposta paginada de SocialPosts
+export interface SocialPostListResponse {
+  posts: SocialPost[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+// Interface para filtros de SocialPosts
+export interface SocialPostFilters {
+  brand_name?: string;
+  platform?: SocialPlatform;
+  post_type?: SocialPostType;
+  start_date?: string; // YYYY-MM-DD
+  end_date?: string; // YYYY-MM-DD
+  min_followers?: number;
+  max_followers?: number;
+  min_engagement?: number;
+  max_engagement?: number;
+  active?: boolean; // true = ativos, false = deletados
+  page?: number;
+  limit?: number;
+  sort_by?: 'post_date' | 'likes' | 'comments' | 'shares' | 'created_at';
+  sort_order?: 'asc' | 'desc';
+}
+
+// Interface para request de criação de SocialPost
+export interface CreateSocialPostRequest {
+  brand_name: string;
+  platform: SocialPlatform;
+  post_date: string; // YYYY-MM-DD
+  post_time?: string; // HH:MM:SS (opcional)
+  likes: number;
+  comments: number;
+  shares?: number; // Opcional
+  post_type: SocialPostType;
+  caption?: string; // Opcional
+  followers_at_post?: number; // Opcional
+}
+
+// Interface para request de atualização de SocialPost (partial update)
+export interface UpdateSocialPostRequest {
+  brand_name?: string;
+  platform?: SocialPlatform;
+  post_date?: string; // YYYY-MM-DD
+  post_time?: string; // HH:MM:SS (opcional)
+  likes?: number;
+  comments?: number;
+  shares?: number; // Opcional
+  post_type?: SocialPostType;
+  caption?: string; // Opcional
+  followers_at_post?: number; // Opcional
+}
+
+// ============================================
+// Social Daily Aggregation Types (Backend Integration)
+// ============================================
+
+// Interface principal para SocialDailyAggregation
+export interface SocialDailyAggregation {
+  id: string;
+  brand_name: string;
+  aggregation_date: string; // YYYY-MM-DD
+  total_posts: number;
+  total_likes: number;
+  total_comments: number;
+  total_shares?: number; // Opcional
+  avg_likes: number;
+  avg_comments: number;
+  avg_shares?: number; // Opcional
+  followers_at_date?: number; // Opcional
+  engagement_rate: number;
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+}
+
+// Interface para resposta paginada de SocialDailyAggregations
+export interface SocialDailyAggregationListResponse {
+  aggregations: SocialDailyAggregation[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+// Interface para filtros de SocialDailyAggregations
+export interface SocialDailyAggregationFilters {
+  brand_name?: string;
+  platform?: SocialPlatform;
+  start_date?: string; // YYYY-MM-DD
+  end_date?: string; // YYYY-MM-DD
+  active?: boolean; // true = ativos, false = deletados
+  page?: number;
+  limit?: number;
+  sort_by?: 'aggregation_date' | 'total_posts' | 'total_likes' | 'total_comments' | 'engagement_rate' | 'created_at';
+  sort_order?: 'asc' | 'desc';
+}
