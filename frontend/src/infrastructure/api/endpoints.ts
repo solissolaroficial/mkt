@@ -55,4 +55,24 @@ export const ENDPOINTS = {
     RECALCULATE_AGGREGATIONS: (brandName: string, date: string) =>
       `/api/social/daily-aggregations/recalculate/${brandName}/${date}`,
   } as const,
+  COOPERATIVE: {
+    // Offline Actions
+    OFFLINE_ACTIONS_LIST: '/api/cooperative/offline-actions',
+    OFFLINE_ACTIONS_GET: (uuid: string) => `/api/cooperative/offline-actions/${uuid}`,
+    OFFLINE_ACTIONS_CREATE: '/api/cooperative/offline-actions',
+    OFFLINE_ACTIONS_UPDATE: (uuid: string) => `/api/cooperative/offline-actions/${uuid}`,
+    OFFLINE_ACTIONS_DELETE: (uuid: string) => `/api/cooperative/offline-actions/${uuid}`,
+    // Showroom Items
+    SHOWROOM_ITEMS_LIST: '/api/cooperative/showroom-items',
+    SHOWROOM_ITEMS_GET: (uuid: string) => `/api/cooperative/showroom-items/${uuid}`,
+    SHOWROOM_ITEMS_CREATE: '/api/cooperative/showroom-items',
+    SHOWROOM_ITEMS_UPDATE: (uuid: string) => `/api/cooperative/showroom-items/${uuid}`,
+    SHOWROOM_ITEMS_DELETE: (uuid: string) => `/api/cooperative/showroom-items/${uuid}`,
+    // Rep Marketing Actions
+    REP_MARKETING_ACTIONS_LIST: '/api/cooperative/rep-marketing-actions',
+    REP_MARKETING_ACTIONS_GET: (uuid: string) => `/api/cooperative/rep-marketing-actions/${uuid}`,
+    REP_MARKETING_ACTIONS_CREATE: '/api/cooperative/rep-marketing-actions',
+    REP_MARKETING_ACTIONS_UPDATE: (uuid: string) => `/api/cooperative/rep-marketing-actions/${uuid}`,
+    REP_MARKETING_ACTIONS_DELETE: (uuid: string) => `/api/cooperative/rep-marketing-actions/${uuid}`,
+  } as const,
 } as const;

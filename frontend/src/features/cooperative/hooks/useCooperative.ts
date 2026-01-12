@@ -1,34 +1,55 @@
 import { useQuery } from '@tanstack/react-query';
 import { cooperativeService } from '../services/cooperativeService';
-import type { OfflineAction, ShowroomItem } from '../types';
-import { OFFLINE_ACTIONS_DATA, MOCK_SHOWROOM_ITEMS } from '@/shared/utils/legacy.constants';
+import type { ShowroomItem, OfflineAction, RepMarketingAction, PaginatedResponse } from '../types';
+import type { OfflineActionFilters, ShowroomItemFilters, RepMarketingActionFilters } from '../types';
 
-export const useOfflineActions = () => {
+export const useOfflineActions = (filters?: OfflineActionFilters) => {
   return useQuery({
-    queryKey: ['offline-actions'],
-    queryFn: async () => {
-      try {
-        return await cooperativeService.getOfflineActions();
-      } catch (error) {
-        console.warn('Using mock data for offline actions:', error);
-        return OFFLINE_ACTIONS_DATA as OfflineAction[];
-      }
-    },
-    staleTime: 1000 * 60 * 5,
+    queryKey: ['offline-actions', filters],
+    queryFn: () => cooperativeService.getOfflineActions({
+      ...filters,
+      page: filters?.page || 1,
+      limit: filters?.limit || 50,
+    }),
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    select: (data: PaginatedResponse<OfflineAction>) => data.data, // Extrair array de dados da resposta paginada
   });
 };
 
-export const useShowroomItems = () => {
+export const useShowroomItems = (filters?: ShowroomItemFilters) => {
   return useQuery({
-    queryKey: ['showroom-items'],
-    queryFn: async () => {
-      try {
-        return await cooperativeService.getShowroomItems();
-      } catch (error) {
-        console.warn('Using mock data for showroom items:', error);
-        return MOCK_SHOWROOM_ITEMS as ShowroomItem[];
-      }
-    },
-    staleTime: 1000 * 60 * 5,
+    queryKey: ['showroom-items', filters],
+    queryFn: () => cooperativeService.getShowroomItems({
+      ...filters,
+      page: filters?.page || 1,
+      limit: filters?.limit || 50,
+    }),
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    select: (data: PaginatedResponse<ShowroomItem>) => data.data, // Extrair array de dados da resposta paginada
+  });
+};
+
+export const useRepMarketingActions = (filters?: RepMarketingActionFilters) => {
+  return useQuery({
+    queryKey: ['rep-marketing-actions', filters],
+    queryFn: () => cooperativeService.getRepMarketingActions({
+      ...filters,
+      page: filters?.page || 1,
+      limit: filters?.limit || 50,
+    }),
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
+    select: (data: PaginatedResponse<RepMarketingAction>) => data.data, // Extrair array de dados da resposta paginada
   });
 };

@@ -1,14 +1,47 @@
-export { default as CooperativeActionsView } from './ui/CooperativeActionsView';
+// ============================================
+// Cooperative Module Exports
+// ============================================
 
-export { useOfflineActions, useShowroomItems } from './hooks/useCooperative';
-export { useOfflineActionMutations, useShowroomItemMutations } from './hooks/useCooperativeMutations';
-
-export type { 
-  CooperativeActionsViewProps,
+// Types
+export type {
+  ShowroomItem,
+  OfflineAction,
   RepMarketingAction,
-  SubTabType,
-  OfflineCategory,
-  OfflineActionForm,
-  ShowroomForm,
-  MarketingActionForm
+  CreateShowroomItemRequest,
+  UpdateShowroomItemRequest,
+  CreateOfflineActionRequest,
+  UpdateOfflineActionRequest,
+  CreateRepMarketingActionRequest,
+  UpdateRepMarketingActionRequest
 } from './types';
+
+export type {
+  ShowroomItemFilters,
+  OfflineActionFilters,
+  RepMarketingActionFilters
+} from './types/filters';
+
+// Services
+export { cooperativeService } from './services/cooperativeService';
+
+// Hooks
+export {
+  useOfflineActions,
+  useShowroomItems,
+  useRepMarketingActions
+} from './hooks/useCooperative';
+
+export {
+  useOfflineActionMutations,
+  useShowroomItemMutations,
+  useRepMarketingActionMutations
+} from './hooks/useCooperativeMutations';
+
+// Utils
+export {
+  fromDDMMYYYYtoISO,
+  fromISOtoDDMMYYYY,
+  formatCurrency,
+  parseCurrency,
+  isValidDate
+} from './utils/formatters';
