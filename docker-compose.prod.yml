@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: solis_db
       POSTGRES_USER: solis_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:C43Uyi2fXtX26n0J0Nf8}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-C43Uyi2fXtX26n0J0Nf8}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -21,17 +19,16 @@ services:
 
   backend:
     image: 183295432925.dkr.ecr.us-west-2.amazonaws.com/solis:prod
-    platform: linux/amd64
     container_name: solis-backend
     restart: unless-stopped
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: solis_user
-      DB_PASSWORD: ${DB_PASSWORD:C43Uyi2fXtX26n0J0Nf8}
+      DB_PASSWORD: ${DB_PASSWORD:-C43Uyi2fXtX26n0J0Nf8}
       DB_NAME: solis_db
       SERVER_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:25acb4ea5f8fed783b6ebaba198965aadb90547f461e98375779c3c0afa3882b}
+      JWT_SECRET: ${JWT_SECRET:-25acb4ea5f8fed783b6ebaba198965aadb90547f461e98375779c3c0afa3882b}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:https://mkt.dimensolis.com.br}
     depends_on:
       postgres:
