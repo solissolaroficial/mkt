@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"solis/backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 // OfflineActionCriteria representa filtros para busca de ações offline

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"solis/backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 
 	"github.com/google/uuid"
 )
@@ -104,8 +104,8 @@ func NewOfflineAction(
 		deliveryDate:     nil,
 		city:             nil,
 		uf:               nil,
-		scored:           scored,
-		status:           status,
+		scored:           &scored,
+		status:           &status,
 		observation:      obs,
 		pdv:              &pdvTrimmed,
 		repName:          repName,

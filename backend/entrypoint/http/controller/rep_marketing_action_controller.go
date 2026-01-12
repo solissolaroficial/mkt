@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	usecase "solis/backend/application/usecase/cooperative/repmarketingaction"
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/entrypoint/http/payload/request"
-	"solis/backend/entrypoint/http/payload/response"
+	usecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
 
 type RepMarketingActionController struct {
@@ -63,7 +63,7 @@ func (c *RepMarketingActionController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("Rep marketing action created successfully: %s", action.UUID())
+	log.Printf("Rep marketing action created successfully: %s", action.ID())
 	return ctx.Status(fiber.StatusCreated).JSON(c.mapper.ToRepMarketingActionResponse(action))
 }
 

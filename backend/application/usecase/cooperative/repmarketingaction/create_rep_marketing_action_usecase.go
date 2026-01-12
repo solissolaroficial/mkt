@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"solis/backend/core/domain/entity"
-	"solis/backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
 type CreateRepMarketingActionUseCase struct {

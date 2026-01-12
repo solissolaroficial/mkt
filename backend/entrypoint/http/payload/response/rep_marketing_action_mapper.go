@@ -3,7 +3,7 @@ package response
 import (
 	"time"
 
-	"solis/backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 )
 
 type RepMarketingActionPayloadMapper struct{}
@@ -15,7 +15,7 @@ func NewRepMarketingActionPayloadMapper() *RepMarketingActionPayloadMapper {
 // ToRepMarketingActionResponse converte Entity para Response DTO
 func (m *RepMarketingActionPayloadMapper) ToRepMarketingActionResponse(action *entity.RepMarketingAction) RepMarketingActionResponse {
 	response := RepMarketingActionResponse{
-		UUID:        action.UUID().String(),
+		UUID:        action.ID().String(),
 		RepName:     action.RepName(),
 		Date:        action.Date().Format(time.RFC3339),
 		Description: action.Description(),

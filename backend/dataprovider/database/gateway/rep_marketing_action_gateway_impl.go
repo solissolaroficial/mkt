@@ -6,13 +6,13 @@ import (
 
 	"gorm.io/gorm"
 
-	"solis/backend/core/domain"
-	"solis/backend/core/domain/entity"
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/core/domain/gateway"
-	"solis/backend/core/domain/valueobject"
-	"solis/backend/dataprovider/database/mapper"
-	"solis/backend/dataprovider/database/model"
+	"github.com/seu-usuario/solis-backend/core/domain"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/dataprovider/database/mapper"
+	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
 )
 
 type repMarketingActionGatewayImpl struct {

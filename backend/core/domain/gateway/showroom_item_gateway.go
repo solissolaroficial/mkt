@@ -3,9 +3,9 @@ package gateway
 import (
 	"context"
 
-	"solis/backend/core/domain"
-	"solis/backend/core/domain/entity"
-	"solis/backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/core/domain"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 type ShowroomItemGateway interface {

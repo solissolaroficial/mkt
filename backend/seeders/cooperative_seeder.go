@@ -3,9 +3,11 @@ package seeders
 import (
 	"context"
 	"log"
+	"time"
 
-	"solis/backend/core/domain/entity"
-	"solis/backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 // CooperativeSeeder é responsável por criar dados iniciais do módulo cooperative
@@ -89,37 +91,34 @@ func (s *CooperativeSeeder) seedOfflineActions(ctx context.Context) error {
 	}
 
 	for _, data := range offlineActions {
-		// Verificar se já existe uma ação com mesma PDV e data
-		criteria := entity.NewOfflineActionCriteria().
-			WithPDV(data.pdv).
-			WithActionDate(data.actionDate)
-
-		existingActions, _, err := s.offlineActionGateway.FindByCriteria(ctx, criteria, nil, nil)
+		// Criar ActionDate value object
+		actionDate, err := valueobject.NewActionDate(data.actionDate)
 		if err != nil {
-			return err
-		}
-
-		if len(existingActions) > 0 {
-			log.Printf("✅ Offline action for PDV %s on %s already exists, skipping...", data.pdv, data.actionDate)
+			log.Printf("❌ Error creating ActionDate: %v", err)
 			continue
 		}
+
+		// Criar OfflineCategory value object
+		category := valueobject.OfflineCategory(data.category)
 
 		// Criar ação offline
 		action, err := entity.NewOfflineAction(
 			data.requestedAmount,
-			data.actionDate,
-			data.category,
+			actionDate,
+			category,
 			data.pdv,
 			data.repName,
 			data.observation,
 		)
 		if err != nil {
-			return err
+			log.Printf("❌ Error creating offline action: %v", err)
+			continue
 		}
 
 		// Salvar no banco
 		if err := s.offlineActionGateway.Save(ctx, action); err != nil {
-			return err
+			log.Printf("❌ Error saving offline action: %v", err)
+			continue
 		}
 
 		log.Printf("✅ Offline action created: %s - %s", data.pdv, data.actionDate)
@@ -166,41 +165,48 @@ func (s *CooperativeSeeder) seedShowroomItems(ctx context.Context) error {
 	}
 
 	for _, data := range showroomItems {
-		// Verificar se já existe um item com mesma PDV
-		criteria := entity.NewShowroomItemCriteria().WithPDV(data.pdv)
-
-		existingItems, _, err := s.showroomItemGateway.FindByCriteria(ctx, criteria, nil, nil)
+		// Criar item de showroom com apenas 2 parâmetros
+		item, err := entity.NewShowroomItem(
+			data.pdv,
+			data.repName,
+		)
 		if err != nil {
-			return err
-		}
-
-		if len(existingItems) > 0 {
-			log.Printf("✅ Showroom item for PDV %s already exists, skipping...", data.pdv)
+			log.Printf("❌ Error creating showroom item: %v", err)
 			continue
 		}
 
-		// Criar item de showroom
-		item, err := entity.NewShowroomItem(
-			data.pdv,
-			data.city,
-			data.contact,
-			data.repName,
-			data.deliveryForecast,
-		)
-		if err != nil {
-			return err
+		// Atualizar cidade
+		if data.city != "" {
+			if err := item.UpdateCity(&data.city); err != nil {
+				log.Printf("❌ Error updating city: %v", err)
+			}
+		}
+
+		// Atualizar contato
+		if data.contact != "" {
+			if err := item.UpdateContact(&data.contact); err != nil {
+				log.Printf("❌ Error updating contact: %v", err)
+			}
+		}
+
+		// Atualizar previsão de entrega
+		if data.deliveryForecast != "" {
+			if err := item.UpdateDeliveryForecast(&data.deliveryForecast); err != nil {
+				log.Printf("❌ Error updating delivery forecast: %v", err)
+			}
 		}
 
 		// Atualizar data de workshop se fornecida
 		if data.workshopDate != "" {
-			if err := item.UpdateWorkshopDate(data.workshopDate); err != nil {
-				return err
+			if err := item.UpdateWorkshopDate(&data.workshopDate); err != nil {
+				log.Printf("❌ Error updating workshop date: %v", err)
 			}
 		}
 
 		// Salvar no banco
 		if err := s.showroomItemGateway.Save(ctx, item); err != nil {
-			return err
+			log.Printf("❌ Error saving showroom item: %v", err)
+			continue
 		}
 
 		log.Printf("✅ Showroom item created: %s - %s", data.pdv, data.city)
@@ -241,34 +247,28 @@ func (s *CooperativeSeeder) seedRepMarketingActions(ctx context.Context) error {
 	}
 
 	for _, data := range repMarketingActions {
-		// Verificar se já existe uma ação com mesmo representante e data
-		criteria := entity.NewRepMarketingActionCriteria().
-			WithRepName(data.repName).
-			WithDate(data.date)
-
-		existingActions, _, err := s.repMarketingActionGateway.FindByCriteria(ctx, criteria, nil, nil)
+		// Parse date
+		parsedDate, err := time.Parse("2006-01-02", data.date)
 		if err != nil {
-			return err
-		}
-
-		if len(existingActions) > 0 {
-			log.Printf("✅ Rep marketing action for %s on %s already exists, skipping...", data.repName, data.date)
+			log.Printf("❌ Error parsing date %s: %v", data.date, err)
 			continue
 		}
 
 		// Criar ação de marketing de representante
 		action, err := entity.NewRepMarketingAction(
 			data.repName,
-			data.date,
+			parsedDate,
 			data.description,
 		)
 		if err != nil {
-			return err
+			log.Printf("❌ Error creating rep marketing action: %v", err)
+			continue
 		}
 
 		// Salvar no banco
 		if err := s.repMarketingActionGateway.Save(ctx, action); err != nil {
-			return err
+			log.Printf("❌ Error saving rep marketing action: %v", err)
+			continue
 		}
 
 		log.Printf("✅ Rep marketing action created: %s - %s", data.repName, data.date)

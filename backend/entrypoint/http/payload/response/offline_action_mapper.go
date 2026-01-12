@@ -3,7 +3,7 @@ package response
 import (
 	"time"
 
-	"solis/backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 )
 
 type OfflineActionPayloadMapper struct{}
@@ -14,12 +14,17 @@ func NewOfflineActionPayloadMapper() *OfflineActionPayloadMapper {
 
 // ToOfflineActionResponse converte Entity para Response DTO
 func (m *OfflineActionPayloadMapper) ToOfflineActionResponse(action *entity.OfflineAction) OfflineActionResponse {
+	pdv := ""
+	if v := action.PDV(); v != nil {
+		pdv = *v
+	}
+
 	response := OfflineActionResponse{
-		UUID:            action.UUID().String(),
+		UUID:            action.ID().String(),
 		RequestedAmount: action.RequestedAmount().Value(),
-		ActionDate:      action.ActionDate().Format(time.RFC3339),
+		ActionDate:      action.ActionDate().Value().Format(time.RFC3339),
 		Category:        action.Category().String(),
-		PDV:             action.PDV(),
+		PDV:             pdv,
 		RepName:         action.RepName(),
 		Observation:     action.Observation(),
 		Status:          action.Status().String(),
@@ -38,18 +43,15 @@ func (m *OfflineActionPayloadMapper) ToOfflineActionResponse(action *entity.Offl
 	}
 
 	if action.DepartureDate() != nil {
-		departureDate := action.DepartureDate().Format(time.RFC3339)
-		response.DepartureDate = &departureDate
+		response.DepartureDate = action.DepartureDate()
 	}
 
 	if action.DeliveryForecast() != nil {
-		deliveryForecast := action.DeliveryForecast().Format(time.RFC3339)
-		response.DeliveryForecast = &deliveryForecast
+		response.DeliveryForecast = action.DeliveryForecast()
 	}
 
 	if action.DeliveryDate() != nil {
-		deliveryDate := action.DeliveryDate().Format(time.RFC3339)
-		response.DeliveryDate = &deliveryDate
+		response.DeliveryDate = action.DeliveryDate()
 	}
 
 	if action.City() != nil {

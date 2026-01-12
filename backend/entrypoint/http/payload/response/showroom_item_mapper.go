@@ -3,7 +3,7 @@ package response
 import (
 	"time"
 
-	"solis/backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 )
 
 type ShowroomItemPayloadMapper struct{}
@@ -15,7 +15,7 @@ func NewShowroomItemPayloadMapper() *ShowroomItemPayloadMapper {
 // ToShowroomItemResponse converte Entity para Response DTO
 func (m *ShowroomItemPayloadMapper) ToShowroomItemResponse(item *entity.ShowroomItem) ShowroomItemResponse {
 	response := ShowroomItemResponse{
-		UUID:             item.UUID().String(),
+		UUID:             item.ID().String(),
 		PDV:              item.PDV(),
 		City:             item.City(),
 		Contact:          item.Contact(),

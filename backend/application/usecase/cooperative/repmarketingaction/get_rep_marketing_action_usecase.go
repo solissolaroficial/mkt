@@ -3,9 +3,9 @@ package repmarketingaction
 import (
 	"context"
 
-	"solis/backend/core/domain/entity"
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
 type GetRepMarketingActionUseCase struct {

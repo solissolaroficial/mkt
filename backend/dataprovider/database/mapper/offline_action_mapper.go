@@ -5,9 +5,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"solis/backend/core/domain/entity"
-	"solis/backend/core/domain/valueobject"
-	"solis/backend/dataprovider/database/model"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
 )
 
 type OfflineActionMapper struct{}

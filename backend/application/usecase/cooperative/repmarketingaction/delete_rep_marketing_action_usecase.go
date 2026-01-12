@@ -3,8 +3,8 @@ package repmarketingaction
 import (
 	"context"
 
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/core/domain/gateway"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
 type DeleteRepMarketingActionUseCase struct {

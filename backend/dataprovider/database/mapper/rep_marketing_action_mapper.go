@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"solis/backend/core/domain/entity"
-	"solis/backend/dataprovider/database/model"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
 )
 
 type RepMarketingActionMapper struct{}

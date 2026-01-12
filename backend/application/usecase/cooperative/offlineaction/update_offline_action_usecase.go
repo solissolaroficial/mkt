@@ -3,10 +3,10 @@ package offlineaction
 import (
 	"context"
 
-	"solis/backend/core/domain/entity"
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/core/domain/gateway"
-	"solis/backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 type UpdateOfflineActionUseCase struct {
@@ -102,7 +102,7 @@ func (uc *UpdateOfflineActionUseCase) Execute(ctx context.Context, input UpdateO
 	}
 
 	if input.PDV != nil {
-		if err := action.UpdatePDV(*input.PDV); err != nil {
+		if err := action.UpdatePDV(input.PDV); err != nil {
 			return nil, err
 		}
 	}

@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	usecase "solis/backend/application/usecase/cooperative/showroomitem"
-	domainErrors "solis/backend/core/domain/errors"
-	"solis/backend/entrypoint/http/payload/request"
-	"solis/backend/entrypoint/http/payload/response"
+	usecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
+	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
 
 type ShowroomItemController struct {
@@ -66,7 +66,7 @@ func (c *ShowroomItemController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	log.Printf("Showroom item created successfully: %s", item.UUID())
+	log.Printf("Showroom item created successfully: %s", item.ID())
 	return ctx.Status(fiber.StatusCreated).JSON(c.mapper.ToShowroomItemResponse(item))
 }
 

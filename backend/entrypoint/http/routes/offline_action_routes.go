@@ -3,9 +3,9 @@ package routes
 import (
 	"time"
 
-	"solis/backend/entrypoint/http/controller"
-	"solis/backend/entrypoint/http/middleware"
-	"solis/backend/entrypoint/http/payload/response"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/controller"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/middleware"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
