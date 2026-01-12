@@ -9,17 +9,20 @@ import (
 
 // Controllers agrupa todos os controllers da aplicação
 type Controllers struct {
-	AuthController         *controller.AuthController
-	KpiController          *controller.KpiController
-	TaskController         *controller.TaskController
-	SubtaskController      *controller.SubtaskController
-	CommentController      *controller.CommentController
-	NotificationController *controller.NotificationController
-	UserController         *controller.UserController
-	CalendarPostController *controller.CalendarPostController
-	PdvController          *controller.PdvController
-	SocialController       *controller.SocialController
-	SocialPostController   *controller.SocialPostController
+	AuthController               *controller.AuthController
+	KpiController                *controller.KpiController
+	TaskController               *controller.TaskController
+	SubtaskController            *controller.SubtaskController
+	CommentController            *controller.CommentController
+	NotificationController       *controller.NotificationController
+	UserController               *controller.UserController
+	CalendarPostController       *controller.CalendarPostController
+	PdvController                *controller.PdvController
+	SocialController             *controller.SocialController
+	SocialPostController         *controller.SocialPostController
+	OfflineActionController      *controller.OfflineActionController
+	ShowroomItemController       *controller.ShowroomItemController
+	RepMarketingActionController *controller.RepMarketingActionController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -54,6 +57,9 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupPdvRoutes(protected, controllers.PdvController)
 	SetupSocialRoutes(protected, controllers.SocialController)
 	RegisterSocialPostRoutes(protected, controllers.SocialPostController)
+	SetupOfflineActionRoutes(protected, controllers.OfflineActionController)
+	SetupShowroomItemRoutes(protected, controllers.ShowroomItemController)
+	SetupRepMarketingActionRoutes(protected, controllers.RepMarketingActionController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

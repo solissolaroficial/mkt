@@ -8,7 +8,7 @@ import (
 )
 
 type SocialPostModel struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
+	ID              uuid.UUID  `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	BrandName       string     `gorm:"type:varchar(200);not null;index:idx_brand_name,priority:1"`
 	Platform        string     `gorm:"type:varchar(50);not null;index"`
 	PostDate        time.Time  `gorm:"type:date;not null;index:idx_brand_name,priority:2"`

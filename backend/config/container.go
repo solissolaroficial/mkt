@@ -12,6 +12,9 @@ import (
 
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
 	"github.com/seu-usuario/solis-backend/application/usecase/calendar"
+	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
+	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
+	showroomitemusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
 	"github.com/seu-usuario/solis-backend/application/usecase/social"
@@ -50,11 +53,15 @@ type Container struct {
 	SocialBenchmarkingGateway     gateway.SocialBenchmarkingGateway
 	SocialPostGateway             gateway.SocialPostGateway
 	SocialDailyAggregationGateway gateway.SocialDailyAggregationGateway
+	OfflineActionGateway          gateway.OfflineActionGateway
+	ShowroomItemGateway           gateway.ShowroomItemGateway
+	RepMarketingActionGateway     gateway.RepMarketingActionGateway
 
 	// Seeders
 	UserSeeder               *seeders.UserSeeder
 	KpiSeeder                *seeders.KpiSeeder
 	SocialBenchmarkingSeeder *seeders.SocialBenchmarkingSeeder
+	CooperativeSeeder        *seeders.CooperativeSeeder
 
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
@@ -80,6 +87,27 @@ type Container struct {
 	RecalculateDailyAggregationsUseCase *social.RecalculateDailyAggregationsUseCase
 	ListSocialDailyAggregationsUseCase  *social.ListSocialDailyAggregationsUseCase
 	GetSocialDailyAggregationUseCase    *social.GetSocialDailyAggregationUseCase
+
+	// Use Cases - Offline Actions
+	CreateOfflineActionUseCase *offlineactionusecase.CreateOfflineActionUseCase
+	ListOfflineActionsUseCase  *offlineactionusecase.ListOfflineActionsUseCase
+	GetOfflineActionUseCase    *offlineactionusecase.GetOfflineActionUseCase
+	UpdateOfflineActionUseCase *offlineactionusecase.UpdateOfflineActionUseCase
+	DeleteOfflineActionUseCase *offlineactionusecase.DeleteOfflineActionUseCase
+
+	// Use Cases - Showroom Items
+	CreateShowroomItemUseCase *showroomitemusecase.CreateShowroomItemUseCase
+	ListShowroomItemsUseCase  *showroomitemusecase.ListShowroomItemsUseCase
+	GetShowroomItemUseCase    *showroomitemusecase.GetShowroomItemUseCase
+	UpdateShowroomItemUseCase *showroomitemusecase.UpdateShowroomItemUseCase
+	DeleteShowroomItemUseCase *showroomitemusecase.DeleteShowroomItemUseCase
+
+	// Use Cases - Rep Marketing Actions
+	CreateRepMarketingActionUseCase *repmarketingactionusecase.CreateRepMarketingActionUseCase
+	ListRepMarketingActionsUseCase  *repmarketingactionusecase.ListRepMarketingActionsUseCase
+	GetRepMarketingActionUseCase    *repmarketingactionusecase.GetRepMarketingActionUseCase
+	UpdateRepMarketingActionUseCase *repmarketingactionusecase.UpdateRepMarketingActionUseCase
+	DeleteRepMarketingActionUseCase *repmarketingactionusecase.DeleteRepMarketingActionUseCase
 
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
@@ -126,17 +154,20 @@ type Container struct {
 	DeleteNotificationsByTaskIDUseCase *tasks.DeleteNotificationsByTaskIDUseCase
 
 	// Controllers
-	AuthController         *controller.AuthController
-	KpiController          *controller.KpiController
-	TaskController         *controller.TaskController
-	SubtaskController      *controller.SubtaskController
-	CommentController      *controller.CommentController
-	NotificationController *controller.NotificationController
-	UserController         *controller.UserController
-	CalendarPostController *controller.CalendarPostController
-	PdvController          *controller.PdvController
-	SocialController       *controller.SocialController
-	SocialPostController   *controller.SocialPostController
+	AuthController               *controller.AuthController
+	KpiController                *controller.KpiController
+	TaskController               *controller.TaskController
+	SubtaskController            *controller.SubtaskController
+	CommentController            *controller.CommentController
+	NotificationController       *controller.NotificationController
+	UserController               *controller.UserController
+	CalendarPostController       *controller.CalendarPostController
+	PdvController                *controller.PdvController
+	SocialController             *controller.SocialController
+	SocialPostController         *controller.SocialPostController
+	OfflineActionController      *controller.OfflineActionController
+	ShowroomItemController       *controller.ShowroomItemController
+	RepMarketingActionController *controller.RepMarketingActionController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -175,12 +206,16 @@ func NewContainer(cfg *Config) (*Container, error) {
 	socialBenchmarkingGateway := dbgateway.NewSocialBenchmarkingGateway(db)
 	socialPostGateway := dbgateway.NewSocialPostGateway(db)
 	socialDailyAggregationGateway := dbgateway.NewSocialDailyAggregationGateway(db)
+	offlineActionGateway := dbgateway.NewOfflineActionGateway(db)
+	showroomItemGateway := dbgateway.NewShowroomItemGateway(db)
+	repMarketingActionGateway := dbgateway.NewRepMarketingActionGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
 	userSeeder := seeders.NewUserSeeder(userGateway, hasherService)
 	kpiSeeder := seeders.NewKpiSeeder(kpiGateway, monthlyDataGateway)
 	socialBenchmarkingSeeder := seeders.NewSocialBenchmarkingSeeder(socialBenchmarkingGateway)
+	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway)
 	log.Println("✅ Seeders initialized")
 
 	// 4. Use Cases (dependem de gateways e services)
@@ -275,6 +310,27 @@ func NewContainer(cfg *Config) (*Container, error) {
 	updateSocialPostUseCase := social.NewUpdateSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
 	deleteSocialPostUseCase := social.NewDeleteSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
 
+	// Cooperative Use Cases - Offline Actions
+	createOfflineActionUseCase := offlineactionusecase.NewCreateOfflineAction(offlineActionGateway)
+	listOfflineActionsUseCase := offlineactionusecase.NewListOfflineActions(offlineActionGateway)
+	getOfflineActionUseCase := offlineactionusecase.NewGetOfflineAction(offlineActionGateway)
+	updateOfflineActionUseCase := offlineactionusecase.NewUpdateOfflineAction(offlineActionGateway)
+	deleteOfflineActionUseCase := offlineactionusecase.NewDeleteOfflineAction(offlineActionGateway)
+
+	// Cooperative Use Cases - Showroom Items
+	createShowroomItemUseCase := showroomitemusecase.NewCreateShowroomItem(showroomItemGateway)
+	listShowroomItemsUseCase := showroomitemusecase.NewListShowroomItems(showroomItemGateway)
+	getShowroomItemUseCase := showroomitemusecase.NewGetShowroomItem(showroomItemGateway)
+	updateShowroomItemUseCase := showroomitemusecase.NewUpdateShowroomItem(showroomItemGateway)
+	deleteShowroomItemUseCase := showroomitemusecase.NewDeleteShowroomItem(showroomItemGateway)
+
+	// Cooperative Use Cases - Rep Marketing Actions
+	createRepMarketingActionUseCase := repmarketingactionusecase.NewCreateRepMarketingAction(repMarketingActionGateway)
+	listRepMarketingActionsUseCase := repmarketingactionusecase.NewListRepMarketingActions(repMarketingActionGateway)
+	getRepMarketingActionUseCase := repmarketingactionusecase.NewGetRepMarketingAction(repMarketingActionGateway)
+	updateRepMarketingActionUseCase := repmarketingactionusecase.NewUpdateRepMarketingAction(repMarketingActionGateway)
+	deleteRepMarketingActionUseCase := repmarketingactionusecase.NewDeleteRepMarketingAction(repMarketingActionGateway)
+
 	log.Println("✅ Use cases initialized")
 
 	// 5. Controllers (dependem de use cases)
@@ -368,6 +424,29 @@ func NewContainer(cfg *Config) (*Container, error) {
 		getSocialDailyAggregationUseCase,
 	)
 
+	// Cooperative Controllers
+	offlineActionController := controller.NewOfflineActionController(
+		createOfflineActionUseCase,
+		listOfflineActionsUseCase,
+		getOfflineActionUseCase,
+		updateOfflineActionUseCase,
+		deleteOfflineActionUseCase,
+	)
+	showroomItemController := controller.NewShowroomItemController(
+		createShowroomItemUseCase,
+		listShowroomItemsUseCase,
+		getShowroomItemUseCase,
+		updateShowroomItemUseCase,
+		deleteShowroomItemUseCase,
+	)
+	repMarketingActionController := controller.NewRepMarketingActionController(
+		createRepMarketingActionUseCase,
+		listRepMarketingActionsUseCase,
+		getRepMarketingActionUseCase,
+		updateRepMarketingActionUseCase,
+		deleteRepMarketingActionUseCase,
+	)
+
 	log.Println("✅ Controllers initialized")
 
 	// 6. Middlewares (dependem de services)
@@ -393,9 +472,13 @@ func NewContainer(cfg *Config) (*Container, error) {
 		UserSeeder:                           userSeeder,
 		KpiSeeder:                            kpiSeeder,
 		SocialBenchmarkingSeeder:             socialBenchmarkingSeeder,
+		CooperativeSeeder:                    cooperativeSeeder,
 		SocialBenchmarkingGateway:            socialBenchmarkingGateway,
 		SocialPostGateway:                    socialPostGateway,
 		SocialDailyAggregationGateway:        socialDailyAggregationGateway,
+		OfflineActionGateway:                 offlineActionGateway,
+		ShowroomItemGateway:                  showroomItemGateway,
+		RepMarketingActionGateway:            repMarketingActionGateway,
 		LoginUseCase:                         loginUseCase,
 		CreateKpiUseCase:                     createKpiUseCase,
 		GetKpiUseCase:                        getKpiUseCase,
@@ -446,6 +529,9 @@ func NewContainer(cfg *Config) (*Container, error) {
 		PdvController:                        pdvController,
 		SocialController:                     socialController,
 		SocialPostController:                 socialPostController,
+		OfflineActionController:              offlineActionController,
+		ShowroomItemController:               showroomItemController,
+		RepMarketingActionController:         repMarketingActionController,
 		CreateSocialBenchmarkingUseCase:      createSocialBenchmarkingUseCase,
 		ListSocialBenchmarkingsUseCase:       listSocialBenchmarkingsUseCase,
 		GetSocialBenchmarkingUseCase:         getSocialBenchmarkingUseCase,
@@ -459,6 +545,21 @@ func NewContainer(cfg *Config) (*Container, error) {
 		RecalculateDailyAggregationsUseCase:  recalculateDailyAggregationsUseCase,
 		ListSocialDailyAggregationsUseCase:   listSocialDailyAggregationsUseCase,
 		GetSocialDailyAggregationUseCase:     getSocialDailyAggregationUseCase,
+		CreateOfflineActionUseCase:           createOfflineActionUseCase,
+		ListOfflineActionsUseCase:            listOfflineActionsUseCase,
+		GetOfflineActionUseCase:              getOfflineActionUseCase,
+		UpdateOfflineActionUseCase:           updateOfflineActionUseCase,
+		DeleteOfflineActionUseCase:           deleteOfflineActionUseCase,
+		CreateShowroomItemUseCase:            createShowroomItemUseCase,
+		ListShowroomItemsUseCase:             listShowroomItemsUseCase,
+		GetShowroomItemUseCase:               getShowroomItemUseCase,
+		UpdateShowroomItemUseCase:            updateShowroomItemUseCase,
+		DeleteShowroomItemUseCase:            deleteShowroomItemUseCase,
+		CreateRepMarketingActionUseCase:      createRepMarketingActionUseCase,
+		ListRepMarketingActionsUseCase:       listRepMarketingActionsUseCase,
+		GetRepMarketingActionUseCase:         getRepMarketingActionUseCase,
+		UpdateRepMarketingActionUseCase:      updateRepMarketingActionUseCase,
+		DeleteRepMarketingActionUseCase:      deleteRepMarketingActionUseCase,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -515,17 +616,20 @@ func (c *Container) Close() error {
 // GetControllers retorna struct para usar nas rotas
 func (c *Container) GetControllers() *routes.Controllers {
 	return &routes.Controllers{
-		AuthController:         c.AuthController,
-		KpiController:          c.KpiController,
-		TaskController:         c.TaskController,
-		SubtaskController:      c.SubtaskController,
-		CommentController:      c.CommentController,
-		NotificationController: c.NotificationController,
-		UserController:         c.UserController,
-		CalendarPostController: c.CalendarPostController,
-		PdvController:          c.PdvController,
-		SocialController:       c.SocialController,
-		SocialPostController:   c.SocialPostController,
+		AuthController:               c.AuthController,
+		KpiController:                c.KpiController,
+		TaskController:               c.TaskController,
+		SubtaskController:            c.SubtaskController,
+		CommentController:            c.CommentController,
+		NotificationController:       c.NotificationController,
+		UserController:               c.UserController,
+		CalendarPostController:       c.CalendarPostController,
+		PdvController:                c.PdvController,
+		SocialController:             c.SocialController,
+		SocialPostController:         c.SocialPostController,
+		OfflineActionController:      c.OfflineActionController,
+		ShowroomItemController:       c.ShowroomItemController,
+		RepMarketingActionController: c.RepMarketingActionController,
 	}
 }
 

@@ -27,6 +27,9 @@ func RunMigrations(db *gorm.DB) error {
 		&model.SocialBenchmarkingModel{},
 		&model.SocialPostModel{},
 		&model.SocialDailyAggregationModel{},
+		&model.OfflineActionModel{},
+		&model.ShowroomItemModel{},
+		&model.RepMarketingActionModel{},
 	)
 
 	if err != nil {

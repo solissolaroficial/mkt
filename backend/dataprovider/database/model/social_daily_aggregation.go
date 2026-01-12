@@ -8,7 +8,7 @@ import (
 )
 
 type SocialDailyAggregationModel struct {
-	ID              uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
+	ID              uuid.UUID  `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	BrandName       string     `gorm:"type:varchar(200);not null;uniqueIndex:idx_brand_date,priority:1;index:idx_brand"`
 	AggregationDate time.Time  `gorm:"type:date;not null;uniqueIndex:idx_brand_date,priority:2;index:idx_date"`
 	TotalPosts      int        `gorm:"type:int;not null;default:0"`

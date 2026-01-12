@@ -6,7 +6,13 @@ import (
 )
 
 // SeedAll runs all seeders in the correct order
-func SeedAll(ctx context.Context, userSeeder *UserSeeder, kpiSeeder *KpiSeeder, socialBenchmarkingSeeder *SocialBenchmarkingSeeder) error {
+func SeedAll(
+	ctx context.Context,
+	userSeeder *UserSeeder,
+	kpiSeeder *KpiSeeder,
+	socialBenchmarkingSeeder *SocialBenchmarkingSeeder,
+	cooperativeSeeder *CooperativeSeeder,
+) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
 
@@ -32,6 +38,14 @@ func SeedAll(ctx context.Context, userSeeder *UserSeeder, kpiSeeder *KpiSeeder, 
 		return err
 	}
 	log.Println("✅ Social benchmarkings seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 4: Seed Cooperative Data
+	if err := cooperativeSeeder.Seed(ctx); err != nil {
+		log.Printf("❌ Error seeding cooperative data: %v", err)
+		return err
+	}
+	log.Println("✅ Cooperative data seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")
