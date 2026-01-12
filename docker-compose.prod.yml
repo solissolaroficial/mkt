@@ -21,6 +21,7 @@ services:
 
   backend:
     image: 183295432925.dkr.ecr.us-west-2.amazonaws.com/solis:prod
+    platform: linux/amd64
     container_name: solis-backend
     restart: unless-stopped
     environment:

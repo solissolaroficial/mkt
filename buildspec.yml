@@ -24,7 +24,7 @@ phases:
   build:
     commands:
       - echo "🏗️  Building BACKEND Go (prod)..."
-      - docker build --platform linux/arm64 -t $BACKEND_REPO_URI:prod -t $BACKEND_REPO_URI:$PROD_TAG -f backend/Dockerfile ./backend
+      - docker build -t $BACKEND_REPO_URI:prod -t $BACKEND_REPO_URI:$PROD_TAG -f backend/Dockerfile ./backend
 
   post_build:
     commands:
