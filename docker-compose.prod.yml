@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: solis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: solis_db
+      POSTGRES_USER: solis_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:C43Uyi2fXtX26n0J0Nf8}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - solis-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solis_user -d solis_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: 183295432925.dkr.ecr.us-west-2.amazonaws.com/solis:prod
+    container_name: solis-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: solis_user
+      DB_PASSWORD: ${DB_PASSWORD:C43Uyi2fXtX26n0J0Nf8}
+      DB_NAME: solis_db
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:25acb4ea5f8fed783b6ebaba198965aadb90547f461e98375779c3c0afa3882b}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:https://mkt.dimensolis.com.br}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - solis-network
+    ports:
+      - "8600:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  solis-network:
+    driver: bridge
