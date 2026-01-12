@@ -1,0 +1,38 @@
+version: 0.2
+
+env:
+  variables:
+    # Configure com sua região e conta da AWS
+    AWS_DEFAULT_REGION: "us-west-2"
+    AWS_ACCOUNT_ID: "183295432925"
+
+phases:
+  pre_build:
+    commands:
+      - echo "🔐 Login no ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+      - echo "📦 Definindo variáveis de imagem..."
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - PROD_TAG="prod-${COMMIT_HASH}"
+
+      # Nome do repositório ECR para o backend Go
+      - BACKEND_REPO_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/solis
+
+      - echo "Build PROD para commit $COMMIT_HASH (tag $PROD_TAG)"
+
+  build:
+    commands:
+      - echo "🏗️  Building BACKEND Go (prod)..."
+      - docker build --platform linux/amd64 -t $BACKEND_REPO_URI:prod -t $BACKEND_REPO_URI:$PROD_TAG -f backend/Dockerfile ./backend
+
+  post_build:
+    commands:
+      - echo "🚀 Push das imagens para ECR..."
+
+      - echo "Pushing backend:prod..."
+      - docker push $BACKEND_REPO_URI:prod
+      - docker push $BACKEND_REPO_URI:$PROD_TAG
+
+      - echo "✅ Build completo! Imagem prod disponível no ECR"
+      - echo "  → $BACKEND_REPO_URI:prod ($PROD_TAG)"
