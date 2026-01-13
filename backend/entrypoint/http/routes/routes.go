@@ -23,6 +23,8 @@ type Controllers struct {
 	OfflineActionController      *controller.OfflineActionController
 	ShowroomItemController       *controller.ShowroomItemController
 	RepMarketingActionController *controller.RepMarketingActionController
+	GiftItemController           *controller.GiftItemController
+	GiftTransactionController    *controller.GiftTransactionController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -60,6 +62,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupOfflineActionRoutes(protected, controllers.OfflineActionController)
 	SetupShowroomItemRoutes(protected, controllers.ShowroomItemController)
 	SetupRepMarketingActionRoutes(protected, controllers.RepMarketingActionController)
+	SetupGiftRoutes(protected, controllers.GiftItemController, controllers.GiftTransactionController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

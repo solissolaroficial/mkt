@@ -75,4 +75,18 @@ export const ENDPOINTS = {
     REP_MARKETING_ACTIONS_UPDATE: (uuid: string) => `/api/cooperative/rep-marketing-actions/${uuid}`,
     REP_MARKETING_ACTIONS_DELETE: (uuid: string) => `/api/cooperative/rep-marketing-actions/${uuid}`,
   } as const,
+  GIFTS: {
+    // Gift Items
+    ITEMS_LIST: '/api/gifts/items',
+    ITEMS_GET: (id: string) => `/api/gifts/items/${id}`,
+    ITEMS_CREATE: '/api/gifts/items',
+    ITEMS_UPDATE: (id: string) => `/api/gifts/items/${id}`,
+    ITEMS_DELETE: (id: string) => `/api/gifts/items/${id}`,
+    // Gift Transactions
+    TRANSACTIONS_LIST: '/api/gifts/transactions',
+    TRANSACTIONS_GET: (id: string) => `/api/gifts/transactions/${id}`,
+    TRANSACTIONS_CREATE: '/api/gifts/transactions',
+    TRANSACTIONS_UPDATE: (id: string) => `/api/gifts/transactions/${id}`,
+    TRANSACTIONS_DELETE: (id: string) => `/api/gifts/transactions/${id}`,
+  } as const,
 } as const;

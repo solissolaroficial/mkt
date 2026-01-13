@@ -46,4 +46,18 @@ const (
 	UpdateSocialBenchmarkings = "social_benchmarkings.update"
 	DeleteSocialBenchmarkings = "social_benchmarkings.delete"
 	ManageSocialBenchmarkings = "social_benchmarkings.*"
+
+	// Gift Items
+	CreateGiftItems = "gift_items.create"
+	ReadGiftItems   = "gift_items.read"
+	UpdateGiftItems = "gift_items.update"
+	DeleteGiftItems = "gift_items.delete"
+	ManageGiftItems = "gift_items.*"
+
+	// Gift Transactions
+	CreateGiftTransactions = "gift_transactions.create"
+	ReadGiftTransactions   = "gift_transactions.read"
+	UpdateGiftTransactions = "gift_transactions.update"
+	DeleteGiftTransactions = "gift_transactions.delete"
+	ManageGiftTransactions = "gift_transactions.*"
 )

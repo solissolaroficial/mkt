@@ -15,6 +15,7 @@ import (
 	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
 	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
 	showroomitemusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
+	"github.com/seu-usuario/solis-backend/application/usecase/gifts"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
 	"github.com/seu-usuario/solis-backend/application/usecase/social"
@@ -56,12 +57,15 @@ type Container struct {
 	OfflineActionGateway          gateway.OfflineActionGateway
 	ShowroomItemGateway           gateway.ShowroomItemGateway
 	RepMarketingActionGateway     gateway.RepMarketingActionGateway
+	GiftItemGateway               gateway.GiftItemGateway
+	GiftTransactionGateway        gateway.GiftTransactionGateway
 
 	// Seeders
 	UserSeeder               *seeders.UserSeeder
 	KpiSeeder                *seeders.KpiSeeder
 	SocialBenchmarkingSeeder *seeders.SocialBenchmarkingSeeder
 	CooperativeSeeder        *seeders.CooperativeSeeder
+	GiftSeeder               *seeders.GiftSeeder
 
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
@@ -108,6 +112,20 @@ type Container struct {
 	GetRepMarketingActionUseCase    *repmarketingactionusecase.GetRepMarketingActionUseCase
 	UpdateRepMarketingActionUseCase *repmarketingactionusecase.UpdateRepMarketingActionUseCase
 	DeleteRepMarketingActionUseCase *repmarketingactionusecase.DeleteRepMarketingActionUseCase
+
+	// Use Cases - Gift Items
+	CreateGiftItemUseCase *gifts.CreateGiftItemUseCase
+	GetGiftItemUseCase    *gifts.GetGiftItemUseCase
+	ListGiftItemsUseCase  *gifts.ListGiftItemsUseCase
+	UpdateGiftItemUseCase *gifts.UpdateGiftItemUseCase
+	DeleteGiftItemUseCase *gifts.DeleteGiftItemUseCase
+
+	// Use Cases - Gift Transactions
+	CreateGiftTransactionUseCase *gifts.CreateGiftTransactionUseCase
+	GetGiftTransactionUseCase    *gifts.GetGiftTransactionUseCase
+	ListGiftTransactionsUseCase  *gifts.ListGiftTransactionsUseCase
+	UpdateGiftTransactionUseCase *gifts.UpdateGiftTransactionUseCase
+	DeleteGiftTransactionUseCase *gifts.DeleteGiftTransactionUseCase
 
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
@@ -168,6 +186,8 @@ type Container struct {
 	OfflineActionController      *controller.OfflineActionController
 	ShowroomItemController       *controller.ShowroomItemController
 	RepMarketingActionController *controller.RepMarketingActionController
+	GiftItemController           *controller.GiftItemController
+	GiftTransactionController    *controller.GiftTransactionController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -209,6 +229,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 	offlineActionGateway := dbgateway.NewOfflineActionGateway(db)
 	showroomItemGateway := dbgateway.NewShowroomItemGateway(db)
 	repMarketingActionGateway := dbgateway.NewRepMarketingActionGateway(db)
+	giftItemGateway := dbgateway.NewGiftItemGateway(db)
+	giftTransactionGateway := dbgateway.NewGiftTransactionGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -216,6 +238,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	kpiSeeder := seeders.NewKpiSeeder(kpiGateway, monthlyDataGateway)
 	socialBenchmarkingSeeder := seeders.NewSocialBenchmarkingSeeder(socialBenchmarkingGateway)
 	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway)
+	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway)
 	log.Println("✅ Seeders initialized")
 
 	// 4. Use Cases (dependem de gateways e services)
@@ -330,6 +353,20 @@ func NewContainer(cfg *Config) (*Container, error) {
 	getRepMarketingActionUseCase := repmarketingactionusecase.NewGetRepMarketingAction(repMarketingActionGateway)
 	updateRepMarketingActionUseCase := repmarketingactionusecase.NewUpdateRepMarketingAction(repMarketingActionGateway)
 	deleteRepMarketingActionUseCase := repmarketingactionusecase.NewDeleteRepMarketingAction(repMarketingActionGateway)
+
+	// Gift Items Use Cases
+	createGiftItemUseCase := gifts.NewCreateGiftItemUseCase(giftItemGateway)
+	getGiftItemUseCase := gifts.NewGetGiftItemUseCase(giftItemGateway)
+	listGiftItemsUseCase := gifts.NewListGiftItemsUseCase(giftItemGateway)
+	updateGiftItemUseCase := gifts.NewUpdateGiftItemUseCase(giftItemGateway)
+	deleteGiftItemUseCase := gifts.NewDeleteGiftItemUseCase(giftItemGateway, giftTransactionGateway)
+
+	// Gift Transactions Use Cases
+	createGiftTransactionUseCase := gifts.NewCreateGiftTransactionUseCase(giftTransactionGateway, giftItemGateway)
+	getGiftTransactionUseCase := gifts.NewGetGiftTransactionUseCase(giftTransactionGateway)
+	listGiftTransactionsUseCase := gifts.NewListGiftTransactionsUseCase(giftTransactionGateway)
+	updateGiftTransactionUseCase := gifts.NewUpdateGiftTransactionUseCase(giftTransactionGateway)
+	deleteGiftTransactionUseCase := gifts.NewDeleteGiftTransactionUseCase(giftTransactionGateway)
 
 	log.Println("✅ Use cases initialized")
 
@@ -479,6 +516,9 @@ func NewContainer(cfg *Config) (*Container, error) {
 		OfflineActionGateway:                 offlineActionGateway,
 		ShowroomItemGateway:                  showroomItemGateway,
 		RepMarketingActionGateway:            repMarketingActionGateway,
+		GiftItemGateway:                      giftItemGateway,
+		GiftTransactionGateway:               giftTransactionGateway,
+		GiftSeeder:                           giftSeeder,
 		LoginUseCase:                         loginUseCase,
 		CreateKpiUseCase:                     createKpiUseCase,
 		GetKpiUseCase:                        getKpiUseCase,
@@ -560,6 +600,16 @@ func NewContainer(cfg *Config) (*Container, error) {
 		GetRepMarketingActionUseCase:         getRepMarketingActionUseCase,
 		UpdateRepMarketingActionUseCase:      updateRepMarketingActionUseCase,
 		DeleteRepMarketingActionUseCase:      deleteRepMarketingActionUseCase,
+		CreateGiftItemUseCase:                createGiftItemUseCase,
+		GetGiftItemUseCase:                   getGiftItemUseCase,
+		ListGiftItemsUseCase:                 listGiftItemsUseCase,
+		UpdateGiftItemUseCase:                updateGiftItemUseCase,
+		DeleteGiftItemUseCase:                deleteGiftItemUseCase,
+		CreateGiftTransactionUseCase:         createGiftTransactionUseCase,
+		GetGiftTransactionUseCase:            getGiftTransactionUseCase,
+		ListGiftTransactionsUseCase:          listGiftTransactionsUseCase,
+		UpdateGiftTransactionUseCase:         updateGiftTransactionUseCase,
+		DeleteGiftTransactionUseCase:         deleteGiftTransactionUseCase,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -630,6 +680,8 @@ func (c *Container) GetControllers() *routes.Controllers {
 		OfflineActionController:      c.OfflineActionController,
 		ShowroomItemController:       c.ShowroomItemController,
 		RepMarketingActionController: c.RepMarketingActionController,
+		GiftItemController:           c.GiftItemController,
+		GiftTransactionController:    c.GiftTransactionController,
 	}
 }
 

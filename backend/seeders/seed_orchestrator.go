@@ -12,6 +12,7 @@ func SeedAll(
 	kpiSeeder *KpiSeeder,
 	socialBenchmarkingSeeder *SocialBenchmarkingSeeder,
 	cooperativeSeeder *CooperativeSeeder,
+	giftSeeder *GiftSeeder,
 ) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
@@ -46,6 +47,14 @@ func SeedAll(
 		return err
 	}
 	log.Println("✅ Cooperative data seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 5: Seed Gifts Data
+	if err := giftSeeder.Seed(ctx); err != nil {
+		log.Printf("❌ Error seeding gifts data: %v", err)
+		return err
+	}
+	log.Println("✅ Gifts data seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")
