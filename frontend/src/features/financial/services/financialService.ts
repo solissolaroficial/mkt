@@ -5,7 +5,7 @@ export const financialService = {
   // Get all accounts payable
   list: async (): Promise<AccountPayable[]> => {
     const response = await apiClient.get('/api/financial/accounts-payable');
-    return response.data;
+    return response.data.accounts;
   },
 
   // Create new account payable
@@ -26,14 +26,14 @@ export const financialService = {
   },
 
   // Toggle NF arrived status
-  toggleNf: async (id: string, arrived: boolean): Promise<AccountPayable> => {
-    const response = await apiClient.patch(`/api/financial/accounts-payable/${id}/nf`, { arrived });
+  toggleNf: async (id: string): Promise<AccountPayable> => {
+    const response = await apiClient.patch(`/api/financial/accounts-payable/${id}/nf`);
     return response.data;
   },
 
   // Toggle Boleto arrived status
-  toggleBoleto: async (id: string, arrived: boolean): Promise<AccountPayable> => {
-    const response = await apiClient.patch(`/api/financial/accounts-payable/${id}/boleto`, { arrived });
+  toggleBoleto: async (id: string): Promise<AccountPayable> => {
+    const response = await apiClient.patch(`/api/financial/accounts-payable/${id}/boleto`);
     return response.data;
   },
 

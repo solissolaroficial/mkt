@@ -32,6 +32,7 @@ func RunMigrations(db *gorm.DB) error {
 		&model.RepMarketingActionModel{},
 		&model.GiftItemModel{},
 		&model.GiftTransactionModel{},
+		&model.AccountPayableModel{},
 	)
 
 	if err != nil {

@@ -60,4 +60,11 @@ const (
 	UpdateGiftTransactions = "gift_transactions.update"
 	DeleteGiftTransactions = "gift_transactions.delete"
 	ManageGiftTransactions = "gift_transactions.*"
+
+	// Account Payable
+	CreateAccountsPayable = "accounts_payable.create"
+	ReadAccountsPayable   = "accounts_payable.read"
+	UpdateAccountsPayable = "accounts_payable.update"
+	DeleteAccountsPayable = "accounts_payable.delete"
+	ManageAccountsPayable = "accounts_payable.*"
 )

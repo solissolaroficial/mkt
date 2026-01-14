@@ -15,6 +15,7 @@ import (
 	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
 	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
 	showroomitemusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
+	accountpayableusecase "github.com/seu-usuario/solis-backend/application/usecase/financial/accountpayable"
 	"github.com/seu-usuario/solis-backend/application/usecase/gifts"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
@@ -59,6 +60,7 @@ type Container struct {
 	RepMarketingActionGateway     gateway.RepMarketingActionGateway
 	GiftItemGateway               gateway.GiftItemGateway
 	GiftTransactionGateway        gateway.GiftTransactionGateway
+	AccountPayableGateway         gateway.AccountPayableGateway
 
 	// Seeders
 	UserSeeder               *seeders.UserSeeder
@@ -127,6 +129,16 @@ type Container struct {
 	UpdateGiftTransactionUseCase *gifts.UpdateGiftTransactionUseCase
 	DeleteGiftTransactionUseCase *gifts.DeleteGiftTransactionUseCase
 
+	// Use Cases - Account Payable
+	CreateAccountPayableUseCase *accountpayableusecase.CreateAccountPayableUseCase
+	ListAccountsPayableUseCase  *accountpayableusecase.ListAccountsPayableUseCase
+	GetAccountPayableUseCase    *accountpayableusecase.GetAccountPayableUseCase
+	UpdateAccountPayableUseCase *accountpayableusecase.UpdateAccountPayableUseCase
+	DeleteAccountPayableUseCase *accountpayableusecase.DeleteAccountPayableUseCase
+	ToggleNFUseCase             *accountpayableusecase.ToggleNFUseCase
+	ToggleBoletoUseCase         *accountpayableusecase.ToggleBoletoUseCase
+	SendToFinanceUseCase        *accountpayableusecase.SendToFinanceUseCase
+
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
 	GetCalendarPostUseCase               *calendar.GetCalendarPostUseCase
@@ -188,6 +200,7 @@ type Container struct {
 	RepMarketingActionController *controller.RepMarketingActionController
 	GiftItemController           *controller.GiftItemController
 	GiftTransactionController    *controller.GiftTransactionController
+	AccountPayableController     *controller.AccountPayableController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -231,6 +244,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	repMarketingActionGateway := dbgateway.NewRepMarketingActionGateway(db)
 	giftItemGateway := dbgateway.NewGiftItemGateway(db)
 	giftTransactionGateway := dbgateway.NewGiftTransactionGateway(db)
+	accountPayableGateway := dbgateway.NewAccountPayableGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -367,6 +381,16 @@ func NewContainer(cfg *Config) (*Container, error) {
 	listGiftTransactionsUseCase := gifts.NewListGiftTransactionsUseCase(giftTransactionGateway)
 	updateGiftTransactionUseCase := gifts.NewUpdateGiftTransactionUseCase(giftTransactionGateway)
 	deleteGiftTransactionUseCase := gifts.NewDeleteGiftTransactionUseCase(giftTransactionGateway)
+
+	// Account Payable Use Cases
+	createAccountPayableUseCase := accountpayableusecase.NewCreateAccountPayable(accountPayableGateway)
+	listAccountsPayableUseCase := accountpayableusecase.NewListAccountsPayable(accountPayableGateway)
+	getAccountPayableUseCase := accountpayableusecase.NewGetAccountPayable(accountPayableGateway)
+	updateAccountPayableUseCase := accountpayableusecase.NewUpdateAccountPayable(accountPayableGateway)
+	deleteAccountPayableUseCase := accountpayableusecase.NewDeleteAccountPayable(accountPayableGateway)
+	toggleNFUseCase := accountpayableusecase.NewToggleNFUseCase(accountPayableGateway)
+	toggleBoletoUseCase := accountpayableusecase.NewToggleBoletoUseCase(accountPayableGateway)
+	sendToFinanceUseCase := accountpayableusecase.NewSendToFinanceUseCase(accountPayableGateway)
 
 	log.Println("✅ Use cases initialized")
 
@@ -518,6 +542,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		RepMarketingActionGateway:            repMarketingActionGateway,
 		GiftItemGateway:                      giftItemGateway,
 		GiftTransactionGateway:               giftTransactionGateway,
+		AccountPayableGateway:                accountPayableGateway,
 		GiftSeeder:                           giftSeeder,
 		LoginUseCase:                         loginUseCase,
 		CreateKpiUseCase:                     createKpiUseCase,
@@ -610,6 +635,14 @@ func NewContainer(cfg *Config) (*Container, error) {
 		ListGiftTransactionsUseCase:          listGiftTransactionsUseCase,
 		UpdateGiftTransactionUseCase:         updateGiftTransactionUseCase,
 		DeleteGiftTransactionUseCase:         deleteGiftTransactionUseCase,
+		CreateAccountPayableUseCase:          createAccountPayableUseCase,
+		ListAccountsPayableUseCase:           listAccountsPayableUseCase,
+		GetAccountPayableUseCase:             getAccountPayableUseCase,
+		UpdateAccountPayableUseCase:          updateAccountPayableUseCase,
+		DeleteAccountPayableUseCase:          deleteAccountPayableUseCase,
+		ToggleNFUseCase:                      toggleNFUseCase,
+		ToggleBoletoUseCase:                  toggleBoletoUseCase,
+		SendToFinanceUseCase:                 sendToFinanceUseCase,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -682,6 +715,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		RepMarketingActionController: c.RepMarketingActionController,
 		GiftItemController:           c.GiftItemController,
 		GiftTransactionController:    c.GiftTransactionController,
+		AccountPayableController:     c.AccountPayableController,
 	}
 }
 

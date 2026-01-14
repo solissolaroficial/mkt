@@ -25,6 +25,7 @@ type Controllers struct {
 	RepMarketingActionController *controller.RepMarketingActionController
 	GiftItemController           *controller.GiftItemController
 	GiftTransactionController    *controller.GiftTransactionController
+	AccountPayableController     *controller.AccountPayableController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -63,6 +64,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupShowroomItemRoutes(protected, controllers.ShowroomItemController)
 	SetupRepMarketingActionRoutes(protected, controllers.RepMarketingActionController)
 	SetupGiftRoutes(protected, controllers.GiftItemController, controllers.GiftTransactionController)
+	SetupAccountPayableRoutes(protected, controllers.AccountPayableController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {
