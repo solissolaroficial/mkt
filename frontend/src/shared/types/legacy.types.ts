@@ -428,15 +428,19 @@ export interface InternalContact {
 }
 
 export interface BudgetItem {
-  id: string;
-  codObj: string;
-  obj: string;
-  codGrp: string;
-  grp: string;
-  cod: string;
-  desc: string;
-  vals: number[]; // Orçado
-  realizedVals: number[]; // Realizado
+  uuid: string;            // UUID do backend (snake_case)
+  cod_obj: string;         // Código do objeto (snake_case)
+  obj: string;             // Nome do objeto
+  cod_grp: string;         // Código do grupo (snake_case)
+  grp: string;             // Nome do grupo
+  cod: string;             // Código do item
+  desc: string;            // Descrição do item
+  vals: number[];          // Array de 12 valores orçados
+  realized_vals: number[]; // Array de 12 valores realizados (snake_case)
+  year: number;            // Ano do orçamento
+  created_at: string;      // Timestamp ISO 8601 (snake_case)
+  updated_at: string;      // Timestamp ISO 8601 (snake_case)
+  deleted_at?: string;     // Timestamp ISO 8601 (snake_case, opcional)
 }
 
 // ============================================

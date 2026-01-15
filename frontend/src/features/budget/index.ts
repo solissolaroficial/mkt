@@ -1,19 +1,29 @@
-// UI Components
+// Components
+export { default as BudgetPage } from './pages/BudgetPage';
 export { default as BudgetView } from './ui/BudgetView';
-export { default as MarketingBudgetView } from './ui/MarketingBudgetView';
 
 // Hooks
-export { useBudgetItems } from './hooks/useBudget';
+export { useBudgetItems, useBudgetItem, useBudgetSummary, useBudgetYears } from './hooks/useBudget';
+export { useBudgetMutations } from './hooks/useBudgetMutations';
 
 // Services
 export { budgetService } from './services/budgetService';
 
 // Types
-export type { 
+export type {
+  BudgetItem,
   BudgetViewProps,
   EditingCell,
   BudgetGroup,
   BudgetSubgroup,
   MarketingBudgetViewProps,
-  BudgetSummaryItem
+  BudgetSummaryItem,
+  CreateBudgetItemRequest,
+  UpdateBudgetItemRequest,
+  DeleteBudgetItemRequest,
+  BatchCreateBudgetItemsRequest,
+  BudgetItemListResponse,
+  BudgetSummaryResponse,
+  BudgetYearsResponse,
+  BudgetItemFilters,
 } from './types';

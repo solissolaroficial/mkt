@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-// SeedAll runs all seeders in the correct order
+// SeedAll runs all seeders in correct order
 func SeedAll(
 	ctx context.Context,
 	userSeeder *UserSeeder,
@@ -13,6 +13,7 @@ func SeedAll(
 	socialBenchmarkingSeeder *SocialBenchmarkingSeeder,
 	cooperativeSeeder *CooperativeSeeder,
 	giftSeeder *GiftSeeder,
+	budgetSeeder *BudgetSeeder,
 ) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
@@ -55,6 +56,14 @@ func SeedAll(
 		return err
 	}
 	log.Println("✅ Gifts data seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 6: Seed Budget Data
+	if err := budgetSeeder.Seed(ctx); err != nil {
+		log.Printf("❌ Error seeding budget data: %v", err)
+		return err
+	}
+	log.Println("✅ Budget data seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")

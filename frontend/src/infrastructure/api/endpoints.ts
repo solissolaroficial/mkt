@@ -89,4 +89,14 @@ export const ENDPOINTS = {
     TRANSACTIONS_UPDATE: (id: string) => `/api/gifts/transactions/${id}`,
     TRANSACTIONS_DELETE: (id: string) => `/api/gifts/transactions/${id}`,
   } as const,
+  BUDGET: {
+    LIST: '/api/budget',
+    GET: (uuid: string) => `/api/budget/${uuid}`,
+    CREATE: '/api/budget',
+    UPDATE: (uuid: string) => `/api/budget/${uuid}`,
+    DELETE: (uuid: string) => `/api/budget/${uuid}`,
+    BATCH: '/api/budget/batch',
+    SUMMARY: '/api/budget/summary',
+    YEARS: '/api/budget/years',
+  } as const,
 } as const;

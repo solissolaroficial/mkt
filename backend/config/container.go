@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
+	"github.com/seu-usuario/solis-backend/application/usecase/budget"
 	"github.com/seu-usuario/solis-backend/application/usecase/calendar"
 	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
 	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
@@ -61,6 +62,7 @@ type Container struct {
 	GiftItemGateway               gateway.GiftItemGateway
 	GiftTransactionGateway        gateway.GiftTransactionGateway
 	AccountPayableGateway         gateway.AccountPayableGateway
+	BudgetGateway                 gateway.BudgetGateway
 
 	// Seeders
 	UserSeeder               *seeders.UserSeeder
@@ -68,6 +70,7 @@ type Container struct {
 	SocialBenchmarkingSeeder *seeders.SocialBenchmarkingSeeder
 	CooperativeSeeder        *seeders.CooperativeSeeder
 	GiftSeeder               *seeders.GiftSeeder
+	BudgetSeeder             *seeders.BudgetSeeder
 
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
@@ -139,6 +142,15 @@ type Container struct {
 	ToggleBoletoUseCase         *accountpayableusecase.ToggleBoletoUseCase
 	SendToFinanceUseCase        *accountpayableusecase.SendToFinanceUseCase
 
+	// Use Cases - Budget
+	CreateBudgetItemUseCase       *budget.CreateBudgetItemUseCase
+	ListBudgetItemsUseCase        *budget.ListBudgetItemsUseCase
+	GetBudgetItemUseCase          *budget.GetBudgetItemUseCase
+	UpdateBudgetItemUseCase       *budget.UpdateBudgetItemUseCase
+	DeleteBudgetItemUseCase       *budget.DeleteBudgetItemUseCase
+	BatchCreateBudgetItemsUseCase *budget.BatchCreateBudgetItemsUseCase
+	GetBudgetSummaryUseCase       *budget.GetBudgetSummaryUseCase
+
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
 	GetCalendarPostUseCase               *calendar.GetCalendarPostUseCase
@@ -201,6 +213,7 @@ type Container struct {
 	GiftItemController           *controller.GiftItemController
 	GiftTransactionController    *controller.GiftTransactionController
 	AccountPayableController     *controller.AccountPayableController
+	BudgetController             *controller.BudgetController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -245,6 +258,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	giftItemGateway := dbgateway.NewGiftItemGateway(db)
 	giftTransactionGateway := dbgateway.NewGiftTransactionGateway(db)
 	accountPayableGateway := dbgateway.NewAccountPayableGateway(db)
+	budgetGateway := dbgateway.NewBudgetGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -253,6 +267,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	socialBenchmarkingSeeder := seeders.NewSocialBenchmarkingSeeder(socialBenchmarkingGateway)
 	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway)
 	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway)
+	budgetSeeder := seeders.NewBudgetSeeder(budgetGateway)
 	log.Println("✅ Seeders initialized")
 
 	// 4. Use Cases (dependem de gateways e services)
@@ -392,6 +407,15 @@ func NewContainer(cfg *Config) (*Container, error) {
 	toggleBoletoUseCase := accountpayableusecase.NewToggleBoletoUseCase(accountPayableGateway)
 	sendToFinanceUseCase := accountpayableusecase.NewSendToFinanceUseCase(accountPayableGateway)
 
+	// Budget Use Cases
+	createBudgetItemUseCase := budget.NewCreateBudgetItemUseCase(budgetGateway)
+	listBudgetItemsUseCase := budget.NewListBudgetItemsUseCase(budgetGateway)
+	getBudgetItemUseCase := budget.NewGetBudgetItemUseCase(budgetGateway)
+	updateBudgetItemUseCase := budget.NewUpdateBudgetItemUseCase(budgetGateway)
+	deleteBudgetItemUseCase := budget.NewDeleteBudgetItemUseCase(budgetGateway)
+	batchCreateBudgetItemsUseCase := budget.NewBatchCreateBudgetItemsUseCase(budgetGateway)
+	getBudgetSummaryUseCase := budget.NewGetBudgetSummaryUseCase(budgetGateway)
+
 	log.Println("✅ Use cases initialized")
 
 	// 5. Controllers (dependem de use cases)
@@ -508,6 +532,17 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteRepMarketingActionUseCase,
 	)
 
+	budgetController := controller.NewBudgetController(
+		createBudgetItemUseCase,
+		listBudgetItemsUseCase,
+		getBudgetItemUseCase,
+		updateBudgetItemUseCase,
+		deleteBudgetItemUseCase,
+		batchCreateBudgetItemsUseCase,
+		getBudgetSummaryUseCase,
+		budgetGateway,
+	)
+
 	log.Println("✅ Controllers initialized")
 
 	// 6. Middlewares (dependem de services)
@@ -543,7 +578,9 @@ func NewContainer(cfg *Config) (*Container, error) {
 		GiftItemGateway:                      giftItemGateway,
 		GiftTransactionGateway:               giftTransactionGateway,
 		AccountPayableGateway:                accountPayableGateway,
+		BudgetGateway:                        budgetGateway,
 		GiftSeeder:                           giftSeeder,
+		BudgetSeeder:                         budgetSeeder,
 		LoginUseCase:                         loginUseCase,
 		CreateKpiUseCase:                     createKpiUseCase,
 		GetKpiUseCase:                        getKpiUseCase,
@@ -643,6 +680,14 @@ func NewContainer(cfg *Config) (*Container, error) {
 		ToggleNFUseCase:                      toggleNFUseCase,
 		ToggleBoletoUseCase:                  toggleBoletoUseCase,
 		SendToFinanceUseCase:                 sendToFinanceUseCase,
+		CreateBudgetItemUseCase:              createBudgetItemUseCase,
+		ListBudgetItemsUseCase:               listBudgetItemsUseCase,
+		GetBudgetItemUseCase:                 getBudgetItemUseCase,
+		UpdateBudgetItemUseCase:              updateBudgetItemUseCase,
+		DeleteBudgetItemUseCase:              deleteBudgetItemUseCase,
+		BatchCreateBudgetItemsUseCase:        batchCreateBudgetItemsUseCase,
+		GetBudgetSummaryUseCase:              getBudgetSummaryUseCase,
+		BudgetController:                     budgetController,
 		AuthMiddleware:                       authMiddleware,
 		CorsMiddleware:                       corsMiddleware,
 	}, nil
@@ -716,6 +761,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		GiftItemController:           c.GiftItemController,
 		GiftTransactionController:    c.GiftTransactionController,
 		AccountPayableController:     c.AccountPayableController,
+		BudgetController:             c.BudgetController,
 	}
 }
 
