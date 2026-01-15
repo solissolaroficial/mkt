@@ -613,6 +613,24 @@ func NewContainer(cfg *Config) (*Container, error) {
 		representativeMonthlyGoalGateway,
 	)
 
+	// Gift Controllers
+	giftItemController := controller.NewGiftItemController(
+		createGiftItemUseCase,
+		listGiftItemsUseCase,
+		getGiftItemUseCase,
+		updateGiftItemUseCase,
+		deleteGiftItemUseCase,
+	)
+
+	giftTransactionController := controller.NewGiftTransactionController(
+		createGiftTransactionUseCase,
+		listGiftTransactionsUseCase,
+		getGiftTransactionUseCase,
+		updateGiftTransactionUseCase,
+		deleteGiftTransactionUseCase,
+	)
+
+	log.Println("✅ Gift controllers initialized")
 	log.Println("✅ Controllers initialized")
 
 	// 6. Middlewares (dependem de services)
@@ -708,6 +726,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 		OfflineActionController:                offlineActionController,
 		ShowroomItemController:                 showroomItemController,
 		RepMarketingActionController:           repMarketingActionController,
+		GiftItemController:                     giftItemController,
+		GiftTransactionController:              giftTransactionController,
 		CreateSocialBenchmarkingUseCase:        createSocialBenchmarkingUseCase,
 		ListSocialBenchmarkingsUseCase:         listSocialBenchmarkingsUseCase,
 		GetSocialBenchmarkingUseCase:           getSocialBenchmarkingUseCase,

@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/seu-usuario/solis-backend/config"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/migration"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/routes"
@@ -71,6 +72,14 @@ func main() {
 		DisableStartupMessage: false,
 		ErrorHandler:          customErrorHandler,
 	})
+
+	// Recovery middleware para capturar panics e evitar que o container caia
+	app.Use(recover.New(recover.Config{
+		EnableStackTrace: true,
+		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
+			log.Printf("❌ PANIC recovered: %v\nStack: %s", e, string(c.Locals("stacktrace").([]byte)))
+		},
+	}))
 
 	// 8. Setup routes
 	routes.SetupRoutes(
