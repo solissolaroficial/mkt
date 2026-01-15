@@ -1,12 +1,14 @@
 import { apiClient } from '@/infrastructure/api/client';
-import type { RepTableData, RepresentativeProfile } from '../types';
+import { ENDPOINTS } from '@/infrastructure/api/endpoints';
+import type { RepTableData } from '@/shared/types/legacy.types';
+import type { RepresentativeProfile } from '../types';
 
 export const representativesService = {
   /**
    * Get representatives table data
    */
   getRepTableData: async (): Promise<RepTableData> => {
-    const response = await apiClient.get('/api/representatives/table');
+    const response = await apiClient.get(ENDPOINTS.REPRESENTATIVES.TABLE);
     return response.data;
   },
 
@@ -14,7 +16,7 @@ export const representativesService = {
    * Get representative profile by name
    */
   getRepProfile: async (repName: string): Promise<RepresentativeProfile> => {
-    const response = await apiClient.get(`/api/representatives/profile/${encodeURIComponent(repName)}`);
+    const response = await apiClient.get(ENDPOINTS.REPRESENTATIVES.PROFILE(repName));
     return response.data;
   },
 
@@ -22,7 +24,7 @@ export const representativesService = {
    * Get all representative profiles
    */
   getAllProfiles: async (): Promise<RepresentativeProfile[]> => {
-    const response = await apiClient.get('/api/representatives/profiles');
-    return response.data;
+    const response = await apiClient.get(ENDPOINTS.REPRESENTATIVES.PROFILES);
+    return response.data.data;
   },
 };

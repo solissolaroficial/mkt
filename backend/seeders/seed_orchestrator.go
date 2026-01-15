@@ -14,6 +14,7 @@ func SeedAll(
 	cooperativeSeeder *CooperativeSeeder,
 	giftSeeder *GiftSeeder,
 	budgetSeeder *BudgetSeeder,
+	representativeMonthlyGoalSeeder *RepresentativeMonthlyGoalSeeder,
 ) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
@@ -64,6 +65,14 @@ func SeedAll(
 		return err
 	}
 	log.Println("✅ Budget data seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 7: Seed Representative Monthly Goals Data
+	if err := representativeMonthlyGoalSeeder.Seed(); err != nil {
+		log.Printf("❌ Error seeding representative monthly goals data: %v", err)
+		return err
+	}
+	log.Println("✅ Representative monthly goals data seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")

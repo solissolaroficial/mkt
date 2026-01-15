@@ -20,6 +20,8 @@ import (
 	"github.com/seu-usuario/solis-backend/application/usecase/gifts"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
+	representativemonthlygoal "github.com/seu-usuario/solis-backend/application/usecase/representativemonthlygoal"
+	"github.com/seu-usuario/solis-backend/application/usecase/representatives"
 	"github.com/seu-usuario/solis-backend/application/usecase/social"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	"github.com/seu-usuario/solis-backend/application/usecase/users"
@@ -43,34 +45,38 @@ type Container struct {
 	JwtService    service.JWTService
 
 	// Gateways
-	UserGateway                   gateway.UserGateway
-	KpiGateway                    gateway.KpiGateway
-	MonthlyDataGateway            gateway.MonthlyDataGateway
-	TaskGateway                   gateway.TaskGateway
-	SubtaskGateway                gateway.SubtaskGateway
-	CommentGateway                gateway.CommentGateway
-	NotificationGateway           gateway.NotificationGateway
-	CalendarPostGateway           gateway.CalendarPostGateway
-	PdvPostGateway                gateway.PdvPostGateway
-	RecurrentPdvGateway           gateway.RecurrentPdvGateway
-	SocialBenchmarkingGateway     gateway.SocialBenchmarkingGateway
-	SocialPostGateway             gateway.SocialPostGateway
-	SocialDailyAggregationGateway gateway.SocialDailyAggregationGateway
-	OfflineActionGateway          gateway.OfflineActionGateway
-	ShowroomItemGateway           gateway.ShowroomItemGateway
-	RepMarketingActionGateway     gateway.RepMarketingActionGateway
-	GiftItemGateway               gateway.GiftItemGateway
-	GiftTransactionGateway        gateway.GiftTransactionGateway
-	AccountPayableGateway         gateway.AccountPayableGateway
-	BudgetGateway                 gateway.BudgetGateway
+	UserGateway                      gateway.UserGateway
+	KpiGateway                       gateway.KpiGateway
+	MonthlyDataGateway               gateway.MonthlyDataGateway
+	TaskGateway                      gateway.TaskGateway
+	SubtaskGateway                   gateway.SubtaskGateway
+	CommentGateway                   gateway.CommentGateway
+	NotificationGateway              gateway.NotificationGateway
+	CalendarPostGateway              gateway.CalendarPostGateway
+	PdvPostGateway                   gateway.PdvPostGateway
+	RecurrentPdvGateway              gateway.RecurrentPdvGateway
+	SocialBenchmarkingGateway        gateway.SocialBenchmarkingGateway
+	SocialPostGateway                gateway.SocialPostGateway
+	SocialDailyAggregationGateway    gateway.SocialDailyAggregationGateway
+	OfflineActionGateway             gateway.OfflineActionGateway
+	ShowroomItemGateway              gateway.ShowroomItemGateway
+	RepMarketingActionGateway        gateway.RepMarketingActionGateway
+	GiftItemGateway                  gateway.GiftItemGateway
+	GiftTransactionGateway           gateway.GiftTransactionGateway
+	AccountPayableGateway            gateway.AccountPayableGateway
+	BudgetGateway                    gateway.BudgetGateway
+	RepresentativeGateway            gateway.RepresentativeGateway
+	RepresentativeStatsGateway       gateway.RepresentativeStatsGateway
+	RepresentativeMonthlyGoalGateway gateway.RepresentativeMonthlyGoalGateway
 
 	// Seeders
-	UserSeeder               *seeders.UserSeeder
-	KpiSeeder                *seeders.KpiSeeder
-	SocialBenchmarkingSeeder *seeders.SocialBenchmarkingSeeder
-	CooperativeSeeder        *seeders.CooperativeSeeder
-	GiftSeeder               *seeders.GiftSeeder
-	BudgetSeeder             *seeders.BudgetSeeder
+	UserSeeder                      *seeders.UserSeeder
+	KpiSeeder                       *seeders.KpiSeeder
+	SocialBenchmarkingSeeder        *seeders.SocialBenchmarkingSeeder
+	CooperativeSeeder               *seeders.CooperativeSeeder
+	GiftSeeder                      *seeders.GiftSeeder
+	BudgetSeeder                    *seeders.BudgetSeeder
+	RepresentativeMonthlyGoalSeeder *seeders.RepresentativeMonthlyGoalSeeder
 
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
@@ -151,6 +157,24 @@ type Container struct {
 	BatchCreateBudgetItemsUseCase *budget.BatchCreateBudgetItemsUseCase
 	GetBudgetSummaryUseCase       *budget.GetBudgetSummaryUseCase
 
+	// Use Cases - Representatives
+	CreateRepresentativeUseCase         *representatives.CreateRepresentativeUseCase
+	GetRepresentativeUseCase            *representatives.GetRepresentativeUseCase
+	UpdateRepresentativeUseCase         *representatives.UpdateRepresentativeUseCase
+	DeleteRepresentativeUseCase         *representatives.DeleteRepresentativeUseCase
+	ListRepresentativesUseCase          *representatives.ListRepresentativesUseCase
+	GetRepresentativeStatsUseCase       *representatives.GetRepresentativeStatsUseCase
+	GetRepresentativeProfileUseCase     *representatives.GetRepresentativeProfileUseCase
+	GetAllRepresentativeProfilesUseCase *representatives.GetAllRepresentativeProfilesUseCase
+
+	// Use Cases - Representative Monthly Goals
+	CreateRepresentativeMonthlyGoalUseCase *representativemonthlygoal.CreateRepresentativeMonthlyGoalUseCase
+	GetRepresentativeMonthlyGoalUseCase    *representativemonthlygoal.GetRepresentativeMonthlyGoalUseCase
+	UpdateRepresentativeMonthlyGoalUseCase *representativemonthlygoal.UpdateRepresentativeMonthlyGoalUseCase
+	DeleteRepresentativeMonthlyGoalUseCase *representativemonthlygoal.DeleteRepresentativeMonthlyGoalUseCase
+	ListRepresentativeMonthlyGoalsUseCase  *representativemonthlygoal.ListRepresentativeMonthlyGoalsUseCase
+	GetRepresentativeGoalsTableDataUseCase *representativemonthlygoal.GetRepresentativeGoalsTableDataUseCase
+
 	// Use Cases - Calendar
 	CreateCalendarPostUseCase            *calendar.CreateCalendarPostUseCase
 	GetCalendarPostUseCase               *calendar.GetCalendarPostUseCase
@@ -196,24 +220,26 @@ type Container struct {
 	DeleteNotificationsByTaskIDUseCase *tasks.DeleteNotificationsByTaskIDUseCase
 
 	// Controllers
-	AuthController               *controller.AuthController
-	KpiController                *controller.KpiController
-	TaskController               *controller.TaskController
-	SubtaskController            *controller.SubtaskController
-	CommentController            *controller.CommentController
-	NotificationController       *controller.NotificationController
-	UserController               *controller.UserController
-	CalendarPostController       *controller.CalendarPostController
-	PdvController                *controller.PdvController
-	SocialController             *controller.SocialController
-	SocialPostController         *controller.SocialPostController
-	OfflineActionController      *controller.OfflineActionController
-	ShowroomItemController       *controller.ShowroomItemController
-	RepMarketingActionController *controller.RepMarketingActionController
-	GiftItemController           *controller.GiftItemController
-	GiftTransactionController    *controller.GiftTransactionController
-	AccountPayableController     *controller.AccountPayableController
-	BudgetController             *controller.BudgetController
+	AuthController                      *controller.AuthController
+	KpiController                       *controller.KpiController
+	TaskController                      *controller.TaskController
+	SubtaskController                   *controller.SubtaskController
+	CommentController                   *controller.CommentController
+	NotificationController              *controller.NotificationController
+	UserController                      *controller.UserController
+	CalendarPostController              *controller.CalendarPostController
+	PdvController                       *controller.PdvController
+	SocialController                    *controller.SocialController
+	SocialPostController                *controller.SocialPostController
+	OfflineActionController             *controller.OfflineActionController
+	ShowroomItemController              *controller.ShowroomItemController
+	RepMarketingActionController        *controller.RepMarketingActionController
+	GiftItemController                  *controller.GiftItemController
+	GiftTransactionController           *controller.GiftTransactionController
+	AccountPayableController            *controller.AccountPayableController
+	BudgetController                    *controller.BudgetController
+	RepresentativeController            *controller.RepresentativeController
+	RepresentativeMonthlyGoalController *controller.RepresentativeMonthlyGoalController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -259,6 +285,9 @@ func NewContainer(cfg *Config) (*Container, error) {
 	giftTransactionGateway := dbgateway.NewGiftTransactionGateway(db)
 	accountPayableGateway := dbgateway.NewAccountPayableGateway(db)
 	budgetGateway := dbgateway.NewBudgetGateway(db)
+	representativeGateway := dbgateway.NewRepresentativeGateway(db)
+	representativeStatsGateway := dbgateway.NewRepresentativeStatsGateway(db)
+	representativeMonthlyGoalGateway := dbgateway.NewRepresentativeMonthlyGoalGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -268,6 +297,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway)
 	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway)
 	budgetSeeder := seeders.NewBudgetSeeder(budgetGateway)
+	representativeMonthlyGoalSeeder := seeders.NewRepresentativeMonthlyGoalSeeder(representativeMonthlyGoalGateway, representativeGateway)
 	log.Println("✅ Seeders initialized")
 
 	// 4. Use Cases (dependem de gateways e services)
@@ -416,6 +446,24 @@ func NewContainer(cfg *Config) (*Container, error) {
 	batchCreateBudgetItemsUseCase := budget.NewBatchCreateBudgetItemsUseCase(budgetGateway)
 	getBudgetSummaryUseCase := budget.NewGetBudgetSummaryUseCase(budgetGateway)
 
+	// Representatives Use Cases
+	createRepresentativeUseCase := representatives.NewCreateRepresentativeUseCase(representativeGateway)
+	getRepresentativeUseCase := representatives.NewGetRepresentativeUseCase(representativeGateway)
+	updateRepresentativeUseCase := representatives.NewUpdateRepresentativeUseCase(representativeGateway)
+	deleteRepresentativeUseCase := representatives.NewDeleteRepresentativeUseCase(representativeGateway)
+	listRepresentativesUseCase := representatives.NewListRepresentativesUseCase(representativeGateway)
+	getRepresentativeStatsUseCase := representatives.NewGetRepresentativeStatsUseCase(representativeGateway, representativeStatsGateway)
+	getRepresentativeProfileUseCase := representatives.NewGetRepresentativeProfileUseCase(representativeGateway, representativeStatsGateway)
+	getAllRepresentativeProfilesUseCase := representatives.NewGetAllRepresentativeProfilesUseCase(representativeGateway, representativeStatsGateway)
+
+	// Representative Monthly Goals Use Cases
+	createRepresentativeMonthlyGoalUseCase := representativemonthlygoal.NewCreateRepresentativeMonthlyGoalUseCase(representativeMonthlyGoalGateway, representativeGateway)
+	getRepresentativeMonthlyGoalUseCase := representativemonthlygoal.NewGetRepresentativeMonthlyGoalUseCase(representativeMonthlyGoalGateway)
+	updateRepresentativeMonthlyGoalUseCase := representativemonthlygoal.NewUpdateRepresentativeMonthlyGoalUseCase(representativeMonthlyGoalGateway)
+	deleteRepresentativeMonthlyGoalUseCase := representativemonthlygoal.NewDeleteRepresentativeMonthlyGoalUseCase(representativeMonthlyGoalGateway)
+	listRepresentativeMonthlyGoalsUseCase := representativemonthlygoal.NewListRepresentativeMonthlyGoalsUseCase(representativeMonthlyGoalGateway, representativeGateway)
+	getRepresentativeGoalsTableDataUseCase := representativemonthlygoal.NewGetRepresentativeGoalsTableDataUseCase(representativeMonthlyGoalGateway)
+
 	log.Println("✅ Use cases initialized")
 
 	// 5. Controllers (dependem de use cases)
@@ -543,6 +591,28 @@ func NewContainer(cfg *Config) (*Container, error) {
 		budgetGateway,
 	)
 
+	representativeController := controller.NewRepresentativeController(
+		createRepresentativeUseCase,
+		getRepresentativeUseCase,
+		updateRepresentativeUseCase,
+		deleteRepresentativeUseCase,
+		listRepresentativesUseCase,
+		getRepresentativeStatsUseCase,
+		getRepresentativeProfileUseCase,
+		getAllRepresentativeProfilesUseCase,
+		representativeGateway,
+	)
+
+	representativeMonthlyGoalController := controller.NewRepresentativeMonthlyGoalController(
+		createRepresentativeMonthlyGoalUseCase,
+		getRepresentativeMonthlyGoalUseCase,
+		updateRepresentativeMonthlyGoalUseCase,
+		deleteRepresentativeMonthlyGoalUseCase,
+		listRepresentativeMonthlyGoalsUseCase,
+		getRepresentativeGoalsTableDataUseCase,
+		representativeMonthlyGoalGateway,
+	)
+
 	log.Println("✅ Controllers initialized")
 
 	// 6. Middlewares (dependem de services)
@@ -552,144 +622,164 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	// 7. Retornar Container
 	return &Container{
-		DB:                                   db,
-		HasherService:                        hasherService,
-		JwtService:                           jwtService,
-		UserGateway:                          userGateway,
-		KpiGateway:                           kpiGateway,
-		MonthlyDataGateway:                   monthlyDataGateway,
-		TaskGateway:                          taskGateway,
-		SubtaskGateway:                       subtaskGateway,
-		CommentGateway:                       commentGateway,
-		NotificationGateway:                  notificationGateway,
-		CalendarPostGateway:                  calendarPostGateway,
-		PdvPostGateway:                       pdvPostGateway,
-		RecurrentPdvGateway:                  recurrentPdvGateway,
-		UserSeeder:                           userSeeder,
-		KpiSeeder:                            kpiSeeder,
-		SocialBenchmarkingSeeder:             socialBenchmarkingSeeder,
-		CooperativeSeeder:                    cooperativeSeeder,
-		SocialBenchmarkingGateway:            socialBenchmarkingGateway,
-		SocialPostGateway:                    socialPostGateway,
-		SocialDailyAggregationGateway:        socialDailyAggregationGateway,
-		OfflineActionGateway:                 offlineActionGateway,
-		ShowroomItemGateway:                  showroomItemGateway,
-		RepMarketingActionGateway:            repMarketingActionGateway,
-		GiftItemGateway:                      giftItemGateway,
-		GiftTransactionGateway:               giftTransactionGateway,
-		AccountPayableGateway:                accountPayableGateway,
-		BudgetGateway:                        budgetGateway,
-		GiftSeeder:                           giftSeeder,
-		BudgetSeeder:                         budgetSeeder,
-		LoginUseCase:                         loginUseCase,
-		CreateKpiUseCase:                     createKpiUseCase,
-		GetKpiUseCase:                        getKpiUseCase,
-		ListKpisUseCase:                      listKpisUseCase,
-		GetKpisBySlugsUseCase:                getKpisBySlugsUseCase,
-		UpdateKpiUseCase:                     updateKpiUseCase,
-		DeleteKpiUseCase:                     deleteKpiUseCase,
-		UpdateMonthlyDataUseCase:             updateMonthlyDataUseCase,
-		CreateTaskUseCase:                    createTaskUseCase,
-		UpdateTaskUseCase:                    updateTaskUseCase,
-		DeleteTaskUseCase:                    deleteTaskUseCase,
-		GetTaskUseCase:                       getTaskUseCase,
-		ListTasksUseCase:                     listTasksUseCase,
-		CreateSubtaskUseCase:                 createSubtaskUseCase,
-		UpdateSubtaskUseCase:                 updateSubtaskUseCase,
-		DeleteSubtaskUseCase:                 deleteSubtaskUseCase,
-		GetSubtaskUseCase:                    getSubtaskUseCase,
-		ListSubtasksUseCase:                  listSubtasksUseCase,
-		CreateCommentUseCase:                 createCommentUseCase,
-		UpdateCommentUseCase:                 updateCommentUseCase,
-		DeleteCommentUseCase:                 deleteCommentUseCase,
-		GetCommentUseCase:                    getCommentUseCase,
-		ListCommentsUseCase:                  listCommentsUseCase,
-		CreateNotificationUseCase:            createNotificationUseCase,
-		UpdateNotificationUseCase:            updateNotificationUseCase,
-		DeleteNotificationUseCase:            deleteNotificationUseCase,
-		GetNotificationUseCase:               getNotificationUseCase,
-		ListNotificationsUseCase:             listNotificationsUseCase,
-		MarkAsReadNotificationUseCase:        markAsReadNotificationUseCase,
-		MarkAllAsReadNotificationsUseCase:    markAllAsReadNotificationsUseCase,
-		DeleteNotificationsByTaskIDUseCase:   deleteNotificationsByTaskIDUseCase,
-		ListUsersUseCase:                     listUsersUseCase,
-		CreateCalendarPostUseCase:            createCalendarPostUseCase,
-		GetCalendarPostUseCase:               getCalendarPostUseCase,
-		UpdateCalendarPostUseCase:            updateCalendarPostUseCase,
-		UpdateCalendarPostStatusUseCase:      updateCalendarPostStatusUseCase,
-		ConfirmCalendarPostPublishingUseCase: confirmCalendarPostPublishingUseCase,
-		DeleteCalendarPostUseCase:            deleteCalendarPostUseCase,
-		ListCalendarPostsUseCase:             listCalendarPostsUseCase,
-		AuthController:                       authController,
-		KpiController:                        kpiController,
-		TaskController:                       taskController,
-		SubtaskController:                    subtaskController,
-		CommentController:                    commentController,
-		NotificationController:               notificationController,
-		UserController:                       userController,
-		CalendarPostController:               calendarPostController,
-		PdvController:                        pdvController,
-		SocialController:                     socialController,
-		SocialPostController:                 socialPostController,
-		OfflineActionController:              offlineActionController,
-		ShowroomItemController:               showroomItemController,
-		RepMarketingActionController:         repMarketingActionController,
-		CreateSocialBenchmarkingUseCase:      createSocialBenchmarkingUseCase,
-		ListSocialBenchmarkingsUseCase:       listSocialBenchmarkingsUseCase,
-		GetSocialBenchmarkingUseCase:         getSocialBenchmarkingUseCase,
-		UpdateSocialBenchmarkingUseCase:      updateSocialBenchmarkingUseCase,
-		DeleteSocialBenchmarkingUseCase:      deleteSocialBenchmarkingUseCase,
-		CreateSocialPostUseCase:              createSocialPostUseCase,
-		GetSocialPostUseCase:                 getSocialPostUseCase,
-		ListSocialPostsUseCase:               listSocialPostsUseCase,
-		UpdateSocialPostUseCase:              updateSocialPostUseCase,
-		DeleteSocialPostUseCase:              deleteSocialPostUseCase,
-		RecalculateDailyAggregationsUseCase:  recalculateDailyAggregationsUseCase,
-		ListSocialDailyAggregationsUseCase:   listSocialDailyAggregationsUseCase,
-		GetSocialDailyAggregationUseCase:     getSocialDailyAggregationUseCase,
-		CreateOfflineActionUseCase:           createOfflineActionUseCase,
-		ListOfflineActionsUseCase:            listOfflineActionsUseCase,
-		GetOfflineActionUseCase:              getOfflineActionUseCase,
-		UpdateOfflineActionUseCase:           updateOfflineActionUseCase,
-		DeleteOfflineActionUseCase:           deleteOfflineActionUseCase,
-		CreateShowroomItemUseCase:            createShowroomItemUseCase,
-		ListShowroomItemsUseCase:             listShowroomItemsUseCase,
-		GetShowroomItemUseCase:               getShowroomItemUseCase,
-		UpdateShowroomItemUseCase:            updateShowroomItemUseCase,
-		DeleteShowroomItemUseCase:            deleteShowroomItemUseCase,
-		CreateRepMarketingActionUseCase:      createRepMarketingActionUseCase,
-		ListRepMarketingActionsUseCase:       listRepMarketingActionsUseCase,
-		GetRepMarketingActionUseCase:         getRepMarketingActionUseCase,
-		UpdateRepMarketingActionUseCase:      updateRepMarketingActionUseCase,
-		DeleteRepMarketingActionUseCase:      deleteRepMarketingActionUseCase,
-		CreateGiftItemUseCase:                createGiftItemUseCase,
-		GetGiftItemUseCase:                   getGiftItemUseCase,
-		ListGiftItemsUseCase:                 listGiftItemsUseCase,
-		UpdateGiftItemUseCase:                updateGiftItemUseCase,
-		DeleteGiftItemUseCase:                deleteGiftItemUseCase,
-		CreateGiftTransactionUseCase:         createGiftTransactionUseCase,
-		GetGiftTransactionUseCase:            getGiftTransactionUseCase,
-		ListGiftTransactionsUseCase:          listGiftTransactionsUseCase,
-		UpdateGiftTransactionUseCase:         updateGiftTransactionUseCase,
-		DeleteGiftTransactionUseCase:         deleteGiftTransactionUseCase,
-		CreateAccountPayableUseCase:          createAccountPayableUseCase,
-		ListAccountsPayableUseCase:           listAccountsPayableUseCase,
-		GetAccountPayableUseCase:             getAccountPayableUseCase,
-		UpdateAccountPayableUseCase:          updateAccountPayableUseCase,
-		DeleteAccountPayableUseCase:          deleteAccountPayableUseCase,
-		ToggleNFUseCase:                      toggleNFUseCase,
-		ToggleBoletoUseCase:                  toggleBoletoUseCase,
-		SendToFinanceUseCase:                 sendToFinanceUseCase,
-		CreateBudgetItemUseCase:              createBudgetItemUseCase,
-		ListBudgetItemsUseCase:               listBudgetItemsUseCase,
-		GetBudgetItemUseCase:                 getBudgetItemUseCase,
-		UpdateBudgetItemUseCase:              updateBudgetItemUseCase,
-		DeleteBudgetItemUseCase:              deleteBudgetItemUseCase,
-		BatchCreateBudgetItemsUseCase:        batchCreateBudgetItemsUseCase,
-		GetBudgetSummaryUseCase:              getBudgetSummaryUseCase,
-		BudgetController:                     budgetController,
-		AuthMiddleware:                       authMiddleware,
-		CorsMiddleware:                       corsMiddleware,
+		DB:                                     db,
+		HasherService:                          hasherService,
+		JwtService:                             jwtService,
+		UserGateway:                            userGateway,
+		KpiGateway:                             kpiGateway,
+		MonthlyDataGateway:                     monthlyDataGateway,
+		TaskGateway:                            taskGateway,
+		SubtaskGateway:                         subtaskGateway,
+		CommentGateway:                         commentGateway,
+		NotificationGateway:                    notificationGateway,
+		CalendarPostGateway:                    calendarPostGateway,
+		PdvPostGateway:                         pdvPostGateway,
+		RecurrentPdvGateway:                    recurrentPdvGateway,
+		UserSeeder:                             userSeeder,
+		KpiSeeder:                              kpiSeeder,
+		SocialBenchmarkingSeeder:               socialBenchmarkingSeeder,
+		CooperativeSeeder:                      cooperativeSeeder,
+		SocialBenchmarkingGateway:              socialBenchmarkingGateway,
+		SocialPostGateway:                      socialPostGateway,
+		SocialDailyAggregationGateway:          socialDailyAggregationGateway,
+		OfflineActionGateway:                   offlineActionGateway,
+		ShowroomItemGateway:                    showroomItemGateway,
+		RepMarketingActionGateway:              repMarketingActionGateway,
+		GiftItemGateway:                        giftItemGateway,
+		GiftTransactionGateway:                 giftTransactionGateway,
+		AccountPayableGateway:                  accountPayableGateway,
+		BudgetGateway:                          budgetGateway,
+		RepresentativeGateway:                  representativeGateway,
+		RepresentativeStatsGateway:             representativeStatsGateway,
+		RepresentativeMonthlyGoalGateway:       representativeMonthlyGoalGateway,
+		GiftSeeder:                             giftSeeder,
+		BudgetSeeder:                           budgetSeeder,
+		RepresentativeMonthlyGoalSeeder:        representativeMonthlyGoalSeeder,
+		LoginUseCase:                           loginUseCase,
+		CreateKpiUseCase:                       createKpiUseCase,
+		GetKpiUseCase:                          getKpiUseCase,
+		ListKpisUseCase:                        listKpisUseCase,
+		GetKpisBySlugsUseCase:                  getKpisBySlugsUseCase,
+		UpdateKpiUseCase:                       updateKpiUseCase,
+		DeleteKpiUseCase:                       deleteKpiUseCase,
+		UpdateMonthlyDataUseCase:               updateMonthlyDataUseCase,
+		CreateTaskUseCase:                      createTaskUseCase,
+		UpdateTaskUseCase:                      updateTaskUseCase,
+		DeleteTaskUseCase:                      deleteTaskUseCase,
+		GetTaskUseCase:                         getTaskUseCase,
+		ListTasksUseCase:                       listTasksUseCase,
+		CreateSubtaskUseCase:                   createSubtaskUseCase,
+		UpdateSubtaskUseCase:                   updateSubtaskUseCase,
+		DeleteSubtaskUseCase:                   deleteSubtaskUseCase,
+		GetSubtaskUseCase:                      getSubtaskUseCase,
+		ListSubtasksUseCase:                    listSubtasksUseCase,
+		CreateCommentUseCase:                   createCommentUseCase,
+		UpdateCommentUseCase:                   updateCommentUseCase,
+		DeleteCommentUseCase:                   deleteCommentUseCase,
+		GetCommentUseCase:                      getCommentUseCase,
+		ListCommentsUseCase:                    listCommentsUseCase,
+		CreateNotificationUseCase:              createNotificationUseCase,
+		UpdateNotificationUseCase:              updateNotificationUseCase,
+		DeleteNotificationUseCase:              deleteNotificationUseCase,
+		GetNotificationUseCase:                 getNotificationUseCase,
+		ListNotificationsUseCase:               listNotificationsUseCase,
+		MarkAsReadNotificationUseCase:          markAsReadNotificationUseCase,
+		MarkAllAsReadNotificationsUseCase:      markAllAsReadNotificationsUseCase,
+		DeleteNotificationsByTaskIDUseCase:     deleteNotificationsByTaskIDUseCase,
+		ListUsersUseCase:                       listUsersUseCase,
+		CreateCalendarPostUseCase:              createCalendarPostUseCase,
+		GetCalendarPostUseCase:                 getCalendarPostUseCase,
+		UpdateCalendarPostUseCase:              updateCalendarPostUseCase,
+		UpdateCalendarPostStatusUseCase:        updateCalendarPostStatusUseCase,
+		ConfirmCalendarPostPublishingUseCase:   confirmCalendarPostPublishingUseCase,
+		DeleteCalendarPostUseCase:              deleteCalendarPostUseCase,
+		ListCalendarPostsUseCase:               listCalendarPostsUseCase,
+		AuthController:                         authController,
+		KpiController:                          kpiController,
+		TaskController:                         taskController,
+		SubtaskController:                      subtaskController,
+		CommentController:                      commentController,
+		NotificationController:                 notificationController,
+		UserController:                         userController,
+		CalendarPostController:                 calendarPostController,
+		PdvController:                          pdvController,
+		SocialController:                       socialController,
+		SocialPostController:                   socialPostController,
+		OfflineActionController:                offlineActionController,
+		ShowroomItemController:                 showroomItemController,
+		RepMarketingActionController:           repMarketingActionController,
+		CreateSocialBenchmarkingUseCase:        createSocialBenchmarkingUseCase,
+		ListSocialBenchmarkingsUseCase:         listSocialBenchmarkingsUseCase,
+		GetSocialBenchmarkingUseCase:           getSocialBenchmarkingUseCase,
+		UpdateSocialBenchmarkingUseCase:        updateSocialBenchmarkingUseCase,
+		DeleteSocialBenchmarkingUseCase:        deleteSocialBenchmarkingUseCase,
+		CreateSocialPostUseCase:                createSocialPostUseCase,
+		GetSocialPostUseCase:                   getSocialPostUseCase,
+		ListSocialPostsUseCase:                 listSocialPostsUseCase,
+		UpdateSocialPostUseCase:                updateSocialPostUseCase,
+		DeleteSocialPostUseCase:                deleteSocialPostUseCase,
+		RecalculateDailyAggregationsUseCase:    recalculateDailyAggregationsUseCase,
+		ListSocialDailyAggregationsUseCase:     listSocialDailyAggregationsUseCase,
+		GetSocialDailyAggregationUseCase:       getSocialDailyAggregationUseCase,
+		CreateOfflineActionUseCase:             createOfflineActionUseCase,
+		ListOfflineActionsUseCase:              listOfflineActionsUseCase,
+		GetOfflineActionUseCase:                getOfflineActionUseCase,
+		UpdateOfflineActionUseCase:             updateOfflineActionUseCase,
+		DeleteOfflineActionUseCase:             deleteOfflineActionUseCase,
+		CreateShowroomItemUseCase:              createShowroomItemUseCase,
+		ListShowroomItemsUseCase:               listShowroomItemsUseCase,
+		GetShowroomItemUseCase:                 getShowroomItemUseCase,
+		UpdateShowroomItemUseCase:              updateShowroomItemUseCase,
+		DeleteShowroomItemUseCase:              deleteShowroomItemUseCase,
+		CreateRepMarketingActionUseCase:        createRepMarketingActionUseCase,
+		ListRepMarketingActionsUseCase:         listRepMarketingActionsUseCase,
+		GetRepMarketingActionUseCase:           getRepMarketingActionUseCase,
+		UpdateRepMarketingActionUseCase:        updateRepMarketingActionUseCase,
+		DeleteRepMarketingActionUseCase:        deleteRepMarketingActionUseCase,
+		CreateGiftItemUseCase:                  createGiftItemUseCase,
+		GetGiftItemUseCase:                     getGiftItemUseCase,
+		ListGiftItemsUseCase:                   listGiftItemsUseCase,
+		UpdateGiftItemUseCase:                  updateGiftItemUseCase,
+		DeleteGiftItemUseCase:                  deleteGiftItemUseCase,
+		CreateGiftTransactionUseCase:           createGiftTransactionUseCase,
+		GetGiftTransactionUseCase:              getGiftTransactionUseCase,
+		ListGiftTransactionsUseCase:            listGiftTransactionsUseCase,
+		UpdateGiftTransactionUseCase:           updateGiftTransactionUseCase,
+		DeleteGiftTransactionUseCase:           deleteGiftTransactionUseCase,
+		CreateAccountPayableUseCase:            createAccountPayableUseCase,
+		ListAccountsPayableUseCase:             listAccountsPayableUseCase,
+		GetAccountPayableUseCase:               getAccountPayableUseCase,
+		UpdateAccountPayableUseCase:            updateAccountPayableUseCase,
+		DeleteAccountPayableUseCase:            deleteAccountPayableUseCase,
+		ToggleNFUseCase:                        toggleNFUseCase,
+		ToggleBoletoUseCase:                    toggleBoletoUseCase,
+		SendToFinanceUseCase:                   sendToFinanceUseCase,
+		CreateBudgetItemUseCase:                createBudgetItemUseCase,
+		ListBudgetItemsUseCase:                 listBudgetItemsUseCase,
+		GetBudgetItemUseCase:                   getBudgetItemUseCase,
+		UpdateBudgetItemUseCase:                updateBudgetItemUseCase,
+		DeleteBudgetItemUseCase:                deleteBudgetItemUseCase,
+		BatchCreateBudgetItemsUseCase:          batchCreateBudgetItemsUseCase,
+		GetBudgetSummaryUseCase:                getBudgetSummaryUseCase,
+		BudgetController:                       budgetController,
+		CreateRepresentativeUseCase:            createRepresentativeUseCase,
+		GetRepresentativeUseCase:               getRepresentativeUseCase,
+		UpdateRepresentativeUseCase:            updateRepresentativeUseCase,
+		DeleteRepresentativeUseCase:            deleteRepresentativeUseCase,
+		ListRepresentativesUseCase:             listRepresentativesUseCase,
+		GetRepresentativeStatsUseCase:          getRepresentativeStatsUseCase,
+		GetRepresentativeProfileUseCase:        getRepresentativeProfileUseCase,
+		GetAllRepresentativeProfilesUseCase:    getAllRepresentativeProfilesUseCase,
+		RepresentativeController:               representativeController,
+		RepresentativeMonthlyGoalController:    representativeMonthlyGoalController,
+		CreateRepresentativeMonthlyGoalUseCase: createRepresentativeMonthlyGoalUseCase,
+		GetRepresentativeMonthlyGoalUseCase:    getRepresentativeMonthlyGoalUseCase,
+		UpdateRepresentativeMonthlyGoalUseCase: updateRepresentativeMonthlyGoalUseCase,
+		DeleteRepresentativeMonthlyGoalUseCase: deleteRepresentativeMonthlyGoalUseCase,
+		ListRepresentativeMonthlyGoalsUseCase:  listRepresentativeMonthlyGoalsUseCase,
+		GetRepresentativeGoalsTableDataUseCase: getRepresentativeGoalsTableDataUseCase,
+		AuthMiddleware:                         authMiddleware,
+		CorsMiddleware:                         corsMiddleware,
 	}, nil
 }
 
@@ -744,24 +834,26 @@ func (c *Container) Close() error {
 // GetControllers retorna struct para usar nas rotas
 func (c *Container) GetControllers() *routes.Controllers {
 	return &routes.Controllers{
-		AuthController:               c.AuthController,
-		KpiController:                c.KpiController,
-		TaskController:               c.TaskController,
-		SubtaskController:            c.SubtaskController,
-		CommentController:            c.CommentController,
-		NotificationController:       c.NotificationController,
-		UserController:               c.UserController,
-		CalendarPostController:       c.CalendarPostController,
-		PdvController:                c.PdvController,
-		SocialController:             c.SocialController,
-		SocialPostController:         c.SocialPostController,
-		OfflineActionController:      c.OfflineActionController,
-		ShowroomItemController:       c.ShowroomItemController,
-		RepMarketingActionController: c.RepMarketingActionController,
-		GiftItemController:           c.GiftItemController,
-		GiftTransactionController:    c.GiftTransactionController,
-		AccountPayableController:     c.AccountPayableController,
-		BudgetController:             c.BudgetController,
+		AuthController:                      c.AuthController,
+		KpiController:                       c.KpiController,
+		TaskController:                      c.TaskController,
+		SubtaskController:                   c.SubtaskController,
+		CommentController:                   c.CommentController,
+		NotificationController:              c.NotificationController,
+		UserController:                      c.UserController,
+		CalendarPostController:              c.CalendarPostController,
+		PdvController:                       c.PdvController,
+		SocialController:                    c.SocialController,
+		SocialPostController:                c.SocialPostController,
+		OfflineActionController:             c.OfflineActionController,
+		ShowroomItemController:              c.ShowroomItemController,
+		RepMarketingActionController:        c.RepMarketingActionController,
+		GiftItemController:                  c.GiftItemController,
+		GiftTransactionController:           c.GiftTransactionController,
+		AccountPayableController:            c.AccountPayableController,
+		BudgetController:                    c.BudgetController,
+		RepresentativeController:            c.RepresentativeController,
+		RepresentativeMonthlyGoalController: c.RepresentativeMonthlyGoalController,
 	}
 }
 

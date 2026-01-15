@@ -1,64 +1,39 @@
 import { useQuery } from '@tanstack/react-query';
-import { representativesService } from '../services/representativesService';
-import { REPS_TRAINING_DATA, REPS_MARKETING_DATA, REP_PROFILES } from '@/shared/utils/legacy.constants';
+import { representativeService } from '../services/representativeService';
+import type { Representative, RepresentativeStats, ListRepresentativesRequest, ListRepresentativesResponse } from '../types';
 
-/**
- * Hook to get representatives training data
- */
-export const useRepTrainingData = () => {
-  return useQuery({
-    queryKey: ['representatives', 'training'],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      return REPS_TRAINING_DATA;
-    },
-    staleTime: 1000 * 60 * 5,
+export interface UseRepresentativesOptions extends ListRepresentativesRequest {}
+
+export const useRepresentatives = (filters?: UseRepresentativesOptions) => {
+  return useQuery<ListRepresentativesResponse>({
+    queryKey: ['representatives', filters],
+    queryFn: () => representativeService.list(filters),
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: false,
   });
 };
 
-/**
- * Hook to get representatives marketing data
- */
-export const useRepMarketingData = () => {
+export const useRepresentative = (uuid: string) => {
   return useQuery({
-    queryKey: ['representatives', 'marketing'],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      return REPS_MARKETING_DATA;
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-};
-
-/**
- * Hook to get representative profile
- */
-export const useRepProfile = (repName: string) => {
-  return useQuery({
-    queryKey: ['representatives', 'profile', repName],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      const profile = REP_PROFILES[repName];
-      if (!profile) {
-        throw new Error(`Representative profile not found: ${repName}`);
-      }
-      return profile;
-    },
+    queryKey: ['representative', uuid],
+    queryFn: () => representativeService.getById(uuid),
+    enabled: !!uuid, // Só executar se uuid for fornecido
     staleTime: 1000 * 60 * 10,
-    enabled: !!repName,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
-/**
- * Hook to get all representative profiles
- */
-export const useAllRepProfiles = () => {
+export const useRepresentativeStats = (uuid: string) => {
   return useQuery({
-    queryKey: ['representatives', 'profiles'],
-    queryFn: async () => {
-      // TODO: Replace with actual API call when backend is ready
-      return Object.values(REP_PROFILES);
-    },
+    queryKey: ['representative-stats', uuid],
+    queryFn: () => representativeService.getStats(uuid),
+    enabled: !!uuid, // Só executar se uuid for fornecido
     staleTime: 1000 * 60 * 10,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };

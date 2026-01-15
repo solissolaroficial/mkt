@@ -99,4 +99,15 @@ export const ENDPOINTS = {
     SUMMARY: '/api/budget/summary',
     YEARS: '/api/budget/years',
   } as const,
+  REPRESENTATIVES: {
+    LIST: '/api/v1/representatives',
+    GET: (uuid: string) => `/api/v1/representatives/${uuid}`,
+    CREATE: '/api/v1/representatives',
+    UPDATE: (uuid: string) => `/api/v1/representatives/${uuid}`,
+    DELETE: (uuid: string) => `/api/v1/representatives/${uuid}`,
+    TABLE: '/api/v1/representatives/table',
+    STATS: (uuid: string) => `/api/v1/representatives/${uuid}/stats`,
+    PROFILE: (name: string) => `/api/v1/representatives/profile/${name}`,
+    PROFILES: '/api/v1/representatives/profiles',
+  } as const,
 } as const;

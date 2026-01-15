@@ -1,10 +1,80 @@
-import type { RepTableData, RepresentativeProfile } from '@/shared/types';
+// Representative Types
+export interface Representative {
+  uuid: string;
+  code: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  region: string;
+  city: string;
+  attendant: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export type { RepTableData, RepresentativeProfile };
+export interface RepresentativeStats {
+  uuid: string;
+  onlineCount: number; // Alias para onlineActionCount (compatibilidade com implementação antiga)
+  onlineActionCount: number;
+  offlineCount: number; // Alias para offlineActionCount (compatibilidade com implementação antiga)
+  offlineActionCount: number;
+  offlineValue: number; // Alias para offlineActionValue (compatibilidade com implementação antiga)
+  offlineActionValue: number;
+  showroomItemCount: number;
+  repMarketingCount: number;
+  totalActions: number;
+}
 
-export interface RepTableProps {
-  data: RepTableData;
-  onRepClick?: (repName: string) => void;
+export interface CreateRepresentativeRequest {
+  code: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  region: string;
+  city: string;
+  attendant: string;
+}
+
+export interface UpdateRepresentativeRequest {
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  region?: string;
+  city?: string;
+  attendant?: string;
+  active?: boolean;
+}
+
+export interface ListRepresentativesRequest {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  name?: string;
+  company?: string;
+  region?: string;
+  city?: string;
+  active?: boolean;
+}
+
+export interface ListRepresentativesResponse {
+  data: Representative[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface RepresentativeTableData {
+  data: Representative[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface RepProfileModalProps {
@@ -13,19 +83,24 @@ export interface RepProfileModalProps {
   profile: RepresentativeProfile;
 }
 
-export const COMPANY_MAP: Record<string, string> = {
-  'André': 'MELO & DOMINGUES REP',
-  'César': 'TORQUATO REPRESENTACOES',
-  'Cleber': 'SANTOS & BRAMBILA REP.',
-  'Cristiano e Ranoika': 'RN REPRESENTAÇÕES COMERCIAIS',
-  'Fausto': 'HIKARI REPRESENTAÇÃO',
-  'Gonçalves': 'SOLAR PRÁTICO',
-  'Márcio Henrique': '4F REPRESENTAÇÕES',
-  'Marcos': 'MARCOS JUNQUEIRA VILELA',
-  'Nilton': 'QUALITYENG SERVICE REPRESENTACOES',
-  'Jorge': 'JK GUIMARAES REPRES',
-  'Otávio': 'MONICA C. MENDES ME',
-  'Rafael Betoni': 'RAFAEL NONATO BETONI TOMAZ',
-  'Rafael Lazzarotto': 'LAZZAROTTO VENDAS E REP. LTDA',
-  'Wilson': 'SOLAR FLUX REPRESENTACOES'
-};
+export interface RepresentativeProfile {
+  uuid: string;
+  code: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  region: string;
+  city: string;
+  attendant: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  trainingCount: number;
+  onlineCount: number;
+  offlineCount: number;
+  offlineValue: number;
+  showroomItemCount: number;
+  repMarketingCount: number;
+  totalActions: number;
+}

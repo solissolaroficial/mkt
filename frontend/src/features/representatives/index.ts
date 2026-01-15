@@ -1,12 +1,21 @@
-export { default as RepTable } from './ui/RepTable';
-export { default as RepProfileModal } from './ui/RepProfileModal';
+// Types
+export * from './types';
 
-export { useRepTrainingData, useRepMarketingData, useRepProfile, useAllRepProfiles } from './hooks/useRepresentatives';
+// Services
+export * from './services/representativeService';
 
-export type { 
-  RepTableData, 
-  RepresentativeProfile,
-  RepTableProps,
-  RepProfileModalProps,
-  COMPANY_MAP
-} from './types';
+// Hooks
+export * from './hooks/useRepresentatives';
+export * from './hooks/useRepresentativeMutations';
+export * from './hooks/useRepTableData';
+export * from './hooks/useRepStats';
+
+// Components
+export { default as RepresentativeTable } from './components/RepresentativeTable';
+export { default as RepresentativeForm } from './components/RepresentativeForm';
+export { default as RepresentativeStats } from './components/RepresentativeStats';
+export { default as RepresentativeList } from './components/RepresentativeList';
+export { default as RepTable } from './components/RepTable';
+
+// Pages
+export { default as RepresentativesPage } from './pages/RepresentativesPage';

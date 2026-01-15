@@ -1,5 +1,5 @@
 import React from 'react';
-import type { RepresentativeProfile } from '@/shared/types';
+import type { RepresentativeProfile } from '../types';
 import { X, Mail, Phone, MapPin, User, Building, Hash, GraduationCap, Megaphone, DollarSign, Globe, FolderOpen } from 'lucide-react';
 import type { RepProfileModalProps } from '../types';
 
@@ -38,40 +38,38 @@ const RepProfileModal: React.FC<RepProfileModalProps> = ({ isOpen, onClose, prof
             <div className="space-y-6">
                 
                 {/* Stats Section */}
-                {profile.stats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
-                            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 mb-2">
-                                <GraduationCap size={18} />
-                            </div>
-                            <span className="text-2xl font-bold text-white">{profile.stats.trainingCount}</span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wide">Treinamentos</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 mb-2">
+                            <GraduationCap size={18} />
                         </div>
-                        <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
-                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 mb-2">
-                                <Globe size={18} />
-                            </div>
-                            <span className="text-2xl font-bold text-white">{profile.stats.onlineCount}</span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wide">Ações Online</span>
-                        </div>
-                        <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
-                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 mb-2">
-                                <FolderOpen size={18} />
-                            </div>
-                            <span className="text-2xl font-bold text-white">{profile.stats.offlineCount}</span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wide">Ações Offline</span>
-                        </div>
-                        <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
-                            <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400 mb-2">
-                                <DollarSign size={18} />
-                            </div>
-                            <span className="text-lg font-bold text-white mt-1">
-                                {profile.stats.offlineValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
-                            </span>
-                            <span className="text-[10px] text-gray-500 uppercase tracking-wide mt-1">Investimento</span>
-                        </div>
+                        <span className="text-2xl font-bold text-white">{profile.trainingCount}</span>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wide">Treinamentos</span>
                     </div>
-                )}
+                    <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
+                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 mb-2">
+                            <Globe size={18} />
+                        </div>
+                        <span className="text-2xl font-bold text-white">{profile.onlineCount}</span>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wide">Ações Online</span>
+                    </div>
+                    <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
+                        <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 mb-2">
+                            <FolderOpen size={18} />
+                        </div>
+                        <span className="text-2xl font-bold text-white">{profile.offlineCount}</span>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wide">Ações Offline</span>
+                    </div>
+                    <div className="bg-[#20232b] p-3 rounded-xl border border-gray-800 flex flex-col items-center text-center">
+                        <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400 mb-2">
+                            <DollarSign size={18} />
+                        </div>
+                        <span className="text-lg font-bold text-white mt-1">
+                            {profile.offlineValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                        </span>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wide mt-1">Investimento</span>
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-[#20232b] p-4 rounded-xl border border-gray-800">
