@@ -30,6 +30,7 @@ func RunMigrations(db *gorm.DB) error {
 		&model.OfflineActionModel{},
 		&model.ShowroomItemModel{},
 		&model.RepMarketingActionModel{},
+		&model.RepresentativeModel{},
 		&model.GiftItemModel{},
 		&model.GiftTransactionModel{},
 		&model.AccountPayableModel{},
