@@ -16,15 +16,15 @@ func SetupRepresentativeRoutes(router fiber.Router, representativeController *co
 	// CRUD básico
 	representatives.Post("/", representativeController.Create)
 	representatives.Get("/", representativeController.List)
+
+	// Operações adicionais (rotas específicas devem vir ANTES de /:id)
+	representatives.Get("/table", representativeController.GetTableData)
+	representatives.Get("/profiles", representativeController.GetAllProfiles)
+	representatives.Get("/profile/:name", representativeController.GetProfile)
+
+	// Rotas com parâmetro (devem vir DEPOIS das rotas específicas)
 	representatives.Get("/:id", representativeController.GetByID)
+	representatives.Get("/:id/stats", representativeController.GetStats)
 	representatives.Put("/:id", representativeController.Update)
 	representatives.Delete("/:id", representativeController.Delete)
-
-	// Operações adicionais
-	representatives.Get("/table", representativeController.GetTableData)
-	representatives.Get("/:id/stats", representativeController.GetStats)
-
-	// Rotas de perfil
-	representatives.Get("/profile/:name", representativeController.GetProfile)
-	representatives.Get("/profiles", representativeController.GetAllProfiles)
 }
