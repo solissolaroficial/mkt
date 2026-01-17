@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -17,17 +19,19 @@ type CreatePdvPostUseCase struct {
 
 // CreatePdvPostInput representa os dados de entrada para criar um post de PDV
 type CreatePdvPostInput struct {
-	RepName  string
-	PdvName  string
-	PostDate string
-	Platform string
-	Link     *string
-	ProofUrl *string
+	RepresentativeUUID string
+	PdvName            string
+	PostDate           string
+	Platform           string
+	Link               *string
+	ProofUrl           *string
 }
 
 // NewCreatePdvPost cria uma nova instância do CreatePdvPostUseCase
 func NewCreatePdvPost(gateway gateway.PdvPostGateway) *CreatePdvPostUseCase {
-	return &CreatePdvPostUseCase{gateway: gateway}
+	return &CreatePdvPostUseCase{
+		gateway: gateway,
+	}
 }
 
 // Execute cria um novo post de PDV
@@ -39,6 +43,12 @@ func (uc *CreatePdvPostUseCase) Execute(ctx context.Context, input CreatePdvPost
 	}
 
 	postDate, err := valueobject.NewPdvPostDate(date)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse representative UUID
+	representativeUUID, err := uuid.Parse(input.RepresentativeUUID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +74,7 @@ func (uc *CreatePdvPostUseCase) Execute(ctx context.Context, input CreatePdvPost
 
 	// Criar entidade
 	post, err := entity.NewPdvPost(
-		input.RepName,
+		representativeUUID,
 		input.PdvName,
 		postDate,
 		input.Platform,

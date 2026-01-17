@@ -15,8 +15,9 @@ import {
 } from 'recharts';
 import { KpiCategory, KpiLog, BreakdownItem } from '@/shared/types/legacy.types';
 import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator } from 'lucide-react';
-import { MONTHS, REP_NAMES } from '@/shared/utils/legacy.constants';
+import { MONTHS } from '@/shared/utils/legacy.constants';
 import { useUpdateMonthlyData } from '../hooks/useKpiMutations';
+import { useRepresentatives } from '@/features/pdv/hooks';
 
 interface KpiDetailViewProps {
   kpi: KpiCategory;
@@ -27,15 +28,16 @@ interface KpiDetailViewProps {
 }
 
 const KpiDetailView: React.FC<KpiDetailViewProps> = ({ kpi, allKpis, selectedMonth, monthNames, onBack }) => {
-const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-const [isLaunchOpen, setIsLaunchOpen] = useState(false);
-const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
-
-// Launch State
-const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
-const [launchMonth, setLaunchMonth] = useState('NOV'); // Extracted Month for internal logic
-const [launchValue, setLaunchValue] = useState('');
-const [launchContext, setLaunchContext] = useState('');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isLaunchOpen, setIsLaunchOpen] = useState(false);
+  const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
+  const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
+  
+  // Launch State
+  const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
+  const [launchMonth, setLaunchMonth] = useState('NOV'); // Extracted Month for internal logic
+  const [launchValue, setLaunchValue] = useState('');
+  const [launchContext, setLaunchContext] = useState('');
 
 // Opportunity Launch Specifics
 const [oppChannel, setOppChannel] = useState('');
@@ -706,7 +708,7 @@ const currentYear = new Date().getFullYear();
                                         required
                                     >
                                         <option value="" disabled>Selecione...</option>
-                                        {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                                        {representatives.map(rep => <option key={rep.uuid} value={rep.name}>{rep.name}</option>)}
                                     </select>
                                 </div>
                             )}

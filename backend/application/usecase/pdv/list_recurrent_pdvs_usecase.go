@@ -3,6 +3,7 @@ package pdv
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -16,12 +17,12 @@ type ListRecurrentPdvsUseCase struct {
 
 // ListRecurrentPdvsInput representa os dados de entrada para listar PDVs recorrentes
 type ListRecurrentPdvsInput struct {
-	RepName   *string
-	City      *string
-	Page      int
-	Limit     int
-	SortBy    *string
-	SortOrder *string
+	RepresentativeUUID *string
+	City               *string
+	Page               int
+	Limit              int
+	SortBy             *string
+	SortOrder          *string
 }
 
 // NewListRecurrentPdvs cria uma nova instância do ListRecurrentPdvsUseCase
@@ -34,8 +35,11 @@ func (uc *ListRecurrentPdvsUseCase) Execute(ctx context.Context, input ListRecur
 	// Criar criteria - Criteria está no package domain
 	crit := domain.NewRecurrentPdvCriteria()
 
-	if input.RepName != nil {
-		crit = crit.WithRepName(input.RepName)
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			crit = crit.WithRepresentativeUUID(&representativeUUID)
+		}
 	}
 
 	if input.City != nil {

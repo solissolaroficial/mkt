@@ -3,6 +3,8 @@ package showroomitem
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -13,18 +15,20 @@ type UpdateShowroomItemUseCase struct {
 }
 
 type UpdateShowroomItemInput struct {
-	ID               string
-	PDV              *string
-	RepName          *string
-	City             *string
-	Contact          *string
-	DeliveryForecast *string
-	WorkshopDate     *string
-	Delivered        *bool
+	ID                 string
+	PDV                *string
+	RepresentativeUUID *string
+	City               *string
+	Contact            *string
+	DeliveryForecast   *string
+	WorkshopDate       *string
+	Delivered          *bool
 }
 
 func NewUpdateShowroomItem(gateway gateway.ShowroomItemGateway) *UpdateShowroomItemUseCase {
-	return &UpdateShowroomItemUseCase{gateway: gateway}
+	return &UpdateShowroomItemUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *UpdateShowroomItemUseCase) Execute(ctx context.Context, input UpdateShowroomItemInput) (*entity.ShowroomItem, error) {
@@ -41,9 +45,12 @@ func (uc *UpdateShowroomItemUseCase) Execute(ctx context.Context, input UpdateSh
 		}
 	}
 
-	if input.RepName != nil {
-		if err := item.UpdateRepName(*input.RepName); err != nil {
-			return nil, err
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			if err := item.UpdateRepresentativeUUID(representativeUUID); err != nil {
+				return nil, err
+			}
 		}
 	}
 

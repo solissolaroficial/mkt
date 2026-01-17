@@ -15,13 +15,13 @@ func NewRepMarketingActionPayloadMapper() *RepMarketingActionPayloadMapper {
 // ToRepMarketingActionResponse converte Entity para Response DTO
 func (m *RepMarketingActionPayloadMapper) ToRepMarketingActionResponse(action *entity.RepMarketingAction) RepMarketingActionResponse {
 	response := RepMarketingActionResponse{
-		UUID:        action.ID().String(),
-		RepName:     action.RepName(),
-		Date:        action.Date().Format(time.RFC3339),
-		Description: action.Description(),
-		Month:       action.Month(),
-		CreatedAt:   action.CreatedAt().Format(time.RFC3339),
-		UpdatedAt:   action.UpdatedAt().Format(time.RFC3339),
+		UUID:               action.ID().String(),
+		RepresentativeUUID: action.RepresentativeUUID().String(),
+		Date:               action.Date().Format(time.RFC3339),
+		Description:        action.Description(),
+		Month:              action.Month(),
+		CreatedAt:          action.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:          action.UpdatedAt().Format(time.RFC3339),
 	}
 
 	// Optional field

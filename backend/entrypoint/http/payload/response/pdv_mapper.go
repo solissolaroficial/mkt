@@ -25,17 +25,17 @@ func (m *PdvPayloadMapper) ToPdvPostResponse(post *entity.PdvPost) PdvPostRespon
 	}
 
 	return PdvPostResponse{
-		ID:        post.ID().String(),
-		RepName:   post.RepName(),
-		PdvName:   post.PdvName(),
-		PostDate:  post.PostDate().String(),
-		Month:     post.Month(),
-		Platform:  post.Platform(),
-		Link:      post.Link(),
-		ProofUrl:  post.ProofUrl(),
-		Status:    statusStr,
-		CreatedAt: post.CreatedAt().Format(time.RFC3339),
-		UpdatedAt: post.UpdatedAt().Format(time.RFC3339),
+		ID:                 post.ID().String(),
+		RepresentativeUUID: post.RepresentativeUUID().String(),
+		PdvName:            post.PdvName(),
+		PostDate:           post.PostDate().String(),
+		Month:              post.Month(),
+		Platform:           post.Platform(),
+		Link:               post.Link(),
+		ProofUrl:           post.ProofUrl(),
+		Status:             statusStr,
+		CreatedAt:          post.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:          post.UpdatedAt().Format(time.RFC3339),
 	}
 }
 
@@ -51,14 +51,14 @@ func (m *PdvPayloadMapper) ToPdvPostResponseList(posts []*entity.PdvPost) []PdvP
 // ToRecurrentPdvResponse converte Entity para Response DTO
 func (m *PdvPayloadMapper) ToRecurrentPdvResponse(pdv *entity.RecurrentPdv) RecurrentPdvResponse {
 	return RecurrentPdvResponse{
-		ID:               pdv.ID().String(),
-		Name:             pdv.Name(),
-		RepName:          pdv.RepName(),
-		City:             pdv.City(),
-		Followers:        pdv.Followers(),
-		InstagramProfile: pdv.InstagramProfile(),
-		CreatedAt:        pdv.CreatedAt().Format(time.RFC3339),
-		UpdatedAt:        pdv.UpdatedAt().Format(time.RFC3339),
+		ID:                 pdv.ID().String(),
+		RepresentativeUUID: pdv.RepresentativeUUID().String(),
+		Name:               pdv.Name(),
+		City:               pdv.City(),
+		Followers:          pdv.Followers(),
+		InstagramProfile:   pdv.InstagramProfile(),
+		CreatedAt:          pdv.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:          pdv.UpdatedAt().Format(time.RFC3339),
 	}
 }
 
@@ -82,6 +82,7 @@ func (m *PdvPayloadMapper) ToPdvPostsListResponse(
 	if totalPages < 0 {
 		totalPages = 0
 	}
+
 	return PdvPostListData{
 		Posts: m.ToPdvPostResponseList(posts),
 		Meta: MetaResponse{
@@ -104,6 +105,7 @@ func (m *PdvPayloadMapper) ToRecurrentPdvsListResponse(
 	if totalPages < 0 {
 		totalPages = 0
 	}
+
 	return RecurrentPdvListData{
 		Pdvs: m.ToRecurrentPdvResponseList(pdvs),
 		Meta: MetaResponse{

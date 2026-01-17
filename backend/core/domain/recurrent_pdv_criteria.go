@@ -1,10 +1,14 @@
 package domain
 
+import (
+	"github.com/google/uuid"
+)
+
 // RecurrentPdvCriteria representa filtros para busca de PDVs recorrentes
 // NOTA: Este criteria NÃO depende de GORM, seguindo Clean Architecture
 type RecurrentPdvCriteria struct {
-	repName *string
-	city    *string
+	representativeUUID *uuid.UUID
+	city               *string
 }
 
 // NewRecurrentPdvCriteria cria um novo RecurrentPdvCriteria vazio
@@ -12,9 +16,9 @@ func NewRecurrentPdvCriteria() *RecurrentPdvCriteria {
 	return &RecurrentPdvCriteria{}
 }
 
-// WithRepName adiciona filtro por nome do representante
-func (c *RecurrentPdvCriteria) WithRepName(repName *string) *RecurrentPdvCriteria {
-	c.repName = repName
+// WithRepresentativeUUID adiciona filtro por UUID do representante
+func (c *RecurrentPdvCriteria) WithRepresentativeUUID(representativeUUID *uuid.UUID) *RecurrentPdvCriteria {
+	c.representativeUUID = representativeUUID
 	return c
 }
 
@@ -26,9 +30,9 @@ func (c *RecurrentPdvCriteria) WithCity(city *string) *RecurrentPdvCriteria {
 
 // Getters para o gateway aplicar os filtros
 
-// RepName retorna o filtro de nome do representante
-func (c *RecurrentPdvCriteria) RepName() *string {
-	return c.repName
+// RepresentativeUUID retorna o filtro de UUID do representante
+func (c *RecurrentPdvCriteria) RepresentativeUUID() *uuid.UUID {
+	return c.representativeUUID
 }
 
 // City retorna o filtro de cidade

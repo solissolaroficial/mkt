@@ -4,18 +4,19 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 // PdvPostCriteria representa filtros para busca de posts de PDV
 // NOTA: Este criteria NÃO depende de GORM, seguindo Clean Architecture
 type PdvPostCriteria struct {
-	repName   *string
-	month     *string
-	platform  *string
-	status    *valueobject.PdvStatus
-	startDate *string
-	endDate   *string
+	representativeUUID *uuid.UUID
+	month              *string
+	platform           *string
+	status             *valueobject.PdvStatus
+	startDate          *string
+	endDate            *string
 }
 
 // NewPdvPostCriteria cria um novo PdvPostCriteria vazio
@@ -23,9 +24,9 @@ func NewPdvPostCriteria() *PdvPostCriteria {
 	return &PdvPostCriteria{}
 }
 
-// WithRepName adiciona filtro por nome do representante
-func (c *PdvPostCriteria) WithRepName(repName *string) *PdvPostCriteria {
-	c.repName = repName
+// WithRepresentativeUUID adiciona filtro por UUID do representante
+func (c *PdvPostCriteria) WithRepresentativeUUID(representativeUUID *uuid.UUID) *PdvPostCriteria {
+	c.representativeUUID = representativeUUID
 	return c
 }
 
@@ -73,9 +74,9 @@ func (c *PdvPostCriteria) WithEndDate(endDate *string) (*PdvPostCriteria, error)
 
 // Getters para o gateway aplicar os filtros
 
-// RepName retorna o filtro de nome do representante
-func (c *PdvPostCriteria) RepName() *string {
-	return c.repName
+// RepresentativeUUID retorna o filtro de UUID do representante
+func (c *PdvPostCriteria) RepresentativeUUID() *uuid.UUID {
+	return c.representativeUUID
 }
 
 // Month retorna o filtro de mês

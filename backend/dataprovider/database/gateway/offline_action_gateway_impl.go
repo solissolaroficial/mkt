@@ -81,8 +81,8 @@ func (g *offlineActionGatewayImpl) FindByCriteria(
 	if criteria.Category() != nil {
 		query = query.Where("category = ?", criteria.Category().String())
 	}
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())
@@ -135,8 +135,8 @@ func (g *offlineActionGatewayImpl) CountByCriteria(ctx context.Context, criteria
 	if criteria.Category() != nil {
 		query = query.Where("category = ?", criteria.Category().String())
 	}
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())

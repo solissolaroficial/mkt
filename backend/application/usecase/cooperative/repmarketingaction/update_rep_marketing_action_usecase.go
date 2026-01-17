@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,14 +16,16 @@ type UpdateRepMarketingActionUseCase struct {
 }
 
 type UpdateRepMarketingActionInput struct {
-	ID          string
-	RepName     *string
-	Date        *string
-	Description *string
+	ID                 string
+	RepresentativeUUID *string
+	Date               *string
+	Description        *string
 }
 
 func NewUpdateRepMarketingAction(gateway gateway.RepMarketingActionGateway) *UpdateRepMarketingActionUseCase {
-	return &UpdateRepMarketingActionUseCase{gateway: gateway}
+	return &UpdateRepMarketingActionUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *UpdateRepMarketingActionUseCase) Execute(ctx context.Context, input UpdateRepMarketingActionInput) (*entity.RepMarketingAction, error) {
@@ -32,9 +36,12 @@ func (uc *UpdateRepMarketingActionUseCase) Execute(ctx context.Context, input Up
 	}
 
 	// Atualizar campos se fornecidos
-	if input.RepName != nil {
-		if err := action.UpdateRepName(*input.RepName); err != nil {
-			return nil, err
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			if err := action.UpdateRepresentativeUUID(representativeUUID); err != nil {
+				return nil, err
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -15,6 +16,7 @@ type CooperativeSeeder struct {
 	offlineActionGateway      gateway.OfflineActionGateway
 	showroomItemGateway       gateway.ShowroomItemGateway
 	repMarketingActionGateway gateway.RepMarketingActionGateway
+	representativeGateway     gateway.RepresentativeGateway
 }
 
 // NewCooperativeSeeder cria uma nova instância do CooperativeSeeder
@@ -22,11 +24,13 @@ func NewCooperativeSeeder(
 	offlineActionGateway gateway.OfflineActionGateway,
 	showroomItemGateway gateway.ShowroomItemGateway,
 	repMarketingActionGateway gateway.RepMarketingActionGateway,
+	representativeGateway gateway.RepresentativeGateway,
 ) *CooperativeSeeder {
 	return &CooperativeSeeder{
 		offlineActionGateway:      offlineActionGateway,
 		showroomItemGateway:       showroomItemGateway,
 		repMarketingActionGateway: repMarketingActionGateway,
+		representativeGateway:     representativeGateway,
 	}
 }
 
@@ -34,18 +38,36 @@ func NewCooperativeSeeder(
 func (s *CooperativeSeeder) Seed(ctx context.Context) error {
 	log.Println("🌱 Seeding cooperative data...")
 
+	// Obter todos os representantes e criar um mapa de nome para UUID
+	pagination := valueobject.NewPagination(1, 1000)
+	sortOrder, err := valueobject.NewSortOrder("name", valueobject.SortDirectionAsc)
+	if err != nil {
+		return err
+	}
+	sortOrders := []*valueobject.SortOrder{sortOrder}
+	representatives, _, err := s.representativeGateway.FindAll(&pagination, sortOrders)
+	if err != nil {
+		return err
+	}
+
+	// Criar mapa de nome para UUID
+	repNameToUUID := make(map[string]uuid.UUID)
+	for _, rep := range representatives {
+		repNameToUUID[rep.Name()] = rep.UUID()
+	}
+
 	// Seed Offline Actions
-	if err := s.seedOfflineActions(ctx); err != nil {
+	if err := s.seedOfflineActions(ctx, repNameToUUID); err != nil {
 		return err
 	}
 
 	// Seed Showroom Items
-	if err := s.seedShowroomItems(ctx); err != nil {
+	if err := s.seedShowroomItems(ctx, repNameToUUID); err != nil {
 		return err
 	}
 
 	// Seed Rep Marketing Actions
-	if err := s.seedRepMarketingActions(ctx); err != nil {
+	if err := s.seedRepMarketingActions(ctx, repNameToUUID); err != nil {
 		return err
 	}
 
@@ -53,7 +75,7 @@ func (s *CooperativeSeeder) Seed(ctx context.Context) error {
 }
 
 // seedOfflineActions cria ações offline iniciais
-func (s *CooperativeSeeder) seedOfflineActions(ctx context.Context) error {
+func (s *CooperativeSeeder) seedOfflineActions(ctx context.Context, repNameToUUID map[string]uuid.UUID) error {
 	log.Println("🌱 Seeding offline actions...")
 
 	offlineActions := []struct {
@@ -101,13 +123,20 @@ func (s *CooperativeSeeder) seedOfflineActions(ctx context.Context) error {
 		// Criar OfflineCategory value object
 		category := valueobject.OfflineCategory(data.category)
 
+		// Obter UUID do representante
+		repUUID, ok := repNameToUUID[data.repName]
+		if !ok {
+			log.Printf("❌ Representative not found: %s", data.repName)
+			continue
+		}
+
 		// Criar ação offline
 		action, err := entity.NewOfflineAction(
 			data.requestedAmount,
 			actionDate,
 			category,
 			data.pdv,
-			data.repName,
+			repUUID,
 			data.observation,
 		)
 		if err != nil {
@@ -128,7 +157,7 @@ func (s *CooperativeSeeder) seedOfflineActions(ctx context.Context) error {
 }
 
 // seedShowroomItems cria itens de showroom iniciais
-func (s *CooperativeSeeder) seedShowroomItems(ctx context.Context) error {
+func (s *CooperativeSeeder) seedShowroomItems(ctx context.Context, repNameToUUID map[string]uuid.UUID) error {
 	log.Println("🌱 Seeding showroom items...")
 
 	showroomItems := []struct {
@@ -161,14 +190,22 @@ func (s *CooperativeSeeder) seedShowroomItems(ctx context.Context) error {
 			contact:          "Pedro Costa",
 			repName:          "Larissa",
 			deliveryForecast: "2024-04-01",
+			workshopDate:     "2024-04-10",
 		},
 	}
 
 	for _, data := range showroomItems {
+		// Obter UUID do representante
+		repUUID, ok := repNameToUUID[data.repName]
+		if !ok {
+			log.Printf("❌ Representative not found: %s", data.repName)
+			continue
+		}
+
 		// Criar item de showroom com apenas 2 parâmetros
 		item, err := entity.NewShowroomItem(
 			data.pdv,
-			data.repName,
+			repUUID,
 		)
 		if err != nil {
 			log.Printf("❌ Error creating showroom item: %v", err)
@@ -216,7 +253,7 @@ func (s *CooperativeSeeder) seedShowroomItems(ctx context.Context) error {
 }
 
 // seedRepMarketingActions cria ações de marketing de representantes iniciais
-func (s *CooperativeSeeder) seedRepMarketingActions(ctx context.Context) error {
+func (s *CooperativeSeeder) seedRepMarketingActions(ctx context.Context, repNameToUUID map[string]uuid.UUID) error {
 	log.Println("🌱 Seeding rep marketing actions...")
 
 	repMarketingActions := []struct {
@@ -254,9 +291,16 @@ func (s *CooperativeSeeder) seedRepMarketingActions(ctx context.Context) error {
 			continue
 		}
 
+		// Obter UUID do representante
+		repUUID, ok := repNameToUUID[data.repName]
+		if !ok {
+			log.Printf("❌ Representative not found: %s", data.repName)
+			continue
+		}
+
 		// Criar ação de marketing de representante
 		action, err := entity.NewRepMarketingAction(
-			data.repName,
+			repUUID,
 			parsedDate,
 			data.description,
 		)

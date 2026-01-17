@@ -3,6 +3,8 @@ package offlineaction
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,23 +16,25 @@ type UpdateOfflineActionUseCase struct {
 }
 
 type UpdateOfflineActionInput struct {
-	ID               string
-	ApprovedAmount   *string
-	OrderNumber      *string
-	DepartureDate    *string
-	DeliveryForecast *string
-	DeliveryDate     *string
-	City             *string
-	UF               *string
-	Scored           *string
-	Status           *string
-	Observation      *string
-	PDV              *string
-	RepName          *string
+	ID                 string
+	ApprovedAmount     *string
+	OrderNumber        *string
+	DepartureDate      *string
+	DeliveryForecast   *string
+	DeliveryDate       *string
+	City               *string
+	UF                 *string
+	Scored             *string
+	Status             *string
+	Observation        *string
+	PDV                *string
+	RepresentativeUUID *string
 }
 
 func NewUpdateOfflineAction(gateway gateway.OfflineActionGateway) *UpdateOfflineActionUseCase {
-	return &UpdateOfflineActionUseCase{gateway: gateway}
+	return &UpdateOfflineActionUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *UpdateOfflineActionUseCase) Execute(ctx context.Context, input UpdateOfflineActionInput) (*entity.OfflineAction, error) {
@@ -107,9 +111,12 @@ func (uc *UpdateOfflineActionUseCase) Execute(ctx context.Context, input UpdateO
 		}
 	}
 
-	if input.RepName != nil {
-		if err := action.UpdateRepName(*input.RepName); err != nil {
-			return nil, err
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			if err := action.UpdateRepresentativeUUID(representativeUUID); err != nil {
+				return nil, err
+			}
 		}
 	}
 

@@ -50,12 +50,12 @@ func (c *ShowroomItemController) Create(ctx *fiber.Ctx) error {
 
 	// Executar use case (validação está no use case)
 	input := usecase.CreateShowroomItemInput{
-		PDV:              req.PDV,
-		City:             req.City,
-		Contact:          req.Contact,
-		RepName:          req.RepName,
-		DeliveryForecast: req.DeliveryForecast,
-		WorkshopDate:     req.WorkshopDate,
+		PDV:                req.PDV,
+		City:               req.City,
+		Contact:            req.Contact,
+		RepresentativeUUID: req.RepresentativeUUID,
+		DeliveryForecast:   req.DeliveryForecast,
+		WorkshopDate:       req.WorkshopDate,
 	}
 
 	item, err := c.createUseCase.Execute(ctx.Context(), input)
@@ -102,13 +102,13 @@ func (c *ShowroomItemController) List(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.ListShowroomItemsInput{
-		RepName:   query.RepName,
-		Delivered: query.Delivered,
-		City:      query.City,
-		Page:      query.Page,
-		Limit:     query.Limit,
-		SortBy:    query.SortBy,
-		SortOrder: query.SortOrder,
+		RepresentativeUUID: query.RepresentativeUUID,
+		Delivered:          query.Delivered,
+		City:               query.City,
+		Page:               query.Page,
+		Limit:              query.Limit,
+		SortBy:             query.SortBy,
+		SortOrder:          query.SortOrder,
 	}
 
 	items, total, err := c.listUseCase.Execute(ctx.Context(), input)
@@ -170,14 +170,14 @@ func (c *ShowroomItemController) Update(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.UpdateShowroomItemInput{
-		ID:               id,
-		City:             req.City,
-		Contact:          req.Contact,
-		RepName:          req.RepName,
-		DeliveryForecast: req.DeliveryForecast,
-		WorkshopDate:     req.WorkshopDate,
-		Delivered:        req.Delivered,
-		PDV:              req.PDV,
+		ID:                 id,
+		City:               req.City,
+		Contact:            req.Contact,
+		RepresentativeUUID: req.RepresentativeUUID,
+		DeliveryForecast:   req.DeliveryForecast,
+		WorkshopDate:       req.WorkshopDate,
+		Delivered:          req.Delivered,
+		PDV:                req.PDV,
 	}
 
 	item, err := c.updateUseCase.Execute(ctx.Context(), input)

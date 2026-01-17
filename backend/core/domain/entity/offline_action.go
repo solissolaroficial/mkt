@@ -11,26 +11,26 @@ import (
 )
 
 type OfflineAction struct {
-	id               uuid.UUID
-	requestedAmount  *valueobject.MonetaryValue
-	actionDate       *valueobject.ActionDate
-	category         *valueobject.OfflineCategory
-	month            string  // Derivado da data (JAN, FEV, MAR, etc.)
-	approvedAmount   *string // Pode ser vazio (em análise)
-	orderNumber      *string
-	departureDate    *string
-	deliveryForecast *string
-	deliveryDate     *string
-	city             *string
-	uf               *string
-	scored           *valueobject.ScoredStatus
-	status           *valueobject.OfflineStatus
-	observation      *string // Descrição/status
-	pdv              *string
-	repName          string
-	createdAt        time.Time
-	updatedAt        time.Time
-	deletedAt        *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	requestedAmount    *valueobject.MonetaryValue
+	actionDate         *valueobject.ActionDate
+	category           *valueobject.OfflineCategory
+	month              string  // Derivado da data (JAN, FEV, MAR, etc.)
+	approvedAmount     *string // Pode ser vazio (em análise)
+	orderNumber        *string
+	departureDate      *string
+	deliveryForecast   *string
+	deliveryDate       *string
+	city               *string
+	uf                 *string
+	scored             *valueobject.ScoredStatus
+	status             *valueobject.OfflineStatus
+	observation        *string // Descrição/status
+	pdv                *string
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewOfflineAction cria uma nova entidade OfflineAction
@@ -39,7 +39,7 @@ func NewOfflineAction(
 	actionDate *valueobject.ActionDate,
 	category valueobject.OfflineCategory,
 	pdv string,
-	repName string,
+	representativeUUID uuid.UUID,
 	observation string,
 ) (*OfflineAction, error) {
 	// Validar e criar value object para valor solicitado
@@ -52,6 +52,11 @@ func NewOfflineAction(
 		return nil, errors.New("actionDate is required")
 	}
 
+	// Validar representativeUUID
+	if representativeUUID == uuid.Nil {
+		return nil, errors.New("representativeUUID is required")
+	}
+
 	// Validar category
 	if !category.IsValid() {
 		return nil, errors.New("invalid category")
@@ -60,11 +65,6 @@ func NewOfflineAction(
 	pdv = strings.TrimSpace(pdv)
 	if pdv == "" {
 		return nil, errors.New("pdv is required")
-	}
-
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return nil, errors.New("repName is required")
 	}
 
 	// Derivar mês da data
@@ -92,25 +92,25 @@ func NewOfflineAction(
 	pdvTrimmed := strings.TrimSpace(pdv)
 
 	action := &OfflineAction{
-		id:               uuid.New(),
-		requestedAmount:  monetary,
-		actionDate:       actionDate,
-		category:         &category,
-		month:            month,
-		approvedAmount:   nil, // Inicialmente vazio (em análise)
-		orderNumber:      nil,
-		departureDate:    nil,
-		deliveryForecast: nil,
-		deliveryDate:     nil,
-		city:             nil,
-		uf:               nil,
-		scored:           &scored,
-		status:           &status,
-		observation:      obs,
-		pdv:              &pdvTrimmed,
-		repName:          repName,
-		createdAt:        time.Now(),
-		updatedAt:        time.Now(),
+		id:                 uuid.New(),
+		representativeUUID: representativeUUID,
+		requestedAmount:    monetary,
+		actionDate:         actionDate,
+		category:           &category,
+		month:              month,
+		approvedAmount:     nil, // Inicialmente vazio (em análise)
+		orderNumber:        nil,
+		departureDate:      nil,
+		deliveryForecast:   nil,
+		deliveryDate:       nil,
+		city:               nil,
+		uf:                 nil,
+		scored:             &scored,
+		status:             &status,
+		observation:        obs,
+		pdv:                &pdvTrimmed,
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := action.Validate(); err != nil {
@@ -138,7 +138,7 @@ func ReconstructOfflineAction(
 	status *valueobject.OfflineStatus,
 	observation *string,
 	pdv *string,
-	repName string,
+	representativeUUID uuid.UUID,
 	createdAt time.Time,
 	updatedAt time.Time,
 	deletedAt *time.Time,
@@ -146,26 +146,26 @@ func ReconstructOfflineAction(
 	monetary := valueobject.ReconstructMonetaryValue(requestedAmount)
 
 	return &OfflineAction{
-		id:               id,
-		requestedAmount:  monetary,
-		actionDate:       actionDate,
-		category:         category,
-		month:            month,
-		approvedAmount:   approvedAmount,
-		orderNumber:      orderNumber,
-		departureDate:    departureDate,
-		deliveryForecast: deliveryForecast,
-		deliveryDate:     deliveryDate,
-		city:             city,
-		uf:               uf,
-		scored:           scored,
-		status:           status,
-		observation:      observation,
-		pdv:              pdv,
-		repName:          repName,
-		createdAt:        createdAt,
-		updatedAt:        updatedAt,
-		deletedAt:        deletedAt,
+		id:                 id,
+		representativeUUID: representativeUUID,
+		requestedAmount:    monetary,
+		actionDate:         actionDate,
+		category:           category,
+		month:              month,
+		approvedAmount:     approvedAmount,
+		orderNumber:        orderNumber,
+		departureDate:      departureDate,
+		deliveryForecast:   deliveryForecast,
+		deliveryDate:       deliveryDate,
+		city:               city,
+		uf:                 uf,
+		scored:             scored,
+		status:             status,
+		observation:        observation,
+		pdv:                pdv,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
@@ -177,6 +177,7 @@ func deriveOfflineMonthFromDate(date time.Time) string {
 
 // Getters
 func (o *OfflineAction) ID() uuid.UUID                               { return o.id }
+func (o *OfflineAction) RepresentativeUUID() uuid.UUID               { return o.representativeUUID }
 func (o *OfflineAction) RequestedAmount() *valueobject.MonetaryValue { return o.requestedAmount }
 func (o *OfflineAction) ActionDate() *valueobject.ActionDate         { return o.actionDate }
 func (o *OfflineAction) Category() *valueobject.OfflineCategory      { return o.category }
@@ -192,7 +193,6 @@ func (o *OfflineAction) Scored() *valueobject.ScoredStatus           { return o.
 func (o *OfflineAction) Status() *valueobject.OfflineStatus          { return o.status }
 func (o *OfflineAction) Observation() *string                        { return o.observation }
 func (o *OfflineAction) PDV() *string                                { return o.pdv }
-func (o *OfflineAction) RepName() string                             { return o.repName }
 func (o *OfflineAction) CreatedAt() time.Time                        { return o.createdAt }
 func (o *OfflineAction) UpdatedAt() time.Time                        { return o.updatedAt }
 func (o *OfflineAction) DeletedAt() *time.Time                       { return o.deletedAt }
@@ -217,8 +217,8 @@ func (o *OfflineAction) Validate() error {
 		return errors.New("scored is required")
 	}
 
-	if o.repName == "" {
-		return errors.New("repName is required")
+	if o.representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
 
 	return nil
@@ -335,16 +335,12 @@ func (o *OfflineAction) UpdatePDV(pdv *string) error {
 	return nil
 }
 
-// UpdateRepName atualiza o nome do representante
-func (o *OfflineAction) UpdateRepName(repName string) error {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return errors.New("repName is required")
+// UpdateRepresentativeUUID atualiza o UUID do representante
+func (o *OfflineAction) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	if representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
-	if len(repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
-	}
-	o.repName = repName
+	o.representativeUUID = representativeUUID
 	o.updatedAt = time.Now()
 	return nil
 }

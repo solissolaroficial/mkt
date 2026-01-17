@@ -125,7 +125,7 @@ export interface Task {
 
 export interface PdvPost {
   id: string;
-  rep_name: string;
+  representative_uuid: string;
   pdv_name: string;
   post_date: string; // YYYY-MM-DD
   month: string; // JAN, FEV, MAR, ABR, MAI, JUN, JUL, AGO, SET, OUT, NOV, DEZ
@@ -140,7 +140,7 @@ export interface PdvPost {
 export interface RecurrentPdv {
     id: string;
     name: string;
-    rep_name: string;
+    representative_uuid: string;
     city?: string;
     followers?: number;
     instagram_profile?: string;
@@ -176,7 +176,7 @@ export interface RecurrentPdvListResponse {
 
 // Interface para filtros de posts PDV
 export interface PdvPostFilters {
-  rep_name?: string;
+  representative_uuid?: string;
   month?: string;
   platform?: string;
   status?: string;
@@ -190,7 +190,7 @@ export interface PdvPostFilters {
 
 // Interface para filtros de PDVs recorrentes
 export interface RecurrentPdvFilters {
-  rep_name?: string;
+  representative_uuid?: string;
   city?: string;
   page?: number;
   limit?: number;
@@ -200,7 +200,7 @@ export interface RecurrentPdvFilters {
 
 // Interface para request de criação de post PDV
 export interface CreatePdvPostRequest {
-  rep_name: string;
+  representative_uuid: string;
   pdv_name: string;
   post_date: string;
   platform: string;
@@ -210,7 +210,7 @@ export interface CreatePdvPostRequest {
 
 // Interface para request de atualização de post PDV
 export interface UpdatePdvPostRequest {
-  rep_name?: string;
+  representative_uuid?: string;
   pdv_name?: string;
   post_date?: string;
   platform?: string;
@@ -221,14 +221,14 @@ export interface UpdatePdvPostRequest {
 // Interface para request de criação de PDV recorrente
 export interface CreateRecurrentPdvRequest {
   name: string;
-  rep_name: string;
+  representative_uuid: string;
   city?: string;
 }
 
 // Interface para request de atualização de PDV recorrente
 export interface UpdateRecurrentPdvRequest {
   name?: string;
-  rep_name?: string;
+  representative_uuid?: string;
   city?: string;
   followers?: number;
   instagram_profile?: string;
@@ -239,7 +239,7 @@ export interface ShowroomItem {
     pdv: string;
     city: string;
     contact: string;
-    repName: string;
+    representative_uuid: string;
     notDelivered: boolean; // Coluna "Não entregue"
     deliveryForecast: string; // "Previsão de entrega"
     delivered: boolean; // Coluna "Já entregue"
@@ -259,7 +259,7 @@ export interface OfflineAction {
     pontuado: string;
     status: string;
     pdv?: string; // Nome da Loja
-    responsavel?: string; // Representante responsável
+    representative_uuid?: string; // Representante responsável
     // Campos adicionais para formulário detalhado
     contact?: string;
     phone?: string;

@@ -25,7 +25,7 @@ func (m *RepMarketingActionMapper) ModelToEntity(model *model.RepMarketingAction
 
 	return entity.ReconstructRepMarketingAction(
 		model.UUID,
-		model.RepName,
+		model.RepresentativeUUID,
 		model.Date,
 		model.Description,
 		model.Month,
@@ -58,13 +58,13 @@ func (m *RepMarketingActionMapper) EntityToModel(action *entity.RepMarketingActi
 	}
 
 	return &model.RepMarketingActionModel{
-		UUID:        action.ID(),
-		RepName:     action.RepName(),
-		Date:        action.Date(),
-		Description: action.Description(),
-		Month:       action.Month(),
-		CreatedAt:   action.CreatedAt(),
-		UpdatedAt:   action.UpdatedAt(),
-		DeletedAt:   deletedAt,
+		UUID:               action.ID(),
+		RepresentativeUUID: action.RepresentativeUUID(),
+		Date:               action.Date(),
+		Description:        action.Description(),
+		Month:              action.Month(),
+		CreatedAt:          action.CreatedAt(),
+		UpdatedAt:          action.UpdatedAt(),
+		DeletedAt:          deletedAt,
 	}
 }

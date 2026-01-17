@@ -15,15 +15,15 @@ func NewShowroomItemPayloadMapper() *ShowroomItemPayloadMapper {
 // ToShowroomItemResponse converte Entity para Response DTO
 func (m *ShowroomItemPayloadMapper) ToShowroomItemResponse(item *entity.ShowroomItem) ShowroomItemResponse {
 	response := ShowroomItemResponse{
-		UUID:             item.ID().String(),
-		PDV:              item.PDV(),
-		City:             item.City(),
-		Contact:          item.Contact(),
-		RepName:          item.RepName(),
-		DeliveryForecast: item.DeliveryForecast(),
-		Delivered:        item.Delivered(),
-		CreatedAt:        item.CreatedAt().Format(time.RFC3339),
-		UpdatedAt:        item.UpdatedAt().Format(time.RFC3339),
+		UUID:               item.ID().String(),
+		PDV:                item.PDV(),
+		City:               item.City(),
+		Contact:            item.Contact(),
+		RepresentativeUUID: item.RepresentativeUUID().String(),
+		DeliveryForecast:   item.DeliveryForecast(),
+		Delivered:          item.Delivered(),
+		CreatedAt:          item.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:          item.UpdatedAt().Format(time.RFC3339),
 	}
 
 	// Optional fields

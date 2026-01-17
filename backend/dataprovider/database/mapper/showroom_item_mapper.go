@@ -28,7 +28,7 @@ func (m *ShowroomItemMapper) ModelToEntity(model *model.ShowroomItemModel) (*ent
 		model.PDV,
 		model.City,
 		model.Contact,
-		model.RepName,
+		model.RepresentativeUUID,
 		model.DeliveryForecast,
 		model.WorkshopDate,
 		model.Delivered,
@@ -61,16 +61,16 @@ func (m *ShowroomItemMapper) EntityToModel(item *entity.ShowroomItem) *model.Sho
 	}
 
 	return &model.ShowroomItemModel{
-		UUID:             item.ID(),
-		PDV:              item.PDV(),
-		City:             item.City(),
-		Contact:          item.Contact(),
-		RepName:          item.RepName(),
-		DeliveryForecast: item.DeliveryForecast(),
-		WorkshopDate:     item.WorkshopDate(),
-		Delivered:        item.Delivered(),
-		CreatedAt:        item.CreatedAt(),
-		UpdatedAt:        item.UpdatedAt(),
-		DeletedAt:        deletedAt,
+		UUID:               item.ID(),
+		RepresentativeUUID: item.RepresentativeUUID(),
+		PDV:                item.PDV(),
+		City:               item.City(),
+		Contact:            item.Contact(),
+		DeliveryForecast:   item.DeliveryForecast(),
+		WorkshopDate:       item.WorkshopDate(),
+		Delivered:          item.Delivered(),
+		CreatedAt:          item.CreatedAt(),
+		UpdatedAt:          item.UpdatedAt(),
+		DeletedAt:          deletedAt,
 	}
 }

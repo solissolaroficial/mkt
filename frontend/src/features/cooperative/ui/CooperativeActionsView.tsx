@@ -3,8 +3,24 @@ import { Store, Megaphone, MapPin, Calendar, CheckCircle, XCircle, Clock, Target
 import { MOCK_SHOWROOM_ITEMS, REPS_MARKETING_DATA, FULL_MONTH_MAP, OFFLINE_ACTIONS_DATA, MONTHS, REP_NAMES } from '../../../shared/utils/legacy.constants';
 import { RepTable } from '../../representatives';
 import { PdvTrackingView } from '../../pdv';
+import { useRepresentatives } from '../../pdv/hooks';
 import type { OfflineAction, ShowroomItem } from '../../../shared/types';
-import type { CooperativeActionsViewProps, RepMarketingAction, SubTabType, OfflineCategory } from '../types';
+import type { CooperativeActionsViewProps } from '../types';
+
+// Define types locally
+type SubTabType = 'menu' | 'marketing' | 'online_marketing' | 'showroom' | 'offline_marketing';
+type OfflineCategory = 'PARCERIA' | 'AÇÃO COOPERADA' | 'ENTREGA DE BRINDES EXCLUSIVOS' | 'MINIATURAS' | 'BRINDES - FEIRA' | 'FEIRA - EXPOSIÇÃO' | 'TODAS';
+
+// Define RepMarketingAction locally with new fields for compatibility
+interface RepMarketingAction {
+  uuid: string;
+  representative_uuid: string;
+  date: string;
+  description: string;
+  month: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const OFFLINE_CATEGORIES: OfflineCategory[] = [
   "PARCERIA", 
@@ -17,7 +33,14 @@ const OFFLINE_CATEGORIES: OfflineCategory[] = [
 
 const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selectedMonth = '---', onRepClick }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('menu');
-  
+  const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
+
+  // Helper function to get representative name from UUID
+  const getRepresentativeName = (uuid: string) => {
+    const rep = representatives.find(r => r.uuid === uuid);
+    return rep?.name || uuid;
+  };
+
   // Offline Actions State
   const [offlineActions, setOfflineActions] = useState<OfflineAction[]>(OFFLINE_ACTIONS_DATA);
   const [offlineFilterCategory, setOfflineFilterCategory] = useState<OfflineCategory>('TODAS');
@@ -31,7 +54,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
       pdv: '',
       city: '',
       contact: '',
-      repName: '',
+      representativeUUID: '',
       deliveryForecast: '',
       workshopDate: ''
   });
@@ -74,11 +97,13 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                       const dateStr = `2025-${monthNum}-01`; 
                       
                       actions.push({
-                          id: `init-${row.month}-${rep}-${i}`,
-                          repName: rep,
+                          uuid: `init-${row.month}-${rep}-${i}`,
+                          representative_uuid: rep,
                           date: dateStr,
                           description: 'Ação registrada (Histórico)',
-                          month: row.month
+                          month: row.month,
+                          created_at: dateStr,
+                          updated_at: dateStr
                       });
                   }
               }
@@ -92,7 +117,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
   const [editingMarketingId, setEditingMarketingId] = useState<string | null>(null);
   
   const [marketingForm, setMarketingForm] = useState({
-      repName: '',
+      representativeUUID: '',
       date: new Date().toISOString().split('T')[0],
       description: ''
   });
@@ -109,7 +134,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
       dataRows.forEach(row => {
           REP_NAMES.forEach(rep => {
               // Count actions for this rep in this month
-              const count = marketingHistory.filter(h => h.month === row.month && h.repName === rep).length;
+              const count = marketingHistory.filter(h => h.month === row.month && h.representative_uuid === rep).length;
               row.values[rep] = count;
           });
       });
@@ -184,12 +209,12 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
 
   // Extract unique reps for filters
   const uniqueReps = React.useMemo(() => {
-      return Array.from(new Set(OFFLINE_ACTIONS_DATA.map(a => a.responsavel || 'Desconhecido'))).sort();
+      return Array.from(new Set(OFFLINE_ACTIONS_DATA.map(a => a.representative_uuid || 'Desconhecido'))).sort();
   }, []);
 
   const filteredOfflineActions = offlineActions.filter(action => {
       const matchesCategory = offlineFilterCategory === 'TODAS' || getOfflineCategory(action) === offlineFilterCategory;
-      const matchesRep = offlineFilterRep === 'TODOS' || action.responsavel === offlineFilterRep;
+      const matchesRep = offlineFilterRep === 'TODOS' || action.representative_uuid === offlineFilterRep;
       
       let matchesMonth = true;
       if (selectedMonth !== '---') {
@@ -228,7 +253,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
           pontuado: newActionForm.pontuado,
           status: newActionForm.desc, // Obs/Status
           pdv: newActionForm.pdv,
-          responsavel: newActionForm.rep
+          representative_uuid: newActionForm.rep
       };
 
       if (editingOfflineId !== null) {
@@ -269,7 +294,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
           val: cleanVal(action.solicitado),
           date: toIso(action.data),
           pdv: action.pdv || '',
-          rep: action.responsavel || '',
+          rep: action.representative_uuid || '',
           city: action.cidade,
           uf: action.uf,
           desc: action.status,
@@ -319,31 +344,33 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
       const fullMonth = FULL_MONTH_MAP[shortMonth];
 
       const newAction: RepMarketingAction = {
-          id: editingMarketingId || Date.now().toString(),
-          repName: marketingForm.repName,
+          uuid: editingMarketingId || Date.now().toString(),
+          representative_uuid: marketingForm.representativeUUID,
           date: marketingForm.date,
           description: marketingForm.description,
-          month: fullMonth
+          month: fullMonth,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
       };
 
       if (editingMarketingId) {
-          setMarketingHistory(prev => prev.map(a => a.id === editingMarketingId ? newAction : a));
+          setMarketingHistory(prev => prev.map(a => a.uuid === editingMarketingId ? newAction : a));
       } else {
           setMarketingHistory(prev => [newAction, ...prev]);
       }
 
       setIsAddingMarketing(false);
       setEditingMarketingId(null);
-      setMarketingForm({ repName: '', date: new Date().toISOString().split('T')[0], description: '' });
+      setMarketingForm({ representativeUUID: '', date: new Date().toISOString().split('T')[0], description: '' });
   };
 
   const handleEditMarketing = (action: RepMarketingAction) => {
       setMarketingForm({
-          repName: action.repName,
+          representativeUUID: action.representative_uuid,
           date: action.date,
           description: action.description
       });
-      setEditingMarketingId(action.id);
+      setEditingMarketingId(action.uuid);
       setIsAddingMarketing(true);
       // If opened from history modal, close history modal or keep it open? 
       // Usually better to close history modal or stack them. Let's close history modal for clarity.
@@ -352,7 +379,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
 
   const handleDeleteMarketing = (id: string) => {
       if(window.confirm('Tem certeza que deseja excluir esta ação?')) {
-          setMarketingHistory(prev => prev.filter(a => a.id !== id));
+          setMarketingHistory(prev => prev.filter(a => a.uuid !== id));
       }
   };
 
@@ -365,7 +392,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
           pdv: newShowroomForm.pdv,
           city: newShowroomForm.city,
           contact: newShowroomForm.contact,
-          repName: newShowroomForm.repName,
+          representative_uuid: newShowroomForm.representativeUUID,
           notDelivered: true,
           delivered: false,
           deliveryForecast: newShowroomForm.deliveryForecast ? newShowroomForm.deliveryForecast.split('-').reverse().join('/') : '',
@@ -380,7 +407,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
           pdv: '',
           city: '',
           contact: '',
-          repName: '',
+          representativeUUID: '',
           deliveryForecast: '',
           workshopDate: ''
       });
@@ -495,7 +522,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                             <History size={16} /> Histórico
                         </button>
                         <button 
-                            onClick={() => { setEditingMarketingId(null); setMarketingForm({ repName: '', date: new Date().toISOString().split('T')[0], description: '' }); setIsAddingMarketing(true); }}
+                            onClick={() => { setEditingMarketingId(null); setMarketingForm({ representativeUUID: '', date: new Date().toISOString().split('T')[0], description: '' }); setIsAddingMarketing(true); }}
                             className="bg-[#1e5144] hover:bg-[#163c32] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-[#1e5144]/20"
                         >
                             <Plus size={16} /> Novo Lançamento
@@ -566,10 +593,10 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                                         </td>
                                         <td className="px-6 py-4">
                                             <button 
-                                                onClick={() => onRepClick && onRepClick(item.repName)}
+                                                onClick={() => onRepClick && onRepClick(item.representative_uuid)}
                                                 className="font-medium text-gray-200 hover:text-emerald-400 hover:underline transition-colors text-left"
                                             >
-                                                {item.repName}
+                                                {getRepresentativeName(item.representative_uuid)}
                                             </button>
                                         </td>
                                         
@@ -725,13 +752,13 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                                             </td>
 
                                             <td className="px-4 py-3">
-                                                {action.responsavel ? (
+                                                {action.representative_uuid ? (
                                                     <button 
-                                                        onClick={() => onRepClick && onRepClick(action.responsavel!)}
+                                                        onClick={() => onRepClick && onRepClick(action.representative_uuid!)}
                                                         className="flex items-center gap-2 text-gray-300 hover:text-emerald-400 hover:underline transition-colors"
                                                     >
                                                         <User size={14} className="text-gray-500" />
-                                                        {action.responsavel}
+                                                        {getRepresentativeName(action.representative_uuid)}
                                                     </button>
                                                 ) : (
                                                     <span className="text-gray-600">-</span>
@@ -862,13 +889,14 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Representante</label>
                         <select 
-                            value={marketingForm.repName}
-                            onChange={(e) => setMarketingForm({...marketingForm, repName: e.target.value})}
+                            value={marketingForm.representativeUUID}
+                            onChange={(e) => setMarketingForm({...marketingForm, representativeUUID: e.target.value})}
                             className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
                             required
+                            disabled={isLoadingReps}
                         >
                             <option value="" disabled>Selecione...</option>
-                            {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                            {representatives.map(rep => <option key={rep.uuid} value={rep.uuid}>{rep.name}</option>)}
                         </select>
                     </div>
 
@@ -944,7 +972,7 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                                 marketingHistory
                                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                                     .map((action) => (
-                                    <tr key={action.id} className="hover:bg-[#20232b] transition-colors">
+                                    <tr key={action.uuid} className="hover:bg-[#20232b] transition-colors">
                                         <td className="px-4 py-3 text-gray-300 whitespace-nowrap">
                                             {action.date.split('-').reverse().join('/')}
                                         </td>
@@ -952,22 +980,22 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                                             {action.month}
                                         </td>
                                         <td className="px-4 py-3 text-gray-200 font-medium">
-                                            {action.repName}
+                                            {getRepresentativeName(action.representative_uuid)}
                                         </td>
                                         <td className="px-4 py-3 text-gray-400 text-xs">
                                             {action.description}
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button 
+                                                <button
                                                     onClick={() => handleEditMarketing(action)}
                                                     className="p-1.5 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
                                                     title="Editar"
                                                 >
                                                     <Edit size={14} />
                                                 </button>
-                                                <button 
-                                                    onClick={() => handleDeleteMarketing(action.id)}
+                                                <button
+                                                    onClick={() => handleDeleteMarketing(action.uuid)}
                                                     className="p-1.5 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                                                     title="Excluir"
                                                 >
@@ -1038,9 +1066,10 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
                             onChange={(e) => setNewActionForm({...newActionForm, rep: e.target.value})}
                             className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
                             required
+                            disabled={isLoadingReps}
                         >
                             <option value="" disabled>Selecione...</option>
-                            {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                            {representatives.map(rep => <option key={rep.uuid} value={rep.name}>{rep.name}</option>)}
                         </select>
                     </div>
 
@@ -1197,14 +1226,15 @@ const CooperativeActionsView: React.FC<CooperativeActionsViewProps> = ({ selecte
 
                     <div>
                         <label className="block text-xs font-semibold text-gray-400 uppercase mb-1">Responsável</label>
-                        <select 
-                            value={newShowroomForm.repName}
-                            onChange={(e) => setNewShowroomForm({...newShowroomForm, repName: e.target.value})}
+                        <select
+                            value={newShowroomForm.representativeUUID}
+                            onChange={(e) => setNewShowroomForm({...newShowroomForm, representativeUUID: e.target.value})}
                             className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
                             required
+                            disabled={isLoadingReps}
                         >
                             <option value="" disabled>Selecione...</option>
-                            {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                            {representatives.map(rep => <option key={rep.uuid} value={rep.uuid}>{rep.name}</option>)}
                         </select>
                     </div>
 

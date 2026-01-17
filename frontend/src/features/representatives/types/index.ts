@@ -104,3 +104,19 @@ export interface RepresentativeProfile {
   repMarketingCount: number;
   totalActions: number;
 }
+
+export interface RepTableProps {
+  data: {
+    title: string;
+    columns: string[];
+    rows: {
+      month: string;
+      target: number;
+      values: Record<string, number>;
+    }[];
+  };
+  onRepClick: (repName: string) => void;
+}
+
+// Mapa de representante para empresa (para exibir no RepTable)
+export const COMPANY_MAP: Record<string, string> = {};

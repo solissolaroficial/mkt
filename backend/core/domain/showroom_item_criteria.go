@@ -1,18 +1,22 @@
 package domain
 
+import (
+	"github.com/google/uuid"
+)
+
 // ShowroomItemCriteria representa filtros para busca de itens de showroom
 type ShowroomItemCriteria struct {
-	repName   *string
-	delivered *bool
-	city      *string
+	representativeUUID *uuid.UUID
+	delivered          *bool
+	city               *string
 }
 
 func NewShowroomItemCriteria() *ShowroomItemCriteria {
 	return &ShowroomItemCriteria{}
 }
 
-func (c *ShowroomItemCriteria) WithRepName(repName *string) *ShowroomItemCriteria {
-	c.repName = repName
+func (c *ShowroomItemCriteria) WithRepresentativeUUID(representativeUUID *uuid.UUID) *ShowroomItemCriteria {
+	c.representativeUUID = representativeUUID
 	return c
 }
 
@@ -27,9 +31,9 @@ func (c *ShowroomItemCriteria) WithCity(city *string) *ShowroomItemCriteria {
 }
 
 // Getters para o gateway aplicar os filtros
-func (c *ShowroomItemCriteria) RepName() *string { return c.repName }
-func (c *ShowroomItemCriteria) Delivered() *bool { return c.delivered }
-func (c *ShowroomItemCriteria) City() *string    { return c.city }
+func (c *ShowroomItemCriteria) RepresentativeUUID() *uuid.UUID { return c.representativeUUID }
+func (c *ShowroomItemCriteria) Delivered() *bool               { return c.delivered }
+func (c *ShowroomItemCriteria) City() *string                  { return c.city }
 
 // Validate valida os critérios
 func (c *ShowroomItemCriteria) Validate() error {

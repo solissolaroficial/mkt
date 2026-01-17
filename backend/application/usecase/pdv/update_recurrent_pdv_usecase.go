@@ -3,6 +3,8 @@ package pdv
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -15,17 +17,19 @@ type UpdateRecurrentPdvUseCase struct {
 
 // UpdateRecurrentPdvInput representa os dados de entrada para atualizar um PDV recorrente
 type UpdateRecurrentPdvInput struct {
-	ID               string
-	Name             *string
-	RepName          *string
-	City             *string
-	Followers        *int
-	InstagramProfile *string
+	ID                 string
+	Name               *string
+	RepresentativeUUID *string
+	City               *string
+	Followers          *int
+	InstagramProfile   *string
 }
 
 // NewUpdateRecurrentPdv cria uma nova instância do UpdateRecurrentPdvUseCase
 func NewUpdateRecurrentPdv(gateway gateway.RecurrentPdvGateway) *UpdateRecurrentPdvUseCase {
-	return &UpdateRecurrentPdvUseCase{gateway: gateway}
+	return &UpdateRecurrentPdvUseCase{
+		gateway: gateway,
+	}
 }
 
 // Execute atualiza um PDV recorrente existente
@@ -43,9 +47,12 @@ func (uc *UpdateRecurrentPdvUseCase) Execute(ctx context.Context, input UpdateRe
 		}
 	}
 
-	if input.RepName != nil {
-		if err := pdv.UpdateRepName(*input.RepName); err != nil {
-			return nil, err
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			if err := pdv.UpdateRepresentativeUUID(representativeUUID); err != nil {
+				return nil, err
+			}
 		}
 	}
 

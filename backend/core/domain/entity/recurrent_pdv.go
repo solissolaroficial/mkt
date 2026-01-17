@@ -10,38 +10,38 @@ import (
 
 // RecurrentPdv representa um PDV recorrente
 type RecurrentPdv struct {
-	id               uuid.UUID
-	name             string
-	repName          string
-	city             *string
-	followers        *int
-	instagramProfile *string
-	createdAt        time.Time
-	updatedAt        time.Time
-	deletedAt        *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	name               string
+	city               *string
+	followers          *int
+	instagramProfile   *string
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewRecurrentPdv cria uma nova entidade RecurrentPdv
 func NewRecurrentPdv(
 	name string,
-	repName string,
+	representativeUUID uuid.UUID,
 ) (*RecurrentPdv, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, errors.New("name is required")
 	}
 
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return nil, errors.New("repName is required")
+	// Validar representativeUUID
+	if representativeUUID == uuid.Nil {
+		return nil, errors.New("representativeUUID is required")
 	}
 
 	pdv := &RecurrentPdv{
-		id:        uuid.New(),
-		name:      name,
-		repName:   repName,
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
+		id:                 uuid.New(),
+		name:               name,
+		representativeUUID: representativeUUID,
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := pdv.Validate(); err != nil {
@@ -55,7 +55,7 @@ func NewRecurrentPdv(
 func ReconstructRecurrentPdv(
 	id uuid.UUID,
 	name string,
-	repName string,
+	representativeUUID uuid.UUID,
 	city *string,
 	followers *int,
 	instagramProfile *string,
@@ -64,15 +64,15 @@ func ReconstructRecurrentPdv(
 	deletedAt *time.Time,
 ) *RecurrentPdv {
 	return &RecurrentPdv{
-		id:               id,
-		name:             name,
-		repName:          repName,
-		city:             city,
-		followers:        followers,
-		instagramProfile: instagramProfile,
-		createdAt:        createdAt,
-		updatedAt:        updatedAt,
-		deletedAt:        deletedAt,
+		id:                 id,
+		name:               name,
+		representativeUUID: representativeUUID,
+		city:               city,
+		followers:          followers,
+		instagramProfile:   instagramProfile,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
@@ -88,9 +88,9 @@ func (r *RecurrentPdv) Name() string {
 	return r.name
 }
 
-// RepName retorna o nome do representante
-func (r *RecurrentPdv) RepName() string {
-	return r.repName
+// RepresentativeUUID retorna o UUID do representante
+func (r *RecurrentPdv) RepresentativeUUID() uuid.UUID {
+	return r.representativeUUID
 }
 
 // City retorna a cidade do PDV
@@ -131,8 +131,8 @@ func (r *RecurrentPdv) Validate() error {
 		return errors.New("name is required")
 	}
 
-	if r.repName == "" {
-		return errors.New("repName is required")
+	if r.representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
 
 	if len(r.name) > 200 {
@@ -175,16 +175,12 @@ func (r *RecurrentPdv) UpdateName(name string) error {
 	return nil
 }
 
-// UpdateRepName atualiza o nome do representante
-func (r *RecurrentPdv) UpdateRepName(repName string) error {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return errors.New("repName is required")
+// UpdateRepresentativeUUID atualiza o UUID do representante
+func (r *RecurrentPdv) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	if representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
-	if len(repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
-	}
-	r.repName = repName
+	r.representativeUUID = representativeUUID
 	r.updatedAt = time.Now()
 	return nil
 }

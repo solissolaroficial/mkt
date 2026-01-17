@@ -3,6 +3,8 @@ package showroomitem
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
@@ -12,23 +14,31 @@ type CreateShowroomItemUseCase struct {
 }
 
 type CreateShowroomItemInput struct {
-	PDV              string
-	RepName          string
-	City             *string
-	Contact          *string
-	DeliveryForecast *string
-	WorkshopDate     *string
+	PDV                string
+	RepresentativeUUID string
+	City               *string
+	Contact            *string
+	DeliveryForecast   *string
+	WorkshopDate       *string
 }
 
 func NewCreateShowroomItem(gateway gateway.ShowroomItemGateway) *CreateShowroomItemUseCase {
-	return &CreateShowroomItemUseCase{gateway: gateway}
+	return &CreateShowroomItemUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *CreateShowroomItemUseCase) Execute(ctx context.Context, input CreateShowroomItemInput) (*entity.ShowroomItem, error) {
-	// Criar entidade (validação interna)
+	// Parse representative UUID
+	representativeUUID, err := uuid.Parse(input.RepresentativeUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Criar entidade
 	item, err := entity.NewShowroomItem(
 		input.PDV,
-		input.RepName,
+		representativeUUID,
 	)
 	if err != nil {
 		return nil, err

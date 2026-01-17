@@ -70,12 +70,12 @@ func (c *PdvController) CreatePdvPost(ctx *fiber.Ctx) error {
 
 	// Executar use case (validação está no use case)
 	input := usecase.CreatePdvPostInput{
-		RepName:  req.RepName,
-		PdvName:  req.PdvName,
-		PostDate: req.PostDate,
-		Platform: req.Platform,
-		Link:     req.Link,
-		ProofUrl: req.ProofUrl,
+		RepresentativeUUID: req.RepresentativeUUID,
+		PdvName:            req.PdvName,
+		PostDate:           req.PostDate,
+		Platform:           req.Platform,
+		Link:               req.Link,
+		ProofUrl:           req.ProofUrl,
 	}
 
 	post, err := c.createPdvPostUseCase.Execute(ctx.Context(), input)
@@ -109,16 +109,16 @@ func (c *PdvController) ListPdvPosts(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.ListPdvPostsInput{
-		RepName:   query.RepName,
-		Month:     query.Month,
-		Platform:  query.Platform,
-		Status:    query.Status,
-		StartDate: query.StartDate,
-		EndDate:   query.EndDate,
-		Page:      query.Page,
-		Limit:     query.Limit,
-		SortBy:    query.SortBy,
-		SortOrder: query.SortOrder,
+		RepresentativeUUID: query.RepresentativeUUID,
+		Month:              query.Month,
+		Platform:           query.Platform,
+		Status:             query.Status,
+		StartDate:          query.StartDate,
+		EndDate:            query.EndDate,
+		Page:               query.Page,
+		Limit:              query.Limit,
+		SortBy:             query.SortBy,
+		SortOrder:          query.SortOrder,
 	}
 
 	posts, total, err := c.listPdvPostsUseCase.Execute(ctx.Context(), input)
@@ -194,9 +194,9 @@ func (c *PdvController) CreateRecurrentPdv(ctx *fiber.Ctx) error {
 
 	// Executar use case (validação está no use case)
 	input := usecase.CreateRecurrentPdvInput{
-		Name:    req.Name,
-		RepName: req.RepName,
-		City:    req.City,
+		Name:               req.Name,
+		RepresentativeUUID: req.RepresentativeUUID,
+		City:               req.City,
 	}
 
 	pdv, err := c.createRecurrentPdvUseCase.Execute(ctx.Context(), input)
@@ -230,12 +230,12 @@ func (c *PdvController) ListRecurrentPdvs(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.ListRecurrentPdvsInput{
-		RepName:   query.RepName,
-		City:      query.City,
-		Page:      query.Page,
-		Limit:     query.Limit,
-		SortBy:    query.SortBy,
-		SortOrder: query.SortOrder,
+		RepresentativeUUID: query.RepresentativeUUID,
+		City:               query.City,
+		Page:               query.Page,
+		Limit:              query.Limit,
+		SortBy:             query.SortBy,
+		SortOrder:          query.SortOrder,
 	}
 
 	pdvs, total, err := c.listRecurrentPdvsUseCase.Execute(ctx.Context(), input)
@@ -351,13 +351,13 @@ func (c *PdvController) UpdatePdvPost(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.UpdatePdvPostInput{
-		ID:       id,
-		RepName:  req.RepName,
-		PdvName:  req.PdvName,
-		PostDate: req.PostDate,
-		Platform: req.Platform,
-		Link:     req.Link,
-		ProofUrl: req.ProofUrl,
+		ID:                 id,
+		RepresentativeUUID: req.RepresentativeUUID,
+		PdvName:            req.PdvName,
+		PostDate:           req.PostDate,
+		Platform:           req.Platform,
+		Link:               req.Link,
+		ProofUrl:           req.ProofUrl,
 	}
 
 	post, err := c.updatePdvPostUseCase.Execute(ctx.Context(), input)
@@ -425,12 +425,12 @@ func (c *PdvController) UpdateRecurrentPdv(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.UpdateRecurrentPdvInput{
-		ID:               id,
-		Name:             req.Name,
-		RepName:          req.RepName,
-		City:             req.City,
-		Followers:        req.Followers,
-		InstagramProfile: req.InstagramProfile,
+		ID:                 id,
+		Name:               req.Name,
+		RepresentativeUUID: req.RepresentativeUUID,
+		City:               req.City,
+		Followers:          req.Followers,
+		InstagramProfile:   req.InstagramProfile,
 	}
 
 	pdv, err := c.updateRecurrentPdvUseCase.Execute(ctx.Context(), input)

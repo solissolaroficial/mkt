@@ -3,6 +3,8 @@ package showroomitem
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,25 +16,30 @@ type ListShowroomItemsUseCase struct {
 }
 
 type ListShowroomItemsInput struct {
-	RepName   *string
-	City      *string
-	Delivered *bool
-	Page      int
-	Limit     int
-	SortBy    *string
-	SortOrder *string
+	RepresentativeUUID *string
+	City               *string
+	Delivered          *bool
+	Page               int
+	Limit              int
+	SortBy             *string
+	SortOrder          *string
 }
 
 func NewListShowroomItems(gateway gateway.ShowroomItemGateway) *ListShowroomItemsUseCase {
-	return &ListShowroomItemsUseCase{gateway: gateway}
+	return &ListShowroomItemsUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *ListShowroomItemsUseCase) Execute(ctx context.Context, input ListShowroomItemsInput) ([]*entity.ShowroomItem, int64, error) {
 	// Criar criteria
 	crit := domain.NewShowroomItemCriteria()
 
-	if input.RepName != nil {
-		crit = crit.WithRepName(input.RepName)
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			crit = crit.WithRepresentativeUUID(&representativeUUID)
+		}
 	}
 
 	if input.City != nil {

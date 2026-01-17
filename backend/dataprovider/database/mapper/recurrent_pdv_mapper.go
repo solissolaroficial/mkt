@@ -9,10 +9,8 @@ import (
 	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
 )
 
-// RecurrentPdvMapper converte entre Model e Entity para PDVs recorrentes
 type RecurrentPdvMapper struct{}
 
-// NewRecurrentPdvMapper cria uma nova instância do RecurrentPdvMapper
 func NewRecurrentPdvMapper() *RecurrentPdvMapper {
 	return &RecurrentPdvMapper{}
 }
@@ -28,7 +26,7 @@ func (m *RecurrentPdvMapper) ModelToEntity(model *model.RecurrentPdvModel) (*ent
 	return entity.ReconstructRecurrentPdv(
 		model.UUID,
 		model.Name,
-		model.RepName,
+		model.RepresentativeUUID,
 		model.City,
 		model.Followers,
 		model.InstagramProfile,
@@ -40,35 +38,35 @@ func (m *RecurrentPdvMapper) ModelToEntity(model *model.RecurrentPdvModel) (*ent
 
 // ModelsToEntities converte slice de Model para slice de Entity
 func (m *RecurrentPdvMapper) ModelsToEntities(models []*model.RecurrentPdvModel) ([]*entity.RecurrentPdv, error) {
-	pdvs := make([]*entity.RecurrentPdv, len(models))
+	recurrentPdvs := make([]*entity.RecurrentPdv, len(models))
 	for i, model := range models {
-		pdv, err := m.ModelToEntity(model)
+		recurrentPdv, err := m.ModelToEntity(model)
 		if err != nil {
 			return nil, err
 		}
-		pdvs[i] = pdv
+		recurrentPdvs[i] = recurrentPdv
 	}
-	return pdvs, nil
+	return recurrentPdvs, nil
 }
 
 // EntityToModel converte Entity para Model
-func (m *RecurrentPdvMapper) EntityToModel(pdv *entity.RecurrentPdv) *model.RecurrentPdvModel {
+func (m *RecurrentPdvMapper) EntityToModel(recurrentPdv *entity.RecurrentPdv) *model.RecurrentPdvModel {
 	// Converter deletedAt
 	var deletedAt gorm.DeletedAt
-	if pdv.DeletedAt() != nil {
-		deletedAt.Time = *pdv.DeletedAt()
+	if recurrentPdv.DeletedAt() != nil {
+		deletedAt.Time = *recurrentPdv.DeletedAt()
 		deletedAt.Valid = true
 	}
 
 	return &model.RecurrentPdvModel{
-		UUID:             pdv.ID(),
-		Name:             pdv.Name(),
-		RepName:          pdv.RepName(),
-		City:             pdv.City(),
-		Followers:        pdv.Followers(),
-		InstagramProfile: pdv.InstagramProfile(),
-		CreatedAt:        pdv.CreatedAt(),
-		UpdatedAt:        pdv.UpdatedAt(),
-		DeletedAt:        deletedAt,
+		UUID:               recurrentPdv.ID(),
+		RepresentativeUUID: recurrentPdv.RepresentativeUUID(),
+		Name:               recurrentPdv.Name(),
+		City:               recurrentPdv.City(),
+		Followers:          recurrentPdv.Followers(),
+		InstagramProfile:   recurrentPdv.InstagramProfile(),
+		CreatedAt:          recurrentPdv.CreatedAt(),
+		UpdatedAt:          recurrentPdv.UpdatedAt(),
+		DeletedAt:          deletedAt,
 	}
 }

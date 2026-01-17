@@ -3,6 +3,8 @@ package offlineaction
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -13,16 +15,18 @@ type CreateOfflineActionUseCase struct {
 }
 
 type CreateOfflineActionInput struct {
-	RequestedAmount float64
-	ActionDate      string
-	Category        string
-	PDV             string
-	RepName         string
-	Observation     string
+	RequestedAmount    float64
+	ActionDate         string
+	Category           string
+	PDV                string
+	RepresentativeUUID string
+	Observation        string
 }
 
 func NewCreateOfflineAction(gateway gateway.OfflineActionGateway) *CreateOfflineActionUseCase {
-	return &CreateOfflineActionUseCase{gateway: gateway}
+	return &CreateOfflineActionUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *CreateOfflineActionUseCase) Execute(ctx context.Context, input CreateOfflineActionInput) (*entity.OfflineAction, error) {
@@ -37,14 +41,31 @@ func (uc *CreateOfflineActionUseCase) Execute(ctx context.Context, input CreateO
 		return nil, err
 	}
 
-	// Criar entidade (validação interna)
+	requestedAmount, err := valueobject.NewMonetaryValue(input.RequestedAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	representativeUUID, err := uuid.Parse(input.RepresentativeUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	pdv := ""
+	if input.PDV != "" {
+		pdv = input.PDV
+	}
+
+	observation := input.Observation
+
+	// Criar entidade
 	action, err := entity.NewOfflineAction(
-		input.RequestedAmount,
+		requestedAmount.Value(),
 		actionDate,
 		category,
-		input.PDV,
-		input.RepName,
-		input.Observation,
+		pdv,
+		representativeUUID,
+		observation,
 	)
 	if err != nil {
 		return nil, err

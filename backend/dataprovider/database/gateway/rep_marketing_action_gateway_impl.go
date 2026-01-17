@@ -78,8 +78,8 @@ func (g *repMarketingActionGatewayImpl) FindByCriteria(
 	query := g.db.WithContext(ctx).Model(&actionModels).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())
@@ -120,8 +120,8 @@ func (g *repMarketingActionGatewayImpl) CountByCriteria(ctx context.Context, cri
 	query := g.db.WithContext(ctx).Model(&model.RepMarketingActionModel{}).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())

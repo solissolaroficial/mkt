@@ -823,23 +823,23 @@ export const ANNUAL_CHANNEL_DATA: ChannelPerformance[] = [
 ];
 
 export const MOCK_PDV_POSTS: PdvPost[] = [
-    { id: '1', rep_name: 'André', pdv_name: 'Elétrica Silva', post_date: '2025-11-15', month: 'NOV', platform: 'instagram', link: 'https://instagram.com/p/123', status: 'approved', created_at: '2025-11-15T10:00:00Z', updated_at: '2025-11-15T10:00:00Z' },
-    { id: '2', rep_name: 'César', pdv_name: 'Solar Tech', post_date: '2025-11-18', month: 'NOV', platform: 'facebook', status: 'pending', created_at: '2025-11-18T14:00:00Z', updated_at: '2025-11-18T14:00:00Z' },
+    { id: '1', representative_uuid: 'uuid-do-andre', pdv_name: 'Elétrica Silva', post_date: '2025-11-15', month: 'NOV', platform: 'instagram', link: 'https://instagram.com/p/123', status: 'approved', created_at: '2025-11-15T10:00:00Z', updated_at: '2025-11-15T10:00:00Z' },
+    { id: '2', representative_uuid: 'uuid-do-cesar', pdv_name: 'Solar Tech', post_date: '2025-11-18', month: 'NOV', platform: 'facebook', status: 'pending', created_at: '2025-11-18T14:00:00Z', updated_at: '2025-11-18T14:00:00Z' },
 ];
 
 export const RECURRENT_PDVS: RecurrentPdv[] = [
-    { id: '1', name: 'Elétrica Silva', rep_name: 'André', city: 'Recife - PE', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
-    { id: '2', name: 'Solar Tech', rep_name: 'César', city: 'São Paulo - SP', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+    { id: '1', name: 'Elétrica Silva', representative_uuid: 'uuid-do-andre', city: 'Recife - PE', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+    { id: '2', name: 'Solar Tech', representative_uuid: 'uuid-do-cesar', city: 'São Paulo - SP', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
 ];
 
 export const MOCK_SHOWROOM_ITEMS: ShowroomItem[] = [
-    { id: '1', pdv: 'Elétrica Silva', city: 'Recife - PE', contact: 'João Silva', repName: 'André', notDelivered: true, delivered: false, deliveryForecast: '2025-12-10', workshopDate: '' },
-    { id: '2', pdv: 'Solar Tech', city: 'São Paulo - SP', contact: 'Maria Souza', repName: 'César', notDelivered: false, delivered: true, deliveryForecast: '', workshopDate: '2025-11-20' },
+    { id: '1', pdv: 'Elétrica Silva', city: 'Recife - PE', contact: 'João Silva', representative_uuid: 'uuid-do-andre', notDelivered: true, delivered: false, deliveryForecast: '2025-12-10', workshopDate: '' },
+    { id: '2', pdv: 'Solar Tech', city: 'São Paulo - SP', contact: 'Maria Souza', representative_uuid: 'uuid-do-cesar', notDelivered: false, delivered: true, deliveryForecast: '', workshopDate: '2025-11-20' },
 ];
 
 export const OFFLINE_ACTIONS_DATA: OfflineAction[] = [
-    { solicitado: 'R$ 1.500,00', data: '10/11/2025', aprovado: 'R$ 1.500,00', pedido: '12345', saida: '12/11/2025', previsao: '15/11/2025', entrega: '15/11/2025', cidade: 'Recife', uf: 'PE', pontuado: 'SIM', status: 'Entregue', pdv: 'Elétrica Silva', responsavel: 'André', category: 'AÇÃO COOPERADA' },
-    { solicitado: 'R$ 800,00', data: '18/11/2025', aprovado: '', pedido: '', saida: '', previsao: '', entrega: '', cidade: 'São Paulo', uf: 'SP', pontuado: 'AINDA NÃO', status: 'Em análise', pdv: 'Solar Tech', responsavel: 'César', category: 'BRINDES' },
+    { solicitado: 'R$ 1.500,00', data: '10/11/2025', aprovado: 'R$ 1.500,00', pedido: '12345', saida: '12/11/2025', previsao: '15/11/2025', entrega: '15/11/2025', cidade: 'Recife', uf: 'PE', pontuado: 'SIM', status: 'Entregue', pdv: 'Elétrica Silva', representative_uuid: 'uuid-do-andre', category: 'AÇÃO COOPERADA' },
+    { solicitado: 'R$ 800,00', data: '18/11/2025', aprovado: '', pedido: '', saida: '', previsao: '', entrega: '', cidade: 'São Paulo', uf: 'SP', pontuado: 'AINDA NÃO', status: 'Em análise', pdv: 'Solar Tech', representative_uuid: 'uuid-do-cesar', category: 'BRINDES' },
 ];
 
 export const GIFT_ITEMS: GiftItem[] = [

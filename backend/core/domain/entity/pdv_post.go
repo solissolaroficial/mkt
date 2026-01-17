@@ -22,32 +22,32 @@ func isValidURL(s string) bool {
 
 // PdvPost representa um post de PDV (Ponto de Venda)
 type PdvPost struct {
-	id        uuid.UUID
-	repName   string
-	pdvName   string
-	postDate  *valueobject.PdvPostDate
-	month     string // Derivado da data (JAN, FEV, MAR, etc.)
-	platform  string
-	link      *string
-	proofUrl  *string
-	status    *valueobject.PdvStatus
-	createdAt time.Time
-	updatedAt time.Time
-	deletedAt *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	pdvName            string
+	postDate           *valueobject.PdvPostDate
+	month              string // Derivado da data (JAN, FEV, MAR, etc.)
+	platform           string
+	link               *string
+	proofUrl           *string
+	status             *valueobject.PdvStatus
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewPdvPost cria uma nova entidade PdvPost
 func NewPdvPost(
-	repName string,
+	representativeUUID uuid.UUID,
 	pdvName string,
 	postDate *valueobject.PdvPostDate,
 	platform string,
 	link *string,
 	proofUrl *string,
 ) (*PdvPost, error) {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return nil, errors.New("repName is required")
+	// Validar representativeUUID
+	if representativeUUID == uuid.Nil {
+		return nil, errors.New("representativeUUID is required")
 	}
 
 	pdvName = strings.TrimSpace(pdvName)
@@ -94,17 +94,17 @@ func NewPdvPost(
 	}
 
 	post := &PdvPost{
-		id:        uuid.New(),
-		repName:   repName,
-		pdvName:   pdvName,
-		postDate:  postDate,
-		month:     month,
-		platform:  platform,
-		link:      link,
-		proofUrl:  proofUrl,
-		status:    status,
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
+		id:                 uuid.New(),
+		representativeUUID: representativeUUID,
+		pdvName:            pdvName,
+		postDate:           postDate,
+		month:              month,
+		platform:           platform,
+		link:               link,
+		proofUrl:           proofUrl,
+		status:             status,
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := post.Validate(); err != nil {
@@ -117,7 +117,7 @@ func NewPdvPost(
 // ReconstructPdvPost reconstrói a entidade do banco de dados
 func ReconstructPdvPost(
 	id uuid.UUID,
-	repName string,
+	representativeUUID uuid.UUID,
 	pdvName string,
 	postDate *valueobject.PdvPostDate,
 	month string,
@@ -130,18 +130,18 @@ func ReconstructPdvPost(
 	deletedAt *time.Time,
 ) (*PdvPost, error) {
 	post := &PdvPost{
-		id:        id,
-		repName:   repName,
-		pdvName:   pdvName,
-		postDate:  postDate,
-		month:     month,
-		platform:  platform,
-		link:      link,
-		proofUrl:  proofUrl,
-		status:    status,
-		createdAt: createdAt,
-		updatedAt: updatedAt,
-		deletedAt: deletedAt,
+		id:                 id,
+		representativeUUID: representativeUUID,
+		pdvName:            pdvName,
+		postDate:           postDate,
+		month:              month,
+		platform:           platform,
+		link:               link,
+		proofUrl:           proofUrl,
+		status:             status,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 	if err := post.Validate(); err != nil {
 		return nil, err
@@ -162,9 +162,9 @@ func (p *PdvPost) ID() uuid.UUID {
 	return p.id
 }
 
-// RepName retorna o nome do representante
-func (p *PdvPost) RepName() string {
-	return p.repName
+// RepresentativeUUID retorna o UUID do representante
+func (p *PdvPost) RepresentativeUUID() uuid.UUID {
+	return p.representativeUUID
 }
 
 // PdvName retorna o nome do PDV
@@ -221,8 +221,8 @@ func (p *PdvPost) DeletedAt() *time.Time {
 
 // Validate valida os dados da entidade
 func (p *PdvPost) Validate() error {
-	if p.repName == "" {
-		return errors.New("repName is required")
+	if p.representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
 
 	if p.pdvName == "" {
@@ -260,16 +260,12 @@ func (p *PdvPost) UpdateLink(link *string) error {
 	return nil
 }
 
-// UpdateRepName atualiza o nome do representante
-func (p *PdvPost) UpdateRepName(repName string) error {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return errors.New("repName is required")
+// UpdateRepresentativeUUID atualiza o UUID do representante
+func (p *PdvPost) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	if representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
-	if len(repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
-	}
-	p.repName = repName
+	p.representativeUUID = representativeUUID
 	p.updatedAt = time.Now()
 	return nil
 }

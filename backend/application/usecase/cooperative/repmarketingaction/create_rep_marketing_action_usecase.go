@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
@@ -13,13 +15,15 @@ type CreateRepMarketingActionUseCase struct {
 }
 
 type CreateRepMarketingActionInput struct {
-	RepName     string
-	Date        string
-	Description string
+	RepresentativeUUID string
+	Date               string
+	Description        string
 }
 
 func NewCreateRepMarketingAction(gateway gateway.RepMarketingActionGateway) *CreateRepMarketingActionUseCase {
-	return &CreateRepMarketingActionUseCase{gateway: gateway}
+	return &CreateRepMarketingActionUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *CreateRepMarketingActionUseCase) Execute(ctx context.Context, input CreateRepMarketingActionInput) (*entity.RepMarketingAction, error) {
@@ -29,9 +33,15 @@ func (uc *CreateRepMarketingActionUseCase) Execute(ctx context.Context, input Cr
 		return nil, err
 	}
 
-	// Criar entidade (validação interna)
+	// Parse representative UUID
+	representativeUUID, err := uuid.Parse(input.RepresentativeUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Criar entidade
 	action, err := entity.NewRepMarketingAction(
-		input.RepName,
+		representativeUUID,
 		date,
 		input.Description,
 	)

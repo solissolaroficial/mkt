@@ -294,7 +294,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	userSeeder := seeders.NewUserSeeder(userGateway, hasherService)
 	kpiSeeder := seeders.NewKpiSeeder(kpiGateway, monthlyDataGateway)
 	socialBenchmarkingSeeder := seeders.NewSocialBenchmarkingSeeder(socialBenchmarkingGateway)
-	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway)
+	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway, representativeGateway)
 	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway)
 	budgetSeeder := seeders.NewBudgetSeeder(budgetGateway)
 	representativeMonthlyGoalSeeder := seeders.NewRepresentativeMonthlyGoalSeeder(representativeMonthlyGoalGateway, representativeGateway)

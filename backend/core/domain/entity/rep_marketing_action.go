@@ -9,25 +9,24 @@ import (
 )
 
 type RepMarketingAction struct {
-	id          uuid.UUID
-	repName     string
-	date        time.Time
-	description string
-	month       string // Derivado da data (JAN, FEV, MAR, etc.)
-	createdAt   time.Time
-	updatedAt   time.Time
-	deletedAt   *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	date               time.Time
+	description        string
+	month              string // Derivado da data (JAN, FEV, MAR, etc.)
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewRepMarketingAction cria uma nova entidade RepMarketingAction
 func NewRepMarketingAction(
-	repName string,
+	representativeUUID uuid.UUID,
 	date time.Time,
 	description string,
 ) (*RepMarketingAction, error) {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return nil, errors.New("repName is required")
+	if representativeUUID == uuid.Nil {
+		return nil, errors.New("representativeUUID is required")
 	}
 
 	description = strings.TrimSpace(description)
@@ -39,13 +38,13 @@ func NewRepMarketingAction(
 	month := deriveRepMarketingMonthFromDate(date)
 
 	action := &RepMarketingAction{
-		id:          uuid.New(),
-		repName:     repName,
-		date:        date,
-		description: description,
-		month:       month,
-		createdAt:   time.Now(),
-		updatedAt:   time.Now(),
+		id:                 uuid.New(),
+		representativeUUID: representativeUUID,
+		date:               date,
+		description:        description,
+		month:              month,
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := action.Validate(); err != nil {
@@ -58,7 +57,7 @@ func NewRepMarketingAction(
 // ReconstructRepMarketingAction reconstrói a entidade do banco de dados
 func ReconstructRepMarketingAction(
 	id uuid.UUID,
-	repName string,
+	representativeUUID uuid.UUID,
 	date time.Time,
 	description string,
 	month string,
@@ -67,14 +66,14 @@ func ReconstructRepMarketingAction(
 	deletedAt *time.Time,
 ) *RepMarketingAction {
 	return &RepMarketingAction{
-		id:          id,
-		repName:     repName,
-		date:        date,
-		description: description,
-		month:       month,
-		createdAt:   createdAt,
-		updatedAt:   updatedAt,
-		deletedAt:   deletedAt,
+		id:                 id,
+		representativeUUID: representativeUUID,
+		date:               date,
+		description:        description,
+		month:              month,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
@@ -85,29 +84,25 @@ func deriveRepMarketingMonthFromDate(date time.Time) string {
 }
 
 // Getters
-func (r *RepMarketingAction) ID() uuid.UUID         { return r.id }
-func (r *RepMarketingAction) RepName() string       { return r.repName }
-func (r *RepMarketingAction) Date() time.Time       { return r.date }
-func (r *RepMarketingAction) Description() string   { return r.description }
-func (r *RepMarketingAction) Month() string         { return r.month }
-func (r *RepMarketingAction) CreatedAt() time.Time  { return r.createdAt }
-func (r *RepMarketingAction) UpdatedAt() time.Time  { return r.updatedAt }
-func (r *RepMarketingAction) DeletedAt() *time.Time { return r.deletedAt }
+func (r *RepMarketingAction) ID() uuid.UUID                 { return r.id }
+func (r *RepMarketingAction) RepresentativeUUID() uuid.UUID { return r.representativeUUID }
+func (r *RepMarketingAction) Date() time.Time               { return r.date }
+func (r *RepMarketingAction) Description() string           { return r.description }
+func (r *RepMarketingAction) Month() string                 { return r.month }
+func (r *RepMarketingAction) CreatedAt() time.Time          { return r.createdAt }
+func (r *RepMarketingAction) UpdatedAt() time.Time          { return r.updatedAt }
+func (r *RepMarketingAction) DeletedAt() *time.Time         { return r.deletedAt }
 
 // Métodos de Negócio
 
 // Validate valida os dados da entidade
 func (r *RepMarketingAction) Validate() error {
-	if r.repName == "" {
-		return errors.New("repName is required")
+	if r.representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
 
 	if r.description == "" {
 		return errors.New("description is required")
-	}
-
-	if len(r.repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
 	}
 
 	if len(r.description) > 500 {
@@ -117,16 +112,12 @@ func (r *RepMarketingAction) Validate() error {
 	return nil
 }
 
-// UpdateRepName atualiza o nome do representante
-func (r *RepMarketingAction) UpdateRepName(repName string) error {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return errors.New("repName is required")
+// UpdateRepresentativeUUID atualiza o UUID do representante
+func (r *RepMarketingAction) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	if representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
-	if len(repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
-	}
-	r.repName = repName
+	r.representativeUUID = representativeUUID
 	r.updatedAt = time.Now()
 	return nil
 }

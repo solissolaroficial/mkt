@@ -20,17 +20,17 @@ func (m *OfflineActionPayloadMapper) ToOfflineActionResponse(action *entity.Offl
 	}
 
 	response := OfflineActionResponse{
-		UUID:            action.ID().String(),
-		RequestedAmount: action.RequestedAmount().Value(),
-		ActionDate:      action.ActionDate().Value().Format(time.RFC3339),
-		Category:        action.Category().String(),
-		PDV:             pdv,
-		RepName:         action.RepName(),
-		Observation:     action.Observation(),
-		Status:          action.Status().String(),
-		Month:           action.Month(),
-		CreatedAt:       action.CreatedAt().Format(time.RFC3339),
-		UpdatedAt:       action.UpdatedAt().Format(time.RFC3339),
+		UUID:               action.ID().String(),
+		RequestedAmount:    action.RequestedAmount().Value(),
+		ActionDate:         action.ActionDate().Value().Format(time.RFC3339),
+		Category:           action.Category().String(),
+		PDV:                pdv,
+		RepresentativeUUID: action.RepresentativeUUID().String(),
+		Observation:        action.Observation(),
+		Status:             action.Status().String(),
+		Month:              action.Month(),
+		CreatedAt:          action.CreatedAt().Format(time.RFC3339),
+		UpdatedAt:          action.UpdatedAt().Format(time.RFC3339),
 	}
 
 	// Optional fields

@@ -4,18 +4,19 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 // OfflineActionCriteria representa filtros para busca de ações offline
 // NOTA: Este criteria NÃO depende de GORM, seguindo Clean Architecture
 type OfflineActionCriteria struct {
-	category  *valueobject.OfflineCategory
-	repName   *string
-	month     *string
-	startDate *string
-	endDate   *string
-	status    *valueobject.OfflineStatus
+	category           *valueobject.OfflineCategory
+	representativeUUID *uuid.UUID
+	month              *string
+	startDate          *string
+	endDate            *string
+	status             *valueobject.OfflineStatus
 }
 
 func NewOfflineActionCriteria() *OfflineActionCriteria {
@@ -27,8 +28,8 @@ func (c *OfflineActionCriteria) WithCategory(category *valueobject.OfflineCatego
 	return c
 }
 
-func (c *OfflineActionCriteria) WithRepName(repName *string) *OfflineActionCriteria {
-	c.repName = repName
+func (c *OfflineActionCriteria) WithRepresentativeUUID(representativeUUID *uuid.UUID) *OfflineActionCriteria {
+	c.representativeUUID = representativeUUID
 	return c
 }
 
@@ -66,7 +67,7 @@ func (c *OfflineActionCriteria) WithStatus(status *valueobject.OfflineStatus) *O
 
 // Getters para o gateway aplicar os filtros
 func (c *OfflineActionCriteria) Category() *valueobject.OfflineCategory { return c.category }
-func (c *OfflineActionCriteria) RepName() *string                       { return c.repName }
+func (c *OfflineActionCriteria) RepresentativeUUID() *uuid.UUID         { return c.representativeUUID }
 func (c *OfflineActionCriteria) Month() *string                         { return c.month }
 func (c *OfflineActionCriteria) StartDate() *string                     { return c.startDate }
 func (c *OfflineActionCriteria) EndDate() *string                       { return c.endDate }

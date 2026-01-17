@@ -141,12 +141,12 @@ const MarketingBudgetView: React.FC<MarketingBudgetViewProps> = ({ onBack, selec
           saida: '',
           previsao: '',
           entrega: '',
-          cidade: '', 
+          cidade: '',
           uf: '',
           pontuado: 'AINDA NÃO',
           status: 'Nova solicitação registrada',
           pdv: formData.client,
-          responsavel: formData.rep,
+          representative_uuid: formData.rep,
           contact: formData.contact,
           phone: formData.phone,
           email: formData.email,
@@ -308,12 +308,12 @@ const MarketingBudgetView: React.FC<MarketingBudgetViewProps> = ({ onBack, selec
                               const approvedVal = parseCurrency(req.aprovado);
                               return (
                                 <tr key={idx} className="hover:bg-[#20232b] transition-colors group text-xs">
-                                      <td className="px-4 py-3 text-gray-400">{req.data}</td>
-                                      <td className="px-4 py-3 font-bold text-white">{req.pdv}</td>
-                                      <td className="px-4 py-3">{req.responsavel}</td>
-                                      <td className="px-4 py-3 text-gray-400 truncate max-w-[150px]" title={req.category}>
-                                          {req.category || '-'}
-                                      </td>
+                                        <td className="px-4 py-3 text-gray-400">{req.data}</td>
+                                        <td className="px-4 py-3 font-bold text-white">{req.pdv}</td>
+                                        <td className="px-4 py-3">{req.representative_uuid}</td>
+                                        <td className="px-4 py-3 text-gray-400 truncate max-w-[150px]" title={req.category}>
+                                            {req.category || '-'}
+                                        </td>
                                       <td className="px-4 py-3 text-gray-500">
                                           {req.contact || '-'}
                                       </td>

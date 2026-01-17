@@ -9,41 +9,41 @@ import (
 )
 
 type ShowroomItem struct {
-	id               uuid.UUID
-	pdv              string
-	city             *string
-	contact          *string
-	repName          string
-	deliveryForecast *string
-	workshopDate     *string
-	delivered        bool
-	createdAt        time.Time
-	updatedAt        time.Time
-	deletedAt        *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	pdv                string
+	city               *string
+	contact            *string
+	deliveryForecast   *string
+	workshopDate       *string
+	delivered          bool
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewShowroomItem cria uma nova entidade ShowroomItem
 func NewShowroomItem(
 	pdv string,
-	repName string,
+	representativeUUID uuid.UUID,
 ) (*ShowroomItem, error) {
 	pdv = strings.TrimSpace(pdv)
 	if pdv == "" {
 		return nil, errors.New("pdv is required")
 	}
 
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return nil, errors.New("repName is required")
+	// Validar representativeUUID
+	if representativeUUID == uuid.Nil {
+		return nil, errors.New("representativeUUID is required")
 	}
 
 	item := &ShowroomItem{
-		id:        uuid.New(),
-		pdv:       pdv,
-		repName:   repName,
-		delivered: false, // Inicialmente não entregue
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
+		id:                 uuid.New(),
+		pdv:                pdv,
+		representativeUUID: representativeUUID,
+		delivered:          false, // Inicialmente não entregue
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := item.Validate(); err != nil {
@@ -59,7 +59,7 @@ func ReconstructShowroomItem(
 	pdv string,
 	city *string,
 	contact *string,
-	repName string,
+	representativeUUID uuid.UUID,
 	deliveryForecast *string,
 	workshopDate *string,
 	delivered bool,
@@ -68,32 +68,32 @@ func ReconstructShowroomItem(
 	deletedAt *time.Time,
 ) *ShowroomItem {
 	return &ShowroomItem{
-		id:               id,
-		pdv:              pdv,
-		city:             city,
-		contact:          contact,
-		repName:          repName,
-		deliveryForecast: deliveryForecast,
-		workshopDate:     workshopDate,
-		delivered:        delivered,
-		createdAt:        createdAt,
-		updatedAt:        updatedAt,
-		deletedAt:        deletedAt,
+		id:                 id,
+		pdv:                pdv,
+		city:               city,
+		contact:            contact,
+		representativeUUID: representativeUUID,
+		deliveryForecast:   deliveryForecast,
+		workshopDate:       workshopDate,
+		delivered:          delivered,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
 // Getters
-func (s *ShowroomItem) ID() uuid.UUID             { return s.id }
-func (s *ShowroomItem) PDV() string               { return s.pdv }
-func (s *ShowroomItem) City() *string             { return s.city }
-func (s *ShowroomItem) Contact() *string          { return s.contact }
-func (s *ShowroomItem) RepName() string           { return s.repName }
-func (s *ShowroomItem) DeliveryForecast() *string { return s.deliveryForecast }
-func (s *ShowroomItem) WorkshopDate() *string     { return s.workshopDate }
-func (s *ShowroomItem) Delivered() bool           { return s.delivered }
-func (s *ShowroomItem) CreatedAt() time.Time      { return s.createdAt }
-func (s *ShowroomItem) UpdatedAt() time.Time      { return s.updatedAt }
-func (s *ShowroomItem) DeletedAt() *time.Time     { return s.deletedAt }
+func (s *ShowroomItem) ID() uuid.UUID                 { return s.id }
+func (s *ShowroomItem) RepresentativeUUID() uuid.UUID { return s.representativeUUID }
+func (s *ShowroomItem) PDV() string                   { return s.pdv }
+func (s *ShowroomItem) City() *string                 { return s.city }
+func (s *ShowroomItem) Contact() *string              { return s.contact }
+func (s *ShowroomItem) DeliveryForecast() *string     { return s.deliveryForecast }
+func (s *ShowroomItem) WorkshopDate() *string         { return s.workshopDate }
+func (s *ShowroomItem) Delivered() bool               { return s.delivered }
+func (s *ShowroomItem) CreatedAt() time.Time          { return s.createdAt }
+func (s *ShowroomItem) UpdatedAt() time.Time          { return s.updatedAt }
+func (s *ShowroomItem) DeletedAt() *time.Time         { return s.deletedAt }
 
 // Métodos de Negócio
 
@@ -103,8 +103,8 @@ func (s *ShowroomItem) Validate() error {
 		return errors.New("pdv is required")
 	}
 
-	if s.repName == "" {
-		return errors.New("repName is required")
+	if s.representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
 
 	if s.city != nil && len(*s.city) > 100 {
@@ -140,16 +140,12 @@ func (s *ShowroomItem) UpdateContact(contact *string) error {
 	return nil
 }
 
-// UpdateRepName atualiza o nome do representante
-func (s *ShowroomItem) UpdateRepName(repName string) error {
-	repName = strings.TrimSpace(repName)
-	if repName == "" {
-		return errors.New("repName is required")
+// UpdateRepresentativeUUID atualiza o UUID do representante
+func (s *ShowroomItem) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	if representativeUUID == uuid.Nil {
+		return errors.New("representativeUUID is required")
 	}
-	if len(repName) > 100 {
-		return errors.New("repName must be at most 100 characters")
-	}
-	s.repName = repName
+	s.representativeUUID = representativeUUID
 	s.updatedAt = time.Now()
 	return nil
 }

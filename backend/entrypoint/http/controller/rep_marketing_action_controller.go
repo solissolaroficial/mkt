@@ -50,9 +50,9 @@ func (c *RepMarketingActionController) Create(ctx *fiber.Ctx) error {
 
 	// Executar use case (validação está no use case)
 	input := usecase.CreateRepMarketingActionInput{
-		RepName:     req.RepName,
-		Date:        req.Date,
-		Description: req.Description,
+		RepresentativeUUID: req.RepresentativeUUID,
+		Date:               req.Date,
+		Description:        req.Description,
 	}
 
 	action, err := c.createUseCase.Execute(ctx.Context(), input)
@@ -99,12 +99,12 @@ func (c *RepMarketingActionController) List(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.ListRepMarketingActionsInput{
-		RepName:   query.RepName,
-		Month:     query.Month,
-		Page:      query.Page,
-		Limit:     query.Limit,
-		SortBy:    query.SortBy,
-		SortOrder: query.SortOrder,
+		RepresentativeUUID: query.RepresentativeUUID,
+		Month:              query.Month,
+		Page:               query.Page,
+		Limit:              query.Limit,
+		SortBy:             query.SortBy,
+		SortOrder:          query.SortOrder,
 	}
 
 	actions, total, err := c.listUseCase.Execute(ctx.Context(), input)
@@ -166,10 +166,10 @@ func (c *RepMarketingActionController) Update(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.UpdateRepMarketingActionInput{
-		ID:          id,
-		RepName:     req.RepName,
-		Date:        req.Date,
-		Description: req.Description,
+		ID:                 id,
+		RepresentativeUUID: req.RepresentativeUUID,
+		Date:               req.Date,
+		Description:        req.Description,
 	}
 
 	action, err := c.updateUseCase.Execute(ctx.Context(), input)

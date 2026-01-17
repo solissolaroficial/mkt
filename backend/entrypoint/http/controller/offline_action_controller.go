@@ -50,12 +50,12 @@ func (c *OfflineActionController) Create(ctx *fiber.Ctx) error {
 
 	// Executar use case (validação está no use case)
 	input := usecase.CreateOfflineActionInput{
-		RequestedAmount: req.RequestedAmount,
-		ActionDate:      req.ActionDate,
-		Category:        req.Category,
-		PDV:             req.PDV,
-		RepName:         req.RepName,
-		Observation:     req.Observation,
+		RequestedAmount:    req.RequestedAmount,
+		ActionDate:         req.ActionDate,
+		Category:           req.Category,
+		PDV:                req.PDV,
+		RepresentativeUUID: req.RepresentativeUUID,
+		Observation:        req.Observation,
 	}
 
 	action, err := c.createUseCase.Execute(ctx.Context(), input)
@@ -102,16 +102,16 @@ func (c *OfflineActionController) List(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.ListOfflineActionsInput{
-		Category:  query.Category,
-		RepName:   query.RepName,
-		Month:     query.Month,
-		StartDate: query.StartDate,
-		EndDate:   query.EndDate,
-		Status:    query.Status,
-		Page:      query.Page,
-		Limit:     query.Limit,
-		SortBy:    query.SortBy,
-		SortOrder: query.SortOrder,
+		Category:           query.Category,
+		RepresentativeUUID: query.RepresentativeUUID,
+		Month:              query.Month,
+		StartDate:          query.StartDate,
+		EndDate:            query.EndDate,
+		Status:             query.Status,
+		Page:               query.Page,
+		Limit:              query.Limit,
+		SortBy:             query.SortBy,
+		SortOrder:          query.SortOrder,
 	}
 
 	actions, total, err := c.listUseCase.Execute(ctx.Context(), input)
@@ -173,19 +173,19 @@ func (c *OfflineActionController) Update(ctx *fiber.Ctx) error {
 
 	// Executar use case
 	input := usecase.UpdateOfflineActionInput{
-		ID:               id,
-		ApprovedAmount:   req.ApprovedAmount,
-		OrderNumber:      req.OrderNumber,
-		DepartureDate:    req.DepartureDate,
-		DeliveryForecast: req.DeliveryForecast,
-		DeliveryDate:     req.DeliveryDate,
-		City:             req.City,
-		UF:               req.UF,
-		Scored:           req.Scored,
-		Status:           req.Status,
-		Observation:      req.Observation,
-		PDV:              req.PDV,
-		RepName:          req.RepName,
+		ID:                 id,
+		ApprovedAmount:     req.ApprovedAmount,
+		OrderNumber:        req.OrderNumber,
+		DepartureDate:      req.DepartureDate,
+		DeliveryForecast:   req.DeliveryForecast,
+		DeliveryDate:       req.DeliveryDate,
+		City:               req.City,
+		UF:                 req.UF,
+		Scored:             req.Scored,
+		Status:             req.Status,
+		Observation:        req.Observation,
+		PDV:                req.PDV,
+		RepresentativeUUID: req.RepresentativeUUID,
 	}
 
 	action, err := c.updateUseCase.Execute(ctx.Context(), input)

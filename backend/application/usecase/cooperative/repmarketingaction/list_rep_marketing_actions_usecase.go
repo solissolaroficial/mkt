@@ -3,6 +3,7 @@ package repmarketingaction
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,12 +15,12 @@ type ListRepMarketingActionsUseCase struct {
 }
 
 type ListRepMarketingActionsInput struct {
-	RepName   *string
-	Month     *string
-	Page      int
-	Limit     int
-	SortBy    *string
-	SortOrder *string
+	RepresentativeUUID *string
+	Month              *string
+	Page               int
+	Limit              int
+	SortBy             *string
+	SortOrder          *string
 }
 
 func NewListRepMarketingActions(gateway gateway.RepMarketingActionGateway) *ListRepMarketingActionsUseCase {
@@ -30,8 +31,11 @@ func (uc *ListRepMarketingActionsUseCase) Execute(ctx context.Context, input Lis
 	// Criar criteria
 	crit := domain.NewRepMarketingActionCriteria()
 
-	if input.RepName != nil {
-		crit = crit.WithRepName(input.RepName)
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			crit = crit.WithRepresentativeUUID(&representativeUUID)
+		}
 	}
 
 	if input.Month != nil {

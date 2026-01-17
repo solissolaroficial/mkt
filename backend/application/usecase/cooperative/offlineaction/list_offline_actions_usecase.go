@@ -3,6 +3,7 @@ package offlineaction
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,16 +15,16 @@ type ListOfflineActionsUseCase struct {
 }
 
 type ListOfflineActionsInput struct {
-	Category  *string
-	RepName   *string
-	Month     *string
-	StartDate *string
-	EndDate   *string
-	Status    *string
-	Page      int
-	Limit     int
-	SortBy    *string
-	SortOrder *string
+	Category           *string
+	RepresentativeUUID *string
+	Month              *string
+	StartDate          *string
+	EndDate            *string
+	Status             *string
+	Page               int
+	Limit              int
+	SortBy             *string
+	SortOrder          *string
 }
 
 func NewListOfflineActions(gateway gateway.OfflineActionGateway) *ListOfflineActionsUseCase {
@@ -41,8 +42,11 @@ func (uc *ListOfflineActionsUseCase) Execute(ctx context.Context, input ListOffl
 		}
 	}
 
-	if input.RepName != nil {
-		crit = crit.WithRepName(input.RepName)
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			crit = crit.WithRepresentativeUUID(&representativeUUID)
+		}
 	}
 
 	if input.Month != nil {

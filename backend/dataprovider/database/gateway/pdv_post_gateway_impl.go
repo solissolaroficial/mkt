@@ -85,8 +85,8 @@ func (g *pdvPostGatewayImpl) FindByCriteria(
 	query := g.db.WithContext(ctx).Model(&postModels).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters (sem dependência de GORM no domínio)
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())
@@ -140,8 +140,8 @@ func (g *pdvPostGatewayImpl) CountByCriteria(ctx context.Context, criteria *doma
 	query := g.db.WithContext(ctx).Model(&model.PdvPostModel{}).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.Month() != nil {
 		query = query.Where("month = ?", *criteria.Month())

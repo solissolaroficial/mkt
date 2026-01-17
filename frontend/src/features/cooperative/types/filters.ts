@@ -3,7 +3,7 @@
 // ============================================
 
 export interface ShowroomItemFilters {
-  rep_name?: string;
+  representative_uuid?: string;
   city?: string;
   delivered?: boolean;
   page?: number;
@@ -13,7 +13,7 @@ export interface ShowroomItemFilters {
 }
 
 export interface OfflineActionFilters {
-  rep_name?: string;
+  representative_uuid?: string;
   category?: string;
   status?: string;
   month?: string;
@@ -26,7 +26,7 @@ export interface OfflineActionFilters {
 }
 
 export interface RepMarketingActionFilters {
-  rep_name?: string;
+  representative_uuid?: string;
   month?: string;
   page?: number;
   limit?: number;

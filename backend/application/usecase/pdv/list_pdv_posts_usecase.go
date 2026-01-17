@@ -3,6 +3,8 @@ package pdv
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -16,21 +18,23 @@ type ListPdvPostsUseCase struct {
 
 // ListPdvPostsInput representa os dados de entrada para listar posts de PDV
 type ListPdvPostsInput struct {
-	RepName   *string
-	Month     *string
-	Platform  *string
-	Status    *string
-	StartDate *string
-	EndDate   *string
-	Page      int
-	Limit     int
-	SortBy    *string
-	SortOrder *string
+	RepresentativeUUID *string
+	Month              *string
+	Platform           *string
+	Status             *string
+	StartDate          *string
+	EndDate            *string
+	Page               int
+	Limit              int
+	SortBy             *string
+	SortOrder          *string
 }
 
 // NewListPdvPosts cria uma nova instância do ListPdvPostsUseCase
 func NewListPdvPosts(gateway gateway.PdvPostGateway) *ListPdvPostsUseCase {
-	return &ListPdvPostsUseCase{gateway: gateway}
+	return &ListPdvPostsUseCase{
+		gateway: gateway,
+	}
 }
 
 // Execute lista posts de PDV baseado em critérios
@@ -38,8 +42,12 @@ func (uc *ListPdvPostsUseCase) Execute(ctx context.Context, input ListPdvPostsIn
 	// Criar criteria - Criteria está no package domain
 	crit := domain.NewPdvPostCriteria()
 
-	if input.RepName != nil {
-		crit = crit.WithRepName(input.RepName)
+	// Aplicar filtros se fornecidos
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			crit = crit.WithRepresentativeUUID(&representativeUUID)
+		}
 	}
 
 	if input.Month != nil {
@@ -52,10 +60,9 @@ func (uc *ListPdvPostsUseCase) Execute(ctx context.Context, input ListPdvPostsIn
 
 	if input.Status != nil {
 		status, err := valueobject.NewPdvStatus(*input.Status)
-		if err != nil {
-			return nil, 0, err
+		if err == nil {
+			crit = crit.WithStatus(status)
 		}
-		crit = crit.WithStatus(status)
 	}
 
 	if input.StartDate != nil {
@@ -83,23 +90,18 @@ func (uc *ListPdvPostsUseCase) Execute(ctx context.Context, input ListPdvPostsIn
 	pagination := valueobject.NewPagination(input.Page, input.Limit)
 
 	// Criar ordenação
-	var sortBy string
-	if input.SortBy != nil {
-		sortBy = *input.SortBy
+	var sortOrder *valueobject.SortOrder
+	var err error
+	if input.SortBy != nil && input.SortOrder != nil {
+		sortOrder, err = valueobject.NewSortOrder(*input.SortBy, valueobject.SortDirection(*input.SortOrder))
+		if err != nil {
+			return nil, 0, err
+		}
 	} else {
-		sortBy = "post_date"
-	}
-
-	var sortOrderStr string
-	if input.SortOrder != nil {
-		sortOrderStr = *input.SortOrder
-	} else {
-		sortOrderStr = "DESC"
-	}
-
-	sortOrder, err := valueobject.NewSortOrder(sortBy, valueobject.SortDirection(sortOrderStr))
-	if err != nil {
-		return nil, 0, err
+		sortOrder, err = valueobject.NewSortOrder("post_date", valueobject.SortDirection("DESC"))
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	// Buscar posts

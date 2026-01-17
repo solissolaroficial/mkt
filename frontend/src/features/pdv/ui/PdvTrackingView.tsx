@@ -17,8 +17,7 @@ import {
   Store,
   Save
 } from 'lucide-react';
-import { usePdvPosts, useRecurrentPdvs, usePdvMutations } from '../hooks';
-import { REP_NAMES } from '@/shared/utils/legacy.constants';
+import { usePdvPosts, useRecurrentPdvs, usePdvMutations, useRepresentatives } from '../hooks';
 import type { PdvTab, PdvPlatform } from '../types';
 
 // WhatsApp Icon Component
@@ -39,6 +38,7 @@ const PdvTrackingView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PdvTab>('posts');
   const { data: postsData = { posts: [], meta: { total: 0, page: 1, limit: 10, total_pages: 1 } } } = usePdvPosts();
   const { data: pdvListData = { pdvs: [], meta: { total: 0, page: 1, limit: 10, total_pages: 1 } } } = useRecurrentPdvs();
+  const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingPdv, setIsAddingPdv] = useState(false);
   
@@ -48,7 +48,7 @@ const PdvTrackingView: React.FC = () => {
   const [missingMonth, setMissingMonth] = useState('NOV'); // Default for missing tab
   
   // Post Form States
-  const [newPostRep, setNewPostRep] = useState(REP_NAMES[0]);
+  const [newPostRepUUID, setNewPostRepUUID] = useState('');
   const [newPostPdv, setNewPostPdv] = useState('');
   const [newPostDate, setNewPostDate] = useState('');
   const [newPostPlatform, setNewPostPlatform] = useState<PdvPlatform>('instagram');
@@ -56,15 +56,21 @@ const PdvTrackingView: React.FC = () => {
   
   // PDV Form States
   const [newPdvName, setNewPdvName] = useState('');
-  const [newPdvRep, setNewPdvRep] = useState(REP_NAMES[0]);
+  const [newPdvRepUUID, setNewPdvRepUUID] = useState('');
   const [newPdvCity, setNewPdvCity] = useState('');
   
   const { createPost, createRecurrent } = usePdvMutations();
-  
+
+  // Helper function to get representative name from UUID
+  const getRepresentativeName = (uuid: string) => {
+    const rep = representatives.find(r => r.uuid === uuid);
+    return rep?.name || uuid;
+  };
+
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newPost = {
-      rep_name: newPostRep,
+      representative_uuid: newPostRepUUID,
       pdv_name: newPostPdv,
       post_date: newPostDate,
       platform: newPostPlatform,
@@ -87,7 +93,7 @@ const PdvTrackingView: React.FC = () => {
     
     const newPdv = {
       name: newPdvName,
-      rep_name: newPdvRep,
+      representative_uuid: newPdvRepUUID,
       city: newPdvCity || undefined,
     };
     
@@ -110,7 +116,7 @@ const PdvTrackingView: React.FC = () => {
   };
   
   const filteredPosts = postsData.posts.filter(post => {
-      const matchRep = selectedRep === 'Todos' || post.rep_name === selectedRep;
+      const matchRep = selectedRep === 'Todos' || post.representative_uuid === selectedRep;
       const matchMonth = selectedMonth === 'Todos' || post.month === selectedMonth;
       return matchRep && matchMonth;
   });
@@ -141,9 +147,10 @@ const PdvTrackingView: React.FC = () => {
                                 value={selectedRep}
                                 onChange={(e) => setSelectedRep(e.target.value)}
                                 className="appearance-none bg-[#1a1d24] border border-gray-700 text-gray-300 rounded-lg pl-10 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
+                                disabled={isLoadingReps}
                             >
-                                <option value="Todos">Todos Representantes</option>
-                                {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                                <option value="">Todos Representantes</option>
+                                {representatives.map(rep => <option key={rep.uuid} value={rep.uuid}>{rep.name}</option>)}
                             </select>
                             <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                         </div>
@@ -230,12 +237,14 @@ const PdvTrackingView: React.FC = () => {
                         <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-400 mb-1">Representante</label>
-                                <select 
-                                    value={newPostRep}
-                                    onChange={(e) => setNewPostRep(e.target.value)}
+                                <select
+                                    value={newPostRepUUID}
+                                    onChange={(e) => setNewPostRepUUID(e.target.value)}
                                     className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
+                                    disabled={isLoadingReps}
                                 >
-                                    {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                                    <option value="">Selecione o Representante...</option>
+                                    {representatives.map(rep => <option key={rep.uuid} value={rep.uuid}>{rep.name}</option>)}
                                 </select>
                             </div>
   
@@ -349,7 +358,7 @@ const PdvTrackingView: React.FC = () => {
                                                     {post.pdv_name}
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-400">
-                                                    {post.rep_name}
+                                                    {getRepresentativeName(post.representative_uuid)}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="flex items-center gap-1.5 bg-[#0f1115] px-2 py-1 rounded w-fit text-xs border border-gray-800 text-gray-300">
@@ -440,12 +449,14 @@ const PdvTrackingView: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Representante</label>
-                                    <select 
-                                        value={newPdvRep}
-                                        onChange={(e) => setNewPdvRep(e.target.value)}
+                                    <select
+                                        value={newPdvRepUUID}
+                                        onChange={(e) => setNewPdvRepUUID(e.target.value)}
                                         className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
+                                        disabled={isLoadingReps}
                                     >
-                                        {REP_NAMES.map(r => <option key={r} value={r}>{r}</option>)}
+                                        <option value="">Selecione o Representante...</option>
+                                        {representatives.map(rep => <option key={rep.uuid} value={rep.uuid}>{rep.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -499,7 +510,7 @@ const PdvTrackingView: React.FC = () => {
                                 )).map((pdv) => (
                                     <tr key={pdv.id} className="hover:bg-[#20232b] transition-colors group">
                                         <td className="px-6 py-4 text-gray-200 font-medium">{pdv.name}</td>
-                                        <td className="px-6 py-4 text-gray-300">{pdv.rep_name}</td>
+                                        <td className="px-6 py-4 text-gray-300">{getRepresentativeName(pdv.representative_uuid)}</td>
                                         <td className="px-6 py-4">
                                             <span className="flex items-center gap-1.5 bg-[#0f1115] px-2 py-1 rounded w-fit text-xs border border-gray-800 text-gray-300">
                                                 <MapPin size={10} className="text-gray-500" />

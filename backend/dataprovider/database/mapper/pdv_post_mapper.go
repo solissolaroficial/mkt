@@ -35,7 +35,7 @@ func (m *PdvPostMapper) ModelToEntity(model *model.PdvPostModel) (*entity.PdvPos
 
 	return entity.ReconstructPdvPost(
 		model.UUID,
-		model.RepName,
+		model.RepresentativeUUID,
 		model.PdvName,
 		postDate,
 		model.Month,
@@ -80,17 +80,17 @@ func (m *PdvPostMapper) EntityToModel(post *entity.PdvPost) *model.PdvPostModel 
 	}
 
 	return &model.PdvPostModel{
-		UUID:      post.ID(),
-		RepName:   post.RepName(),
-		PdvName:   post.PdvName(),
-		PostDate:  post.PostDate().Value(),
-		Month:     post.Month(),
-		Platform:  post.Platform(),
-		Link:      post.Link(),
-		ProofUrl:  post.ProofUrl(),
-		Status:    statusStr,
-		CreatedAt: post.CreatedAt(),
-		UpdatedAt: post.UpdatedAt(),
-		DeletedAt: deletedAt,
+		UUID:               post.ID(),
+		RepresentativeUUID: post.RepresentativeUUID(),
+		PdvName:            post.PdvName(),
+		PostDate:           post.PostDate().Value(),
+		Month:              post.Month(),
+		Platform:           post.Platform(),
+		Link:               post.Link(),
+		ProofUrl:           post.ProofUrl(),
+		Status:             statusStr,
+		CreatedAt:          post.CreatedAt(),
+		UpdatedAt:          post.UpdatedAt(),
+		DeletedAt:          deletedAt,
 	}
 }

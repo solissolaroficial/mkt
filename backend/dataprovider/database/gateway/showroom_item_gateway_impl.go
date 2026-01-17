@@ -78,8 +78,8 @@ func (g *showroomItemGatewayImpl) FindByCriteria(
 	query := g.db.WithContext(ctx).Model(&itemModels).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.City() != nil {
 		query = query.Where("city = ?", *criteria.City())
@@ -123,8 +123,8 @@ func (g *showroomItemGatewayImpl) CountByCriteria(ctx context.Context, criteria 
 	query := g.db.WithContext(ctx).Model(&model.ShowroomItemModel{}).Where("deleted_at IS NULL")
 
 	// Aplicar criteria usando getters
-	if criteria.RepName() != nil {
-		query = query.Where("rep_name = ?", *criteria.RepName())
+	if criteria.RepresentativeUUID() != nil {
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeUUID())
 	}
 	if criteria.City() != nil {
 		query = query.Where("city = ?", *criteria.City())

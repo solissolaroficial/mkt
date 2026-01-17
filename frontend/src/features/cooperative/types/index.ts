@@ -15,7 +15,7 @@ export interface ShowroomItem {
   pdv: string;
   city?: string;
   contact?: string;
-  rep_name: string;
+  representative_uuid: string;
   delivery_forecast?: string; // ISO 8601 (YYYY-MM-DD)
   workshop_date?: string;     // ISO 8601 (YYYY-MM-DD)
   delivered: boolean;
@@ -28,7 +28,7 @@ export interface CreateShowroomItemRequest {
   pdv: string;
   city?: string;
   contact?: string;
-  rep_name: string;
+  representative_uuid: string;
   delivery_forecast?: string; // ISO 8601
   workshop_date?: string;     // ISO 8601
 }
@@ -37,7 +37,7 @@ export interface UpdateShowroomItemRequest {
   pdv?: string;
   city?: string;
   contact?: string;
-  rep_name?: string;
+  representative_uuid?: string;
   delivery_forecast?: string;
   workshop_date?: string;
   delivered?: boolean;
@@ -60,7 +60,7 @@ export interface OfflineAction {
   uf?: string;
   category: string;
   pdv: string;
-  rep_name: string;
+  representative_uuid: string;
   observation?: string;
   scored?: string;           // "SIM", "NÃO", "AINDA NÃO"
   status: string;            // "pending", "approved", "rejected", "completed"
@@ -75,7 +75,7 @@ export interface CreateOfflineActionRequest {
   category: string;
   action_date: string;       // ISO 8601
   pdv: string;
-  rep_name: string;
+  representative_uuid: string;
   observation: string;       // OBRIGATÓRIO
 }
 
@@ -91,7 +91,7 @@ export interface UpdateOfflineActionRequest {
   status?: string;
   observation?: string;
   pdv?: string;
-  rep_name?: string;
+  representative_uuid?: string;
 }
 
 // ============================================
@@ -100,7 +100,7 @@ export interface UpdateOfflineActionRequest {
 
 export interface RepMarketingAction {
   uuid: string;
-  rep_name: string;
+  representative_uuid: string;
   date: string;             // ISO 8601 (YYYY-MM-DD)
   description: string;
   month: string;             // "JAN", "FEV", "MAR", etc.
@@ -110,13 +110,18 @@ export interface RepMarketingAction {
 }
 
 export interface CreateRepMarketingActionRequest {
-  rep_name: string;
+  representative_uuid: string;
   date: string;             // ISO 8601
   description: string;
 }
 
 export interface UpdateRepMarketingActionRequest {
-  rep_name?: string;
+  representative_uuid?: string;
   date?: string;
   description?: string;
+}
+
+export interface CooperativeActionsViewProps {
+  selectedMonth?: string;
+  onRepClick?: (repUUID: string) => void;
 }

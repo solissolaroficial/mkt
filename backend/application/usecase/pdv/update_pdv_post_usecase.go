@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -17,18 +19,20 @@ type UpdatePdvPostUseCase struct {
 
 // UpdatePdvPostInput representa os dados de entrada para atualizar um post de PDV
 type UpdatePdvPostInput struct {
-	ID       string
-	RepName  *string
-	PdvName  *string
-	PostDate *string
-	Platform *string
-	Link     *string
-	ProofUrl *string
+	ID                 string
+	RepresentativeUUID *string
+	PdvName            *string
+	PostDate           *string
+	Platform           *string
+	Link               *string
+	ProofUrl           *string
 }
 
 // NewUpdatePdvPost cria uma nova instância do UpdatePdvPostUseCase
 func NewUpdatePdvPost(gateway gateway.PdvPostGateway) *UpdatePdvPostUseCase {
-	return &UpdatePdvPostUseCase{gateway: gateway}
+	return &UpdatePdvPostUseCase{
+		gateway: gateway,
+	}
 }
 
 // Execute atualiza um post de PDV existente
@@ -40,9 +44,12 @@ func (uc *UpdatePdvPostUseCase) Execute(ctx context.Context, input UpdatePdvPost
 	}
 
 	// Atualizar campos se fornecidos
-	if input.RepName != nil {
-		if err := post.UpdateRepName(*input.RepName); err != nil {
-			return nil, err
+	if input.RepresentativeUUID != nil {
+		representativeUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err == nil {
+			if err := post.UpdateRepresentativeUUID(representativeUUID); err != nil {
+				return nil, err
+			}
 		}
 	}
 
