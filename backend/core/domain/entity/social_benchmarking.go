@@ -11,6 +11,7 @@ import (
 
 type SocialBenchmarking struct {
 	id             uuid.UUID
+	brandID        uuid.UUID
 	brandName      *valueobject.BrandName
 	avgLikes       float64
 	avgComments    float64
@@ -60,6 +61,7 @@ func NewSocialBenchmarking(
 
 	benchmarking := &SocialBenchmarking{
 		id:             uuid.New(),
+		brandID:        uuid.New(), // Will be updated when brand is created/fetched
 		brandName:      brand,
 		avgLikes:       avgLikes,
 		avgComments:    avgComments,
@@ -79,6 +81,7 @@ func NewSocialBenchmarking(
 // ReconstructSocialBenchmarking reconstrói a entidade do banco de dados
 func ReconstructSocialBenchmarking(
 	id uuid.UUID,
+	brandID uuid.UUID,
 	brandName string,
 	avgLikes float64,
 	avgComments float64,
@@ -93,6 +96,7 @@ func ReconstructSocialBenchmarking(
 
 	return &SocialBenchmarking{
 		id:             id,
+		brandID:        brandID,
 		brandName:      brand,
 		avgLikes:       avgLikes,
 		avgComments:    avgComments,
@@ -106,6 +110,7 @@ func ReconstructSocialBenchmarking(
 
 // Getters
 func (s *SocialBenchmarking) ID() uuid.UUID                               { return s.id }
+func (s *SocialBenchmarking) BrandID() uuid.UUID                          { return s.brandID }
 func (s *SocialBenchmarking) BrandName() *valueobject.BrandName           { return s.brandName }
 func (s *SocialBenchmarking) AvgLikes() float64                           { return s.avgLikes }
 func (s *SocialBenchmarking) AvgComments() float64                        { return s.avgComments }
@@ -119,6 +124,10 @@ func (s *SocialBenchmarking) DeletedAt() *time.Time                       { retu
 
 // Validate valida os dados da entidade
 func (s *SocialBenchmarking) Validate() error {
+	if s.brandID == uuid.Nil {
+		return errors.New("brandID is required")
+	}
+
 	if s.brandName == nil {
 		return errors.New("brandName is required")
 	}
@@ -146,6 +155,17 @@ func (s *SocialBenchmarking) UpdateBrandName(brandName string) error {
 	}
 
 	s.brandName = brand
+	s.updatedAt = time.Now()
+	return nil
+}
+
+// UpdateBrandID atualiza o ID da marca
+func (s *SocialBenchmarking) UpdateBrandID(brandID uuid.UUID) error {
+	if brandID == uuid.Nil {
+		return errors.New("brandID cannot be nil")
+	}
+
+	s.brandID = brandID
 	s.updatedAt = time.Now()
 	return nil
 }

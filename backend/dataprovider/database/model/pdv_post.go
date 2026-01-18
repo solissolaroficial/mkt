@@ -10,7 +10,7 @@ import (
 // PdvPostModel representa o modelo de banco de dados para posts de PDV
 type PdvPostModel struct {
 	UUID               uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_pdv_posts_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_pdv_posts_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:CASCADE,onUpdate:CASCADE"`
 	PdvName            string         `gorm:"not null;size:200;index:idx_pdv_name"`
 	PostDate           time.Time      `gorm:"not null;index:idx_post_date"`
 	Month              string         `gorm:"not null;size:3;index:idx_month;check:month IN ('JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ')"`

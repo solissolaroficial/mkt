@@ -22,9 +22,18 @@ func (m *SocialBenchmarkingMapper) ModelToEntity(model *model.SocialBenchmarking
 		deletedAt = &model.DeletedAt.Time
 	}
 
+	// Get brand name from Brand relationship if available
+	var brandName string
+	if model.Brand != nil {
+		brandName = model.Brand.Name
+	} else {
+		brandName = "Unknown" // Fallback if brand not loaded
+	}
+
 	return entity.ReconstructSocialBenchmarking(
 		model.UUID,
-		model.BrandName,
+		model.BrandID,
+		brandName,
 		model.AvgLikes,
 		model.AvgComments,
 		model.Followers,
@@ -59,7 +68,7 @@ func (m *SocialBenchmarkingMapper) EntityToModel(benchmarking *entity.SocialBenc
 
 	return &model.SocialBenchmarkingModel{
 		UUID:           benchmarking.ID(),
-		BrandName:      benchmarking.BrandName().String(),
+		BrandID:        benchmarking.BrandID(),
 		AvgLikes:       benchmarking.AvgLikes(),
 		AvgComments:    benchmarking.AvgComments(),
 		Followers:      benchmarking.Followers(),

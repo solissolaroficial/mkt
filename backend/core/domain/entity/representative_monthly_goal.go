@@ -9,20 +9,20 @@ import (
 
 // RepresentativeMonthlyGoal represents a monthly goal for a representative
 type RepresentativeMonthlyGoal struct {
-	id               uuid.UUID
-	representativeID uuid.UUID
-	month            int
-	year             int
-	target           float64
-	realized         float64
-	createdAt        time.Time
-	updatedAt        time.Time
-	deletedAt        *time.Time
+	id                 uuid.UUID
+	representativeUUID uuid.UUID
+	month              int
+	year               int
+	target             float64
+	realized           float64
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewRepresentativeMonthlyGoal creates a new RepresentativeMonthlyGoal
 func NewRepresentativeMonthlyGoal(
-	representativeID uuid.UUID,
+	representativeUUID uuid.UUID,
 	month int,
 	year int,
 	target float64,
@@ -39,22 +39,22 @@ func NewRepresentativeMonthlyGoal(
 
 	now := time.Now()
 	return &RepresentativeMonthlyGoal{
-		id:               uuid.New(),
-		representativeID: representativeID,
-		month:            month,
-		year:             year,
-		target:           target,
-		realized:         0,
-		createdAt:        now,
-		updatedAt:        now,
-		deletedAt:        nil,
+		id:                 uuid.New(),
+		representativeUUID: representativeUUID,
+		month:              month,
+		year:               year,
+		target:             target,
+		realized:           0,
+		createdAt:          now,
+		updatedAt:          now,
+		deletedAt:          nil,
 	}, nil
 }
 
 // ReconstructRepresentativeMonthlyGoal reconstructs a RepresentativeMonthlyGoal from persistence
 func ReconstructRepresentativeMonthlyGoal(
 	id uuid.UUID,
-	representativeID uuid.UUID,
+	representativeUUID uuid.UUID,
 	month int,
 	year int,
 	target float64,
@@ -77,15 +77,15 @@ func ReconstructRepresentativeMonthlyGoal(
 	}
 
 	return &RepresentativeMonthlyGoal{
-		id:               id,
-		representativeID: representativeID,
-		month:            month,
-		year:             year,
-		target:           target,
-		realized:         realized,
-		createdAt:        createdAt,
-		updatedAt:        updatedAt,
-		deletedAt:        deletedAt,
+		id:                 id,
+		representativeUUID: representativeUUID,
+		month:              month,
+		year:               year,
+		target:             target,
+		realized:           realized,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}, nil
 }
 
@@ -95,8 +95,8 @@ func (rmg *RepresentativeMonthlyGoal) ID() uuid.UUID {
 	return rmg.id
 }
 
-func (rmg *RepresentativeMonthlyGoal) RepresentativeID() uuid.UUID {
-	return rmg.representativeID
+func (rmg *RepresentativeMonthlyGoal) RepresentativeUUID() uuid.UUID {
+	return rmg.representativeUUID
 }
 
 func (rmg *RepresentativeMonthlyGoal) Month() int {
@@ -127,7 +127,7 @@ func (rmg *RepresentativeMonthlyGoal) DeletedAt() *time.Time {
 	return rmg.deletedAt
 }
 
-// UpdateTarget updates the target value
+// UpdateTarget updates target value
 func (rmg *RepresentativeMonthlyGoal) UpdateTarget(target float64) error {
 	if target < 0 {
 		return errors.ErrInvalidRepresentativeGoal
@@ -137,7 +137,7 @@ func (rmg *RepresentativeMonthlyGoal) UpdateTarget(target float64) error {
 	return nil
 }
 
-// UpdateRealized updates the realized value
+// UpdateRealized updates realized value
 func (rmg *RepresentativeMonthlyGoal) UpdateRealized(realized float64) error {
 	if realized < 0 {
 		return errors.ErrInvalidRepresentativeGoal
@@ -147,12 +147,12 @@ func (rmg *RepresentativeMonthlyGoal) UpdateRealized(realized float64) error {
 	return nil
 }
 
-// IsTargetMet returns true if the realized value meets or exceeds the target
+// IsTargetMet returns true if realized value meets or exceeds the target
 func (rmg *RepresentativeMonthlyGoal) IsTargetMet() bool {
 	return rmg.realized >= rmg.target
 }
 
-// PercentageAchieved returns the percentage of the target achieved
+// PercentageAchieved returns percentage of target achieved
 func (rmg *RepresentativeMonthlyGoal) PercentageAchieved() float64 {
 	if rmg.target == 0 {
 		return 0
@@ -160,7 +160,7 @@ func (rmg *RepresentativeMonthlyGoal) PercentageAchieved() float64 {
 	return (rmg.realized / rmg.target) * 100
 }
 
-// Remaining returns the remaining amount to reach the target
+// Remaining returns remaining amount to reach the target
 func (rmg *RepresentativeMonthlyGoal) Remaining() float64 {
 	remaining := rmg.target - rmg.realized
 	if remaining < 0 {
@@ -176,7 +176,7 @@ func (rmg *RepresentativeMonthlyGoal) MarkAsDeleted() {
 	rmg.updatedAt = now
 }
 
-// IsDeleted returns true if the goal is marked as deleted
+// IsDeleted returns true if goal is marked as deleted
 func (rmg *RepresentativeMonthlyGoal) IsDeleted() bool {
 	return rmg.deletedAt != nil
 }

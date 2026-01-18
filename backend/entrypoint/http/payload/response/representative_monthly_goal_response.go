@@ -6,42 +6,42 @@ import (
 
 // CreateRepresentativeMonthlyGoalResponse represents a response after creating a monthly goal
 type CreateRepresentativeMonthlyGoalResponse struct {
-	ID               uuid.UUID `json:"id"`
-	RepresentativeID uuid.UUID `json:"representativeId"`
-	Month            int       `json:"month"`
-	Year             int       `json:"year"`
-	Target           float64   `json:"target"`
-	Realized         float64   `json:"realized"`
-	Percentage       float64   `json:"percentage"`
-	CreatedAt        string    `json:"createdAt"`
-	UpdatedAt        string    `json:"updatedAt"`
+	ID                 uuid.UUID `json:"id"`
+	RepresentativeUUID uuid.UUID `json:"representativeId"`
+	Month              int       `json:"month"`
+	Year               int       `json:"year"`
+	Target             float64   `json:"target"`
+	Realized           float64   `json:"realized"`
+	Percentage         float64   `json:"percentage"`
+	CreatedAt          string    `json:"createdAt"`
+	UpdatedAt          string    `json:"updatedAt"`
 }
 
 // GetRepresentativeMonthlyGoalResponse represents a response for getting a monthly goal
 type GetRepresentativeMonthlyGoalResponse struct {
-	ID               uuid.UUID `json:"id"`
-	RepresentativeID uuid.UUID `json:"representativeId"`
-	Month            int       `json:"month"`
-	Year             int       `json:"year"`
-	Target           float64   `json:"target"`
-	Realized         float64   `json:"realized"`
-	Percentage       float64   `json:"percentage"`
-	Remaining        float64   `json:"remaining"`
-	IsTargetMet      bool      `json:"isTargetMet"`
-	CreatedAt        string    `json:"createdAt"`
-	UpdatedAt        string    `json:"updatedAt"`
+	ID                 uuid.UUID `json:"id"`
+	RepresentativeUUID uuid.UUID `json:"representativeId"`
+	Month              int       `json:"month"`
+	Year               int       `json:"year"`
+	Target             float64   `json:"target"`
+	Realized           float64   `json:"realized"`
+	Percentage         float64   `json:"percentage"`
+	Remaining          float64   `json:"remaining"`
+	IsTargetMet        bool      `json:"isTargetMet"`
+	CreatedAt          string    `json:"createdAt"`
+	UpdatedAt          string    `json:"updatedAt"`
 }
 
 // UpdateRepresentativeMonthlyGoalResponse represents a response after updating a monthly goal
 type UpdateRepresentativeMonthlyGoalResponse struct {
-	ID               uuid.UUID `json:"id"`
-	RepresentativeID uuid.UUID `json:"representativeId"`
-	Month            int       `json:"month"`
-	Year             int       `json:"year"`
-	Target           float64   `json:"target"`
-	Realized         float64   `json:"realized"`
-	Percentage       float64   `json:"percentage"`
-	UpdatedAt        string    `json:"updatedAt"`
+	ID                 uuid.UUID `json:"id"`
+	RepresentativeUUID uuid.UUID `json:"representativeId"`
+	Month              int       `json:"month"`
+	Year               int       `json:"year"`
+	Target             float64   `json:"target"`
+	Realized           float64   `json:"realized"`
+	Percentage         float64   `json:"percentage"`
+	UpdatedAt          string    `json:"updatedAt"`
 }
 
 // ListRepresentativeMonthlyGoalsResponse represents a response for listing monthly goals
@@ -55,17 +55,17 @@ type ListRepresentativeMonthlyGoalsResponse struct {
 
 // RepresentativeMonthlyGoalData represents a monthly goal in list
 type RepresentativeMonthlyGoalData struct {
-	ID               uuid.UUID `json:"id"`
-	RepresentativeID uuid.UUID `json:"representativeId"`
-	Month            int       `json:"month"`
-	Year             int       `json:"year"`
-	Target           float64   `json:"target"`
-	Realized         float64   `json:"realized"`
-	Percentage       float64   `json:"percentage"`
-	Remaining        float64   `json:"remaining"`
-	IsTargetMet      bool      `json:"isTargetMet"`
-	CreatedAt        string    `json:"createdAt"`
-	UpdatedAt        string    `json:"updatedAt"`
+	ID                 uuid.UUID `json:"id"`
+	RepresentativeUUID uuid.UUID `json:"representativeId"`
+	Month              int       `json:"month"`
+	Year               int       `json:"year"`
+	Target             float64   `json:"target"`
+	Realized           float64   `json:"realized"`
+	Percentage         float64   `json:"percentage"`
+	Remaining          float64   `json:"remaining"`
+	IsTargetMet        bool      `json:"isTargetMet"`
+	CreatedAt          string    `json:"createdAt"`
+	UpdatedAt          string    `json:"updatedAt"`
 }
 
 // GetRepresentativeGoalsTableDataResponse represents a response for getting table data (transposed view)

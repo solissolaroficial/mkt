@@ -10,6 +10,7 @@ import (
 
 type SocialPost struct {
 	id              uuid.UUID
+	brandID         uuid.UUID
 	brandName       *valueobject.BrandName
 	platform        valueobject.SocialPlatform
 	postDate        time.Time
@@ -71,8 +72,13 @@ func NewSocialPost(
 		return nil, errors.New("followersAtPost cannot be negative")
 	}
 
+	if postDate.IsZero() {
+		return nil, errors.New("postDate is required")
+	}
+
 	post := &SocialPost{
 		id:              uuid.New(),
+		brandID:         uuid.New(), // Will be updated when brand is created/fetched
 		brandName:       brand,
 		platform:        plat,
 		postDate:        postDate,
@@ -97,6 +103,7 @@ func NewSocialPost(
 // ReconstructSocialPost reconstrói a entidade do banco de dados
 func ReconstructSocialPost(
 	id uuid.UUID,
+	brandID uuid.UUID,
 	brandName string,
 	platform string,
 	postDate time.Time,
@@ -117,6 +124,7 @@ func ReconstructSocialPost(
 
 	return &SocialPost{
 		id:              id,
+		brandID:         brandID,
 		brandName:       brand,
 		platform:        plat,
 		postDate:        postDate,
@@ -135,6 +143,7 @@ func ReconstructSocialPost(
 
 // Getters
 func (s *SocialPost) ID() uuid.UUID                        { return s.id }
+func (s *SocialPost) BrandID() uuid.UUID                   { return s.brandID }
 func (s *SocialPost) BrandName() *valueobject.BrandName    { return s.brandName }
 func (s *SocialPost) Platform() valueobject.SocialPlatform { return s.platform }
 func (s *SocialPost) PostDate() time.Time                  { return s.postDate }
@@ -153,19 +162,20 @@ func (s *SocialPost) DeletedAt() *time.Time                { return s.deletedAt 
 
 // Validate valida os dados da entidade
 func (s *SocialPost) Validate() error {
+	if s.brandID == uuid.Nil {
+		return errors.New("brandID is required")
+	}
+
 	if s.brandName == nil {
 		return errors.New("brandName is required")
 	}
 
-	if s.postDate.IsZero() {
-		return errors.New("postDate is required")
+	if !s.platform.IsValid() {
+		return errors.New("platform is required")
 	}
 
-	// Validar que a data não seja no futuro (usar UTC para consistência)
-	now := time.Now().UTC()
-	postDateUTC := s.postDate.UTC()
-	if postDateUTC.After(now) {
-		return errors.New("postDate cannot be in future")
+	if s.postDate.IsZero() {
+		return errors.New("postDate is required")
 	}
 
 	if s.likes < 0 {
@@ -187,7 +197,7 @@ func (s *SocialPost) Validate() error {
 	return nil
 }
 
-// UpdateMetrics atualiza as métricas do post
+// UpdateMetrics atualiza as métricas (likes, comments, shares)
 func (s *SocialPost) UpdateMetrics(likes, comments int, shares *int) error {
 	if likes < 0 {
 		return errors.New("likes cannot be negative")
@@ -208,14 +218,40 @@ func (s *SocialPost) UpdateMetrics(likes, comments int, shares *int) error {
 	return nil
 }
 
-// UpdateCaption atualiza a legenda
+// UpdateCaption atualiza a legenda do post
 func (s *SocialPost) UpdateCaption(caption *string) {
 	s.caption = caption
 	s.updatedAt = time.Now()
 }
 
+// UpdateFollowersAtPost atualiza o número de seguidores no momento do post
+func (s *SocialPost) UpdateFollowersAtPost(followers *int) error {
+	if followers != nil && *followers < 0 {
+		return errors.New("followers cannot be negative")
+	}
+
+	s.followersAtPost = followers
+	s.updatedAt = time.Now()
+	return nil
+}
+
+// UpdateBrandID atualiza o ID da marca
+func (s *SocialPost) UpdateBrandID(brandID uuid.UUID) error {
+	if brandID == uuid.Nil {
+		return errors.New("brandID cannot be nil")
+	}
+
+	s.brandID = brandID
+	s.updatedAt = time.Now()
+	return nil
+}
+
 // UpdatePlatform atualiza a plataforma
 func (s *SocialPost) UpdatePlatform(platform valueobject.SocialPlatform) error {
+	if !platform.IsValid() {
+		return errors.New("invalid platform")
+	}
+
 	s.platform = platform
 	s.updatedAt = time.Now()
 	return nil
@@ -224,12 +260,9 @@ func (s *SocialPost) UpdatePlatform(platform valueobject.SocialPlatform) error {
 // UpdatePostDate atualiza a data do post
 func (s *SocialPost) UpdatePostDate(postDate time.Time) error {
 	if postDate.IsZero() {
-		return errors.New("postDate cannot be zero")
+		return errors.New("postDate is required")
 	}
-	// Validar que a data não seja no futuro
-	if postDate.After(time.Now()) {
-		return errors.New("postDate cannot be in future")
-	}
+
 	s.postDate = postDate
 	s.updatedAt = time.Now()
 	return nil
@@ -248,11 +281,14 @@ func (s *SocialPost) SetPostType(postType valueobject.SocialPostType) {
 }
 
 // SetFollowersAtPost define o número de seguidores no momento do post
-func (s *SocialPost) SetFollowersAtPost(followers int) {
-	if followers >= 0 {
-		s.followersAtPost = &followers
-		s.updatedAt = time.Now()
+func (s *SocialPost) SetFollowersAtPost(followers *int) error {
+	if followers != nil && *followers < 0 {
+		return errors.New("followers cannot be negative")
 	}
+
+	s.followersAtPost = followers
+	s.updatedAt = time.Now()
+	return nil
 }
 
 // SoftDelete marca o post como deletado

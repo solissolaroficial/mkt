@@ -18,7 +18,7 @@ type CalendarPost struct {
 	category           valueobject.PostCategory
 	postType           valueobject.PostType
 	status             valueobject.PostStatus
-	assigneeID         *uuid.UUID
+	assigneeUUID       *uuid.UUID
 	platforms          []string
 	publishedPlatforms []string
 	imageURL           *string
@@ -37,7 +37,7 @@ func NewCalendarPost(
 	caption *string,
 	category valueobject.PostCategory,
 	postType valueobject.PostType,
-	assigneeID *uuid.UUID,
+	assigneeUUID *uuid.UUID,
 	platforms []string,
 	imageURL *string,
 ) (*CalendarPost, error) {
@@ -45,7 +45,7 @@ func NewCalendarPost(
 		return nil, errors.New("title is required")
 	}
 
-	// assigneeID agora é opcional
+	// assigneeUUID agora é opcional
 
 	post := &CalendarPost{
 		id:                 uuid.New(),
@@ -57,7 +57,7 @@ func NewCalendarPost(
 		category:           category,
 		postType:           postType,
 		status:             valueobject.StatusInProgress, // status inicial
-		assigneeID:         assigneeID,
+		assigneeUUID:       assigneeUUID,
 		platforms:          platforms,
 		publishedPlatforms: []string{},
 		imageURL:           imageURL,
@@ -84,7 +84,7 @@ func ReconstructCalendarPost(
 	category valueobject.PostCategory,
 	postType valueobject.PostType,
 	status valueobject.PostStatus,
-	assigneeID *uuid.UUID,
+	assigneeUUID *uuid.UUID,
 	platforms []string,
 	publishedPlatforms []string,
 	imageURL *string,
@@ -103,7 +103,7 @@ func ReconstructCalendarPost(
 		category:           category,
 		postType:           postType,
 		status:             status,
-		assigneeID:         assigneeID,
+		assigneeUUID:       assigneeUUID,
 		platforms:          platforms,
 		publishedPlatforms: publishedPlatforms,
 		imageURL:           imageURL,
@@ -124,7 +124,7 @@ func (p *CalendarPost) Caption() *string                         { return p.capt
 func (p *CalendarPost) Category() valueobject.PostCategory       { return p.category }
 func (p *CalendarPost) Type() valueobject.PostType               { return p.postType }
 func (p *CalendarPost) Status() valueobject.PostStatus           { return p.status }
-func (p *CalendarPost) AssigneeID() *uuid.UUID                   { return p.assigneeID }
+func (p *CalendarPost) AssigneeUUID() *uuid.UUID                 { return p.assigneeUUID }
 func (p *CalendarPost) Platforms() []string                      { return p.platforms }
 func (p *CalendarPost) PublishedPlatforms() []string             { return p.publishedPlatforms }
 func (p *CalendarPost) ImageURL() *string                        { return p.imageURL }
@@ -145,7 +145,7 @@ func (p *CalendarPost) Validate() error {
 		return errors.New("title must be at most 500 characters")
 	}
 
-	// assigneeID agora é opcional
+	// assigneeUUID agora é opcional
 
 	if !p.category.IsValid() {
 		return errors.New("invalid category")

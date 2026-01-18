@@ -7,9 +7,18 @@ import (
 
 // ModelToEntity converte model para entity
 func ModelToSocialPostEntity(m *model.SocialPostModel) *entity.SocialPost {
+	// Get brand name from Brand relationship if available
+	var brandName string
+	if m.Brand != nil {
+		brandName = m.Brand.Name
+	} else {
+		brandName = "Unknown" // Fallback if brand not loaded
+	}
+
 	return entity.ReconstructSocialPost(
 		m.ID,
-		m.BrandName,
+		m.BrandID,
+		brandName,
 		m.Platform,
 		m.PostDate,
 		m.PostTime,
@@ -29,7 +38,7 @@ func ModelToSocialPostEntity(m *model.SocialPostModel) *entity.SocialPost {
 func EntityToSocialPostModel(e *entity.SocialPost) *model.SocialPostModel {
 	return &model.SocialPostModel{
 		ID:              e.ID(),
-		BrandName:       e.BrandName().String(),
+		BrandID:         e.BrandID(),
 		Platform:        e.Platform().String(),
 		PostDate:        e.PostDate(),
 		PostTime:        e.PostTime(),

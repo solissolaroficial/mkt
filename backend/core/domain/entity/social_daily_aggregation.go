@@ -10,6 +10,7 @@ import (
 
 type SocialDailyAggregation struct {
 	id              uuid.UUID
+	brandID         uuid.UUID
 	brandName       *valueobject.BrandName
 	aggregationDate time.Time
 	totalPosts      int
@@ -90,6 +91,7 @@ func NewSocialDailyAggregation(
 
 	aggregation := &SocialDailyAggregation{
 		id:              uuid.New(),
+		brandID:         uuid.New(), // Will be updated when brand is created/fetched
 		brandName:       brand,
 		aggregationDate: aggregationDate,
 		totalPosts:      totalPosts,
@@ -116,6 +118,7 @@ func NewSocialDailyAggregation(
 // ReconstructSocialDailyAggregation reconstrói a entidade do banco de dados
 func ReconstructSocialDailyAggregation(
 	id uuid.UUID,
+	brandID uuid.UUID,
 	brandName string,
 	aggregationDate time.Time,
 	totalPosts int,
@@ -136,6 +139,7 @@ func ReconstructSocialDailyAggregation(
 
 	return &SocialDailyAggregation{
 		id:              id,
+		brandID:         brandID,
 		brandName:       brand,
 		aggregationDate: aggregationDate,
 		totalPosts:      totalPosts,
@@ -155,6 +159,7 @@ func ReconstructSocialDailyAggregation(
 
 // Getters
 func (s *SocialDailyAggregation) ID() uuid.UUID                     { return s.id }
+func (s *SocialDailyAggregation) BrandID() uuid.UUID                { return s.brandID }
 func (s *SocialDailyAggregation) BrandName() *valueobject.BrandName { return s.brandName }
 func (s *SocialDailyAggregation) AggregationDate() time.Time        { return s.aggregationDate }
 func (s *SocialDailyAggregation) TotalPosts() int                   { return s.totalPosts }
@@ -176,6 +181,10 @@ func (s *SocialDailyAggregation) DeletedAt() *time.Time { return s.deletedAt }
 
 // Validate valida os dados da entidade
 func (s *SocialDailyAggregation) Validate() error {
+	if s.brandID == uuid.Nil {
+		return errors.New("brandID is required")
+	}
+
 	if s.brandName == nil {
 		return errors.New("brandName is required")
 	}
@@ -296,6 +305,17 @@ func (s *SocialDailyAggregation) UpdateAggregations(
 	}
 
 	s.engagementRate = engagementRate
+	s.updatedAt = time.Now()
+	return nil
+}
+
+// UpdateBrandID atualiza o ID da marca
+func (s *SocialDailyAggregation) UpdateBrandID(brandID uuid.UUID) error {
+	if brandID == uuid.Nil {
+		return errors.New("brandID cannot be nil")
+	}
+
+	s.brandID = brandID
 	s.updatedAt = time.Now()
 	return nil
 }

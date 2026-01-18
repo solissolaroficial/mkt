@@ -9,7 +9,7 @@ import (
 
 type OfflineActionModel struct {
 	UUID               uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_offline_actions_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_offline_actions_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:CASCADE,onUpdate:CASCADE"`
 	RequestedAmount    float64        `gorm:"not null"`
 	ActionDate         time.Time      `gorm:"not null;index:idx_action_date"`
 	Category           string         `gorm:"not null;size:100;index:idx_category"`

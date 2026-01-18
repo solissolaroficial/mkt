@@ -16,14 +16,14 @@ type UpdateRepresentativeMonthlyGoalInput struct {
 
 // UpdateRepresentativeMonthlyGoalOutput defines output data after updating a monthly goal
 type UpdateRepresentativeMonthlyGoalOutput struct {
-	ID               uuid.UUID
-	RepresentativeID uuid.UUID
-	Month            int
-	Year             int
-	Target           float64
-	Realized         float64
-	Percentage       float64
-	UpdatedAt        string
+	ID                 uuid.UUID
+	RepresentativeUUID uuid.UUID
+	Month              int
+	Year               int
+	Target             float64
+	Realized           float64
+	Percentage         float64
+	UpdatedAt          string
 }
 
 type UpdateRepresentativeMonthlyGoalUseCase struct {
@@ -64,13 +64,13 @@ func (uc *UpdateRepresentativeMonthlyGoalUseCase) Execute(ctx context.Context, i
 	}
 
 	return &UpdateRepresentativeMonthlyGoalOutput{
-		ID:               goal.ID(),
-		RepresentativeID: goal.RepresentativeID(),
-		Month:            goal.Month(),
-		Year:             goal.Year(),
-		Target:           goal.Target(),
-		Realized:         goal.Realized(),
-		Percentage:       goal.PercentageAchieved(),
-		UpdatedAt:        goal.UpdatedAt().Format("2006-01-02T15:04:05Z07:00"),
+		ID:                 goal.ID(),
+		RepresentativeUUID: goal.RepresentativeUUID(),
+		Month:              goal.Month(),
+		Year:               goal.Year(),
+		Target:             goal.Target(),
+		Realized:           goal.Realized(),
+		Percentage:         goal.PercentageAchieved(),
+		UpdatedAt:          goal.UpdatedAt().Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
 }

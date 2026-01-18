@@ -9,7 +9,7 @@ import (
 
 type ShowroomItemModel struct {
 	UUID               uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_showroom_items_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	RepresentativeUUID uuid.UUID      `gorm:"not null;type:uuid;index:idx_representative_uuid;constraint:fk_showroom_items_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:CASCADE,onUpdate:CASCADE"`
 	PDV                string         `gorm:"not null;size:200;index:idx_pdv"`
 	City               *string        `gorm:"type:varchar(100);index:idx_city"`
 	Contact            *string        `gorm:"type:varchar(100)"`

@@ -15,7 +15,7 @@ func NewRepresentativeMonthlyGoalMapper() *RepresentativeMonthlyGoalMapper {
 func (m *RepresentativeMonthlyGoalMapper) ModelToEntity(model *model.RepresentativeMonthlyGoalModel) (*entity.RepresentativeMonthlyGoal, error) {
 	return entity.ReconstructRepresentativeMonthlyGoal(
 		model.ID,
-		model.RepresentativeID,
+		model.RepresentativeUUID,
 		model.Month,
 		model.Year,
 		model.Target,
@@ -42,14 +42,14 @@ func (m *RepresentativeMonthlyGoalMapper) ModelsToEntities(models []*model.Repre
 // EntityToModel converts Entity to Model
 func (m *RepresentativeMonthlyGoalMapper) EntityToModel(goal *entity.RepresentativeMonthlyGoal) *model.RepresentativeMonthlyGoalModel {
 	return &model.RepresentativeMonthlyGoalModel{
-		ID:               goal.ID(),
-		RepresentativeID: goal.RepresentativeID(),
-		Month:            goal.Month(),
-		Year:             goal.Year(),
-		Target:           goal.Target(),
-		Realized:         goal.Realized(),
-		CreatedAt:        goal.CreatedAt(),
-		UpdatedAt:        goal.UpdatedAt(),
-		DeletedAt:        goal.DeletedAt(),
+		ID:                 goal.ID(),
+		RepresentativeUUID: goal.RepresentativeUUID(),
+		Month:              goal.Month(),
+		Year:               goal.Year(),
+		Target:             goal.Target(),
+		Realized:           goal.Realized(),
+		CreatedAt:          goal.CreatedAt(),
+		UpdatedAt:          goal.UpdatedAt(),
+		DeletedAt:          goal.DeletedAt(),
 	}
 }

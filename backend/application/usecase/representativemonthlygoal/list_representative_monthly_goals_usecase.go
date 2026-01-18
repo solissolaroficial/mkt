@@ -10,13 +10,13 @@ import (
 
 // ListRepresentativeMonthlyGoalsInput defines input data for listing monthly goals
 type ListRepresentativeMonthlyGoalsInput struct {
-	RepresentativeID *uuid.UUID
-	Month            *int
-	Year             *int
-	Page             int
-	PageSize         int
-	SortBy           string
-	SortOrder        string
+	RepresentativeUUID *uuid.UUID
+	Month              *int
+	Year               *int
+	Page               int
+	PageSize           int
+	SortBy             string
+	SortOrder          string
 }
 
 // ListRepresentativeMonthlyGoalsOutput defines output data for listing monthly goals
@@ -28,10 +28,10 @@ type ListRepresentativeMonthlyGoalsOutput struct {
 	TotalPages int
 }
 
-// RepresentativeMonthlyGoalData represents a monthly goal in the list
+// RepresentativeMonthlyGoalData represents a monthly goal in list
 type RepresentativeMonthlyGoalData struct {
 	ID                 uuid.UUID
-	RepresentativeID   uuid.UUID
+	RepresentativeUUID uuid.UUID
 	RepresentativeName string
 	Month              int
 	Year               int
@@ -62,8 +62,8 @@ func NewListRepresentativeMonthlyGoalsUseCase(
 func (uc *ListRepresentativeMonthlyGoalsUseCase) Execute(ctx context.Context, input ListRepresentativeMonthlyGoalsInput) (*ListRepresentativeMonthlyGoalsOutput, error) {
 	criteria := domain.NewRepresentativeMonthlyGoalCriteria()
 
-	if input.RepresentativeID != nil {
-		criteria = criteria.WithRepresentativeID(*input.RepresentativeID)
+	if input.RepresentativeUUID != nil {
+		criteria = criteria.WithRepresentativeID(*input.RepresentativeUUID)
 	}
 	if input.Month != nil {
 		criteria = criteria.WithMonth(*input.Month)
@@ -84,13 +84,13 @@ func (uc *ListRepresentativeMonthlyGoalsUseCase) Execute(ctx context.Context, in
 	data := make([]*RepresentativeMonthlyGoalData, 0, len(goals))
 	for _, goal := range goals {
 		repName := ""
-		if rep, err := uc.representativeGateway.FindByID(goal.RepresentativeID()); err == nil {
+		if rep, err := uc.representativeGateway.FindByID(goal.RepresentativeUUID()); err == nil {
 			repName = rep.Name()
 		}
 
 		data = append(data, &RepresentativeMonthlyGoalData{
 			ID:                 goal.ID(),
-			RepresentativeID:   goal.RepresentativeID(),
+			RepresentativeUUID: goal.RepresentativeUUID(),
 			RepresentativeName: repName,
 			Month:              goal.Month(),
 			Year:               goal.Year(),

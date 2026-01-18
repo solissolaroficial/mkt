@@ -77,7 +77,7 @@ func (m *CalendarPostMapper) ToCalendarPostResponse(post *entity.CalendarPost) c
 		Category:           post.Category().String(),
 		Type:               post.Type().String(),
 		Status:             post.Status().String(),
-		AssigneeID:         uuidPtrToString(post.AssigneeID()),
+		AssigneeID:         uuidPtrToString(post.AssigneeUUID()),
 		Assignee:           nil, // Will be populated by controller if needed
 		Platforms:          post.Platforms(),
 		PublishedPlatforms: post.PublishedPlatforms(),

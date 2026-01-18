@@ -9,7 +9,8 @@ import (
 
 type SocialBenchmarkingModel struct {
 	UUID           uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	BrandName      string         `gorm:"not null;size:200;index:idx_brand_name"`
+	BrandID        uuid.UUID      `gorm:"not null;type:uuid;index:idx_brand_id;constraint:fk_social_benchmarkings_brand,foreignKey:BrandID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	Brand          *BrandModel    `gorm:"foreignKey:BrandID"`
 	AvgLikes       float64        `gorm:"not null"`
 	AvgComments    float64        `gorm:"not null"`
 	Followers      *int           `gorm:"type:integer"`
@@ -20,7 +21,7 @@ type SocialBenchmarkingModel struct {
 }
 
 // Índices compostos para performance:
-// - idx_brand_name_deleted_at: (brand_name, deleted_at) para queries filtradas por marca
+// - idx_brand_id_deleted_at: (brand_id, deleted_at) para queries filtradas por marca
 // - idx_created_at_deleted_at: (created_at, deleted_at) para queries por data
 // - idx_engagement_rate: (engagement_rate) para ordenação por taxa de engajamento
 

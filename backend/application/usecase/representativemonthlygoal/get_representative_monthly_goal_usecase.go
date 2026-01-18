@@ -14,17 +14,17 @@ type GetRepresentativeMonthlyGoalInput struct {
 
 // GetRepresentativeMonthlyGoalOutput defines output data for a monthly goal
 type GetRepresentativeMonthlyGoalOutput struct {
-	ID               uuid.UUID
-	RepresentativeID uuid.UUID
-	Month            int
-	Year             int
-	Target           float64
-	Realized         float64
-	Percentage       float64
-	Remaining        float64
-	IsTargetMet      bool
-	CreatedAt        string
-	UpdatedAt        string
+	ID                 uuid.UUID
+	RepresentativeUUID uuid.UUID
+	Month              int
+	Year               int
+	Target             float64
+	Realized           float64
+	Percentage         float64
+	Remaining          float64
+	IsTargetMet        bool
+	CreatedAt          string
+	UpdatedAt          string
 }
 
 type GetRepresentativeMonthlyGoalUseCase struct {
@@ -46,16 +46,16 @@ func (uc *GetRepresentativeMonthlyGoalUseCase) Execute(ctx context.Context, inpu
 	}
 
 	return &GetRepresentativeMonthlyGoalOutput{
-		ID:               goal.ID(),
-		RepresentativeID: goal.RepresentativeID(),
-		Month:            goal.Month(),
-		Year:             goal.Year(),
-		Target:           goal.Target(),
-		Realized:         goal.Realized(),
-		Percentage:       goal.PercentageAchieved(),
-		Remaining:        goal.Remaining(),
-		IsTargetMet:      goal.IsTargetMet(),
-		CreatedAt:        goal.CreatedAt().Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:        goal.UpdatedAt().Format("2006-01-02T15:04:05Z07:00"),
+		ID:                 goal.ID(),
+		RepresentativeUUID: goal.RepresentativeUUID(),
+		Month:              goal.Month(),
+		Year:               goal.Year(),
+		Target:             goal.Target(),
+		Realized:           goal.Realized(),
+		Percentage:         goal.PercentageAchieved(),
+		Remaining:          goal.Remaining(),
+		IsTargetMet:        goal.IsTargetMet(),
+		CreatedAt:          goal.CreatedAt().Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:          goal.UpdatedAt().Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
 }

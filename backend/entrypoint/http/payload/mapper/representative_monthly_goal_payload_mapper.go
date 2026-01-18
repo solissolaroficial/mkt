@@ -18,25 +18,25 @@ func NewRepresentativeMonthlyGoalPayloadMapper() *RepresentativeMonthlyGoalPaylo
 func (m *RepresentativeMonthlyGoalPayloadMapper) CreateRequestToInput(req *representativemonthlygoalrequest.CreateRepresentativeMonthlyGoalRequest) *representativemonthlygoal.CreateRepresentativeMonthlyGoalInput {
 	representativeID, _ := uuid.Parse(req.RepresentativeID)
 	return &representativemonthlygoal.CreateRepresentativeMonthlyGoalInput{
-		RepresentativeID: representativeID,
-		Month:            req.Month,
-		Year:             req.Year,
-		Target:           req.Target,
+		RepresentativeUUID: representativeID,
+		Month:              req.Month,
+		Year:               req.Year,
+		Target:             req.Target,
 	}
 }
 
 // CreateOutputToResponse converts use case output to response
 func (m *RepresentativeMonthlyGoalPayloadMapper) CreateOutputToResponse(output *representativemonthlygoal.CreateRepresentativeMonthlyGoalOutput) *representativemonthlygoalresponse.CreateRepresentativeMonthlyGoalResponse {
 	return &representativemonthlygoalresponse.CreateRepresentativeMonthlyGoalResponse{
-		ID:               output.ID,
-		RepresentativeID: output.RepresentativeID,
-		Month:            output.Month,
-		Year:             output.Year,
-		Target:           output.Target,
-		Realized:         output.Realized,
-		Percentage:       output.Percentage,
-		CreatedAt:        output.CreatedAt,
-		UpdatedAt:        output.UpdatedAt,
+		ID:                 output.ID,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Month:              output.Month,
+		Year:               output.Year,
+		Target:             output.Target,
+		Realized:           output.Realized,
+		Percentage:         output.Percentage,
+		CreatedAt:          output.CreatedAt,
+		UpdatedAt:          output.UpdatedAt,
 	}
 }
 
@@ -54,17 +54,17 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) GetRequestToInput(id string) (*
 // GetOutputToResponse converts use case output to response
 func (m *RepresentativeMonthlyGoalPayloadMapper) GetOutputToResponse(output *representativemonthlygoal.GetRepresentativeMonthlyGoalOutput) *representativemonthlygoalresponse.GetRepresentativeMonthlyGoalResponse {
 	return &representativemonthlygoalresponse.GetRepresentativeMonthlyGoalResponse{
-		ID:               output.ID,
-		RepresentativeID: output.RepresentativeID,
-		Month:            output.Month,
-		Year:             output.Year,
-		Target:           output.Target,
-		Realized:         output.Realized,
-		Percentage:       output.Percentage,
-		Remaining:        output.Remaining,
-		IsTargetMet:      output.IsTargetMet,
-		CreatedAt:        output.CreatedAt,
-		UpdatedAt:        output.UpdatedAt,
+		ID:                 output.ID,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Month:              output.Month,
+		Year:               output.Year,
+		Target:             output.Target,
+		Realized:           output.Realized,
+		Percentage:         output.Percentage,
+		Remaining:          output.Remaining,
+		IsTargetMet:        output.IsTargetMet,
+		CreatedAt:          output.CreatedAt,
+		UpdatedAt:          output.UpdatedAt,
 	}
 }
 
@@ -84,14 +84,14 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) UpdateRequestToInput(id string,
 // UpdateOutputToResponse converts use case output to response
 func (m *RepresentativeMonthlyGoalPayloadMapper) UpdateOutputToResponse(output *representativemonthlygoal.UpdateRepresentativeMonthlyGoalOutput) *representativemonthlygoalresponse.UpdateRepresentativeMonthlyGoalResponse {
 	return &representativemonthlygoalresponse.UpdateRepresentativeMonthlyGoalResponse{
-		ID:               output.ID,
-		RepresentativeID: output.RepresentativeID,
-		Month:            output.Month,
-		Year:             output.Year,
-		Target:           output.Target,
-		Realized:         output.Realized,
-		Percentage:       output.Percentage,
-		UpdatedAt:        output.UpdatedAt,
+		ID:                 output.ID,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Month:              output.Month,
+		Year:               output.Year,
+		Target:             output.Target,
+		Realized:           output.Realized,
+		Percentage:         output.Percentage,
+		UpdatedAt:          output.UpdatedAt,
 	}
 }
 
@@ -108,20 +108,20 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) DeleteRequestToInput(id string)
 
 // ListRequestToInput converts request to use case input
 func (m *RepresentativeMonthlyGoalPayloadMapper) ListRequestToInput(req *representativemonthlygoalrequest.ListRepresentativeMonthlyGoalsRequest) *representativemonthlygoal.ListRepresentativeMonthlyGoalsInput {
-	var representativeID *uuid.UUID
+	var representativeUUID *uuid.UUID
 	if req.RepresentativeID != nil {
 		id, _ := uuid.Parse(*req.RepresentativeID)
-		representativeID = &id
+		representativeUUID = &id
 	}
 
 	return &representativemonthlygoal.ListRepresentativeMonthlyGoalsInput{
-		RepresentativeID: representativeID,
-		Month:            req.Month,
-		Year:             req.Year,
-		Page:             req.Page,
-		PageSize:         req.PageSize,
-		SortBy:           req.SortBy,
-		SortOrder:        req.SortOrder,
+		RepresentativeUUID: representativeUUID,
+		Month:              req.Month,
+		Year:               req.Year,
+		Page:               req.Page,
+		PageSize:           req.PageSize,
+		SortBy:             req.SortBy,
+		SortOrder:          req.SortOrder,
 	}
 }
 
@@ -130,17 +130,17 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) ListOutputToResponse(output *re
 	data := make([]representativemonthlygoalresponse.RepresentativeMonthlyGoalData, len(output.Data))
 	for i, item := range output.Data {
 		data[i] = representativemonthlygoalresponse.RepresentativeMonthlyGoalData{
-			ID:               item.ID,
-			RepresentativeID: item.RepresentativeID,
-			Month:            item.Month,
-			Year:             item.Year,
-			Target:           item.Target,
-			Realized:         item.Realized,
-			Percentage:       item.Percentage,
-			Remaining:        item.Remaining,
-			IsTargetMet:      item.IsTargetMet,
-			CreatedAt:        item.CreatedAt,
-			UpdatedAt:        item.UpdatedAt,
+			ID:                 item.ID,
+			RepresentativeUUID: item.RepresentativeUUID,
+			Month:              item.Month,
+			Year:               item.Year,
+			Target:             item.Target,
+			Realized:           item.Realized,
+			Percentage:         item.Percentage,
+			Remaining:          item.Remaining,
+			IsTargetMet:        item.IsTargetMet,
+			CreatedAt:          item.CreatedAt,
+			UpdatedAt:          item.UpdatedAt,
 		}
 	}
 

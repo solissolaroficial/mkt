@@ -7,9 +7,18 @@ import (
 
 // ModelToEntity converte model para entity
 func ModelToSocialDailyAggregationEntity(m *model.SocialDailyAggregationModel) *entity.SocialDailyAggregation {
+	// Get brand name from Brand relationship if available
+	var brandName string
+	if m.Brand != nil {
+		brandName = m.Brand.Name
+	} else {
+		brandName = "Unknown" // Fallback if brand not loaded
+	}
+
 	return entity.ReconstructSocialDailyAggregation(
 		m.ID,
-		m.BrandName,
+		m.BrandID,
+		brandName,
 		m.AggregationDate,
 		m.TotalPosts,
 		m.TotalLikes,
@@ -30,7 +39,7 @@ func ModelToSocialDailyAggregationEntity(m *model.SocialDailyAggregationModel) *
 func EntityToSocialDailyAggregationModel(e *entity.SocialDailyAggregation) *model.SocialDailyAggregationModel {
 	return &model.SocialDailyAggregationModel{
 		ID:              e.ID(),
-		BrandName:       e.BrandName().String(),
+		BrandID:         e.BrandID(),
 		AggregationDate: e.AggregationDate(),
 		TotalPosts:      e.TotalPosts(),
 		TotalLikes:      e.TotalLikes(),

@@ -18,8 +18,8 @@ type CalendarPostModel struct {
 	Category           string         `gorm:"not null;size:50;index:idx_category"`
 	Type               string         `gorm:"not null;size:50;index:idx_type"`
 	Status             string         `gorm:"not null;size:50;index:idx_status"`
-	AssigneeID         *uuid.UUID     `gorm:"type:uuid;index"`
-	Assignee           *User          `gorm:"foreignKey:AssigneeID;references:UUID;constraint:OnDelete:SET NULL"`
+	AssigneeUUID       *uuid.UUID     `gorm:"type:uuid;index;constraint:fk_calendar_posts_assignee,foreignKey:AssigneeUUID,references:UUID,onDelete:SET NULL,onUpdate:CASCADE"`
+	Assignee           *User          `gorm:"foreignKey:AssigneeUUID"`
 	Platforms          datatypes.JSON `gorm:"type:jsonb"`
 	PublishedPlatforms datatypes.JSON `gorm:"type:jsonb"`
 	ImageURL           *string        `gorm:"type:varchar(500)"`

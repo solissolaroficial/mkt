@@ -140,7 +140,7 @@ func (uc *UpdateSocialPostUseCase) Execute(ctx context.Context, input UpdateSoci
 	}
 
 	if input.FollowersAtPost != nil {
-		post.SetFollowersAtPost(*input.FollowersAtPost)
+		post.SetFollowersAtPost(input.FollowersAtPost)
 	}
 
 	// Validate the updated post
