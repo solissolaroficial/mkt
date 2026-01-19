@@ -134,7 +134,7 @@ func (g *notificationGatewayImpl) FindByUserID(userID uuid.UUID, pagination *val
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Notification{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Notification{}).Where("user_uuid = ?", userID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -142,7 +142,7 @@ func (g *notificationGatewayImpl) FindByUserID(userID uuid.UUID, pagination *val
 	query := g.db.Model(&model.Notification{}).
 		Preload("User").
 		Preload("Task").
-		Where("user_id = ?", userID)
+		Where("user_uuid = ?", userID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {
@@ -175,7 +175,7 @@ func (g *notificationGatewayImpl) FindUnreadByUserID(userID uuid.UUID, paginatio
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Notification{}).Where("user_id = ? AND read = ?", userID, false).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Notification{}).Where("user_uuid = ? AND read = ?", userID, false).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -183,7 +183,7 @@ func (g *notificationGatewayImpl) FindUnreadByUserID(userID uuid.UUID, paginatio
 	query := g.db.Model(&model.Notification{}).
 		Preload("User").
 		Preload("Task").
-		Where("user_id = ? AND read = ?", userID, false)
+		Where("user_uuid = ? AND read = ?", userID, false)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {
@@ -235,7 +235,7 @@ func (g *notificationGatewayImpl) MarkAsRead(id uuid.UUID) error {
 func (g *notificationGatewayImpl) MarkAllAsReadByUserID(userID uuid.UUID) error {
 	now := time.Now()
 	result := g.db.Model(&model.Notification{}).
-		Where("user_id = ? AND read = ?", userID, false).
+		Where("user_uuid = ? AND read = ?", userID, false).
 		Updates(map[string]interface{}{
 			"read":    true,
 			"read_at": &now,
@@ -246,6 +246,6 @@ func (g *notificationGatewayImpl) MarkAllAsReadByUserID(userID uuid.UUID) error 
 
 // DeleteByTaskID deleta todas as notificações de uma tarefa
 func (g *notificationGatewayImpl) DeleteByTaskID(taskID uuid.UUID) error {
-	result := g.db.Delete(&model.Notification{}, "task_id = ?", taskID)
+	result := g.db.Delete(&model.Notification{}, "task_uuid = ?", taskID)
 	return result.Error
 }

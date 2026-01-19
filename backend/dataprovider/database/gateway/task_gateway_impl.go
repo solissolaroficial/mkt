@@ -166,7 +166,7 @@ func (g *taskGatewayImpl) FindByCriteria(criteria *gateway.TaskCriteria, paginat
 	}
 
 	if len(criteria.AssigneeIDs) > 0 {
-		query = query.Where("assignee_id IN ?", criteria.AssigneeIDs)
+		query = query.Where("assignee_uuid IN ?", criteria.AssigneeIDs)
 	}
 
 	if criteria.Archived != nil {
@@ -240,7 +240,7 @@ func (g *taskGatewayImpl) CountByCriteria(criteria *gateway.TaskCriteria) (int64
 	}
 
 	if len(criteria.AssigneeIDs) > 0 {
-		query = query.Where("assignee_id IN ?", criteria.AssigneeIDs)
+		query = query.Where("assignee_uuid IN ?", criteria.AssigneeIDs)
 	}
 
 	if criteria.Archived != nil {
@@ -273,7 +273,7 @@ func (g *taskGatewayImpl) FindByAssigneeID(assigneeID uuid.UUID, pagination *val
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Task{}).Where("assignee_id = ?", assigneeID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Task{}).Where("assignee_uuid = ?", assigneeID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -282,7 +282,7 @@ func (g *taskGatewayImpl) FindByAssigneeID(assigneeID uuid.UUID, pagination *val
 		Preload("Subtasks").
 		Preload("Comments").
 		Preload("Assignee").
-		Where("assignee_id = ?", assigneeID)
+		Where("assignee_uuid = ?", assigneeID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {

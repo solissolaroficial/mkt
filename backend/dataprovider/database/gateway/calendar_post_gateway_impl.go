@@ -117,7 +117,7 @@ func (g *calendarPostGatewayImpl) FindByCriteria(ctx context.Context, crit *doma
 	}
 
 	if crit.AssigneeID() != nil {
-		query = query.Where("assignee_id = ?", crit.AssigneeID())
+		query = query.Where("assignee_uuid = ?", crit.AssigneeID())
 	}
 
 	if crit.StartDate() != nil {
@@ -179,7 +179,7 @@ func (g *calendarPostGatewayImpl) CountByCriteria(ctx context.Context, crit *dom
 	}
 
 	if crit.AssigneeID() != nil {
-		query = query.Where("assignee_id = ?", crit.AssigneeID())
+		query = query.Where("assignee_uuid = ?", crit.AssigneeID())
 	}
 
 	if crit.StartDate() != nil {

@@ -133,7 +133,7 @@ func (g *subtaskGatewayImpl) FindByTaskID(taskID uuid.UUID, pagination *valueobj
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Subtask{}).Where("task_id = ?", taskID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Subtask{}).Where("task_uuid = ?", taskID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -141,7 +141,7 @@ func (g *subtaskGatewayImpl) FindByTaskID(taskID uuid.UUID, pagination *valueobj
 	query := g.db.Model(&model.Subtask{}).
 		Preload("Task").
 		Preload("Assignee").
-		Where("task_id = ?", taskID)
+		Where("task_uuid = ?", taskID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {
@@ -174,7 +174,7 @@ func (g *subtaskGatewayImpl) FindByAssigneeID(assigneeID uuid.UUID, pagination *
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Subtask{}).Where("assignee_id = ?", assigneeID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Subtask{}).Where("assignee_uuid = ?", assigneeID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -182,7 +182,7 @@ func (g *subtaskGatewayImpl) FindByAssigneeID(assigneeID uuid.UUID, pagination *
 	query := g.db.Model(&model.Subtask{}).
 		Preload("Task").
 		Preload("Assignee").
-		Where("assignee_id = ?", assigneeID)
+		Where("assignee_uuid = ?", assigneeID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {

@@ -41,7 +41,7 @@ func (g *representativeStatsGatewayImpl) GetOfflineActionValue(ctx interface{}, 
 	var total int64
 	err := g.db.Model(&model.OfflineActionModel{}).
 		Where("representative_uuid = ?", representativeUUID).
-		Select("COALESCE(SUM(value), 0)").
+		Select("COALESCE(SUM(requested_amount), 0)").
 		Scan(&total).Error
 	return total, err
 }
@@ -96,7 +96,7 @@ func (g *representativeStatsGatewayImpl) GetRepresentativeStats(ctx interface{},
 			GROUP BY representative_uuid
 		) online_actions ON representatives.uuid = online_actions.representative_uuid
 		LEFT JOIN (
-			SELECT representative_uuid, COUNT(*) as count, SUM(COALESCE(value, 0)) as total_value
+			SELECT representative_uuid, COUNT(*) as count, SUM(COALESCE(requested_amount, 0)) as total_value
 			FROM offline_actions
 			WHERE representative_uuid = ?
 			GROUP BY representative_uuid
@@ -162,7 +162,7 @@ func (g *representativeStatsGatewayImpl) GetBatchRepresentativeStats(ctx interfa
 			GROUP BY representative_uuid
 		) online_actions ON r.uuid = online_actions.representative_uuid
 		LEFT JOIN (
-			SELECT representative_uuid, COUNT(*) as count, SUM(COALESCE(value, 0)) as total_value
+			SELECT representative_uuid, COUNT(*) as count, SUM(COALESCE(requested_amount, 0)) as total_value
 			FROM offline_actions
 			WHERE representative_uuid IN ?
 			GROUP BY representative_uuid

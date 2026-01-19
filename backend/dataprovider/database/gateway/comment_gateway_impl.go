@@ -139,7 +139,7 @@ func (g *commentGatewayImpl) FindByTaskID(taskID uuid.UUID, pagination *valueobj
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Comment{}).Where("task_id = ?", taskID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Comment{}).Where("task_uuid = ?", taskID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -147,7 +147,7 @@ func (g *commentGatewayImpl) FindByTaskID(taskID uuid.UUID, pagination *valueobj
 	query := g.db.Model(&model.Comment{}).
 		Preload("Task").
 		Preload("User").
-		Where("task_id = ?", taskID)
+		Where("task_uuid = ?", taskID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {
@@ -179,7 +179,7 @@ func (g *commentGatewayImpl) FindByUserID(userID uuid.UUID, pagination *valueobj
 	var total int64
 
 	// Get total count
-	if err := g.db.Model(&model.Comment{}).Where("user_id = ?", userID).Count(&total).Error; err != nil {
+	if err := g.db.Model(&model.Comment{}).Where("user_uuid = ?", userID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -187,7 +187,7 @@ func (g *commentGatewayImpl) FindByUserID(userID uuid.UUID, pagination *valueobj
 	query := g.db.Model(&model.Comment{}).
 		Preload("Task").
 		Preload("User").
-		Where("user_id = ?", userID)
+		Where("user_uuid = ?", userID)
 
 	// Apply sorting
 	for _, sortOrder := range sortOrders {

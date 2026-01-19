@@ -79,7 +79,7 @@ func (g *representativeMonthlyGoalGatewayImpl) List(criteria *domain.Representat
 
 	// Apply filters
 	if criteria.RepresentativeID != nil {
-		query = query.Where("representative_id = ?", *criteria.RepresentativeID)
+		query = query.Where("representative_uuid = ?", *criteria.RepresentativeID)
 	}
 
 	if criteria.Month != nil {
@@ -138,7 +138,7 @@ func (g *representativeMonthlyGoalGatewayImpl) Delete(id uuid.UUID) error {
 func (g *representativeMonthlyGoalGatewayImpl) GetByRepresentativeAndMonth(representativeID uuid.UUID, month int, year int) (*entity.RepresentativeMonthlyGoal, error) {
 	var goalModel model.RepresentativeMonthlyGoalModel
 
-	err := g.db.Where("representative_id = ? AND month = ? AND year = ?", representativeID, month, year).First(&goalModel).Error
+	err := g.db.Where("representative_uuid = ? AND month = ? AND year = ?", representativeID, month, year).First(&goalModel).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -154,7 +154,7 @@ func (g *representativeMonthlyGoalGatewayImpl) GetByRepresentativeAndMonth(repre
 func (g *representativeMonthlyGoalGatewayImpl) GetGoalsByRepresentative(representativeID uuid.UUID) ([]*entity.RepresentativeMonthlyGoal, error) {
 	var goalModels []model.RepresentativeMonthlyGoalModel
 
-	err := g.db.Where("representative_id = ?", representativeID).Order("year DESC, month DESC").Find(&goalModels).Error
+	err := g.db.Where("representative_uuid = ?", representativeID).Order("year DESC, month DESC").Find(&goalModels).Error
 
 	if err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ func (g *representativeMonthlyGoalGatewayImpl) GetGoalsTableData(year int, month
 			g.target,
 			g.realized
 		FROM representatives r
-		LEFT JOIN representative_monthly_goals g ON r.uuid = g.representative_id
+		LEFT JOIN representative_monthly_goals g ON r.uuid = g.representative_uuid
 		WHERE r.deleted_at IS NULL
 	`
 
