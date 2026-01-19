@@ -30,8 +30,8 @@ func (uc *ListCommentsUseCase) Execute(taskID string) ([]*entity.Comment, error)
 	// Default pagination (no limit, no offset)
 	pagination := valueobject.NewPagination(0, 0)
 
-	// Default sort order (created at descending)
-	sortOrder, err := valueobject.NewSortOrder("created_at", valueobject.SortDirectionDesc)
+	// Default sort order (timestamp descending)
+	sortOrder, err := valueobject.NewSortOrder("timestamp", valueobject.SortDirectionDesc)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import type { Task, Subtask, Comment, AllowedUser, TaskFlow, TaskStatus } from '
 import type { AppUser } from '@/shared/types/user.types';
 import { useUsers } from '@/features/users/hooks';
 import { useAuth } from '@/features/auth';
+import { useComments, useSubtasks } from '@/features/tasks/hooks';
 import {
   X,
   CheckSquare,
@@ -27,6 +28,14 @@ import type { TaskModalProps } from '../types';
 const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onMention, onAddSubtask, onUpdateSubtask, onDeleteSubtask, onAddComment, onUpdateComment, onDeleteComment }) => {
 // Load users from API
 const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
+
+// Fetch comments and subtasks for the current task
+const { data: commentsData, isLoading: isLoadingComments } = useComments(task.id);
+const { data: subtasksData, isLoading: isLoadingSubtasks } = useSubtasks(task.id);
+
+// Use fetched data if available, otherwise fall back to task data (for optimistic updates)
+const displayComments = commentsData || task.comments || [];
+const displaySubtasks = subtasksData || task.subtasks || [];
 
 // AVAILABLE_FLOWS é calculado dinamicamente a partir de appUsers
 const AVAILABLE_FLOWS = useMemo(() => {
@@ -53,14 +62,14 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
 
   if (!isOpen || !task) return null; // Safety check
   
-  // Show loading while users are being fetched
-  if (isLoadingUsers) {
+  // Show loading while users, comments, or subtasks are being fetched
+  if (isLoadingUsers || isLoadingComments || isLoadingSubtasks) {
     return (
       <div className="fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-4 backdrop-blur-sm">
         <div className="bg-[#1a1d24] w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl border border-gray-800 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader2 size={48} className="text-pink-500 animate-spin" />
-            <p className="text-gray-400">Carregando usuários...</p>
+            <p className="text-gray-400">Carregando dados...</p>
           </div>
         </div>
       </div>
@@ -73,16 +82,16 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
   };
 
   const toggleSubtask = (subtaskId: string) => {
-    const updatedSubtasks = task.subtasks?.map(st =>
+    const updatedSubtasks = (displaySubtasks || []).map(st =>
       st.id === subtaskId ? { ...st, status: (st.status === 'completed' ? 'pending' : 'completed') as TaskStatus } : st
-    ) || [];
+    );
     onUpdate({ ...task, subtasks: updatedSubtasks });
   };
 
   const updateSubtaskField = (subtaskId: string, field: keyof Subtask, value: any) => {
-    const updatedSubtasks = task.subtasks?.map(st =>
+    const updatedSubtasks = (displaySubtasks || []).map(st =>
       st.id === subtaskId ? { ...st, [field]: value } : st
-    ) || [];
+    );
     onUpdate({ ...task, subtasks: updatedSubtasks });
   };
 
@@ -112,7 +121,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
     if (onDeleteSubtask) {
       onDeleteSubtask(subtaskId);
     }
-    const updatedSubtasks = task.subtasks?.filter(st => st.id !== subtaskId) || [];
+    const updatedSubtasks = (displaySubtasks || []).filter(st => st.id !== subtaskId);
     onUpdate({ ...task, subtasks: updatedSubtasks });
   };
 
@@ -158,8 +167,8 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
       onUpdate({ ...task, archived: !task.archived });
   };
 
-  const completedSubtasks = task.subtasks?.filter(s => s.status === 'completed').length || 0;
-  const totalSubtasks = task.subtasks?.length || 0;
+  const completedSubtasks = (displaySubtasks || []).filter(s => s.status === 'completed').length || 0;
+  const totalSubtasks = (displaySubtasks || []).length || 0;
   const progress = totalSubtasks === 0 ? 0 : (completedSubtasks / totalSubtasks) * 100;
 
   // Helper to safely open date picker
@@ -319,7 +328,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                     )}
 
                     <div className="space-y-2 mb-4">
-                        {task.subtasks?.map(st => (
+                        {(displaySubtasks || []).map(st => (
                             <div key={st.id} className="group flex items-center gap-3 bg-[#0f1115] border border-gray-800 hover:border-gray-700 p-2 pr-3 rounded-lg transition-all">
                                 <button
                                     onClick={() => toggleSubtask(st.id)}
@@ -430,7 +439,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                     </div>
 
                     <div className="space-y-4 mb-5 pl-2">
-                        {task.comments?.map(comment => (
+                        {(displayComments || []).map(comment => (
                             <div key={comment.id} className="flex gap-4 group">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-xs font-bold border border-gray-600 flex-shrink-0 text-gray-300">
                                     {appUsers?.find(u => u.id === comment.user_id)?.name[0] || '?'}

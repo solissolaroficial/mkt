@@ -43,7 +43,7 @@ export const subtaskService = {
   // Get subtasks by task ID
   list: async (taskId: string): Promise<Subtask[]> => {
     const response = await apiClient.get(`/api/subtasks?task_id=${taskId}`);
-    return response.data;
+    return response.data.data || [];
   },
 
   // Get subtask by ID
@@ -74,7 +74,7 @@ export const commentService = {
   // Get comments by task ID
   list: async (taskId: string): Promise<Comment[]> => {
     const response = await apiClient.get(`/api/comments?task_id=${taskId}`);
-    return response.data;
+    return response.data.data || [];
   },
 
   // Get comment by ID
