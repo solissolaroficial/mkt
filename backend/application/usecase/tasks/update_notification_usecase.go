@@ -37,8 +37,8 @@ func (uc *UpdateNotificationUseCase) Execute(id string, title string, message st
 	// Update notification via Reconstruct
 	updatedNotification := entity.ReconstructNotification(
 		notification.ID(),
-		notification.UserID(),
-		notification.TaskID(),
+		notification.UserUUID(),
+		notification.TaskUUID(),
 		notification.Type(),
 		title,
 		message,

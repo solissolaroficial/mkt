@@ -9,27 +9,27 @@ import (
 
 // CreateGiftTransactionInput define os dados de entrada para criar uma GiftTransaction
 type CreateGiftTransactionInput struct {
-	ItemName        string
-	Quantity        int
-	TransactionType string
-	Date            string
-	Time            string
-	Price           *float64
-	Representative  *string
-	Unit            string
+	ItemName           string
+	Quantity           int
+	TransactionType    string
+	Date               string
+	Time               string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               string
 }
 
 // CreateGiftTransactionOutput define os dados de saída após criar uma GiftTransaction
 type CreateGiftTransactionOutput struct {
-	ID              uuid.UUID
-	ItemName        string
-	Quantity        int
-	TransactionType string
-	Date            string
-	Time            string
-	Price           *float64
-	Representative  *string
-	Unit            string
+	ID                 uuid.UUID
+	ItemName           string
+	Quantity           int
+	TransactionType    string
+	Date               string
+	Time               string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               string
 }
 
 // CreateGiftTransactionUseCase define o use case para criar uma GiftTransaction
@@ -61,6 +61,15 @@ func (uc *CreateGiftTransactionUseCase) Execute(input CreateGiftTransactionInput
 	}
 
 	// Criar a transação
+	var representativeUUID *uuid.UUID
+	if input.RepresentativeUUID != nil {
+		parsedUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err != nil {
+			return nil, err
+		}
+		representativeUUID = &parsedUUID
+	}
+
 	transaction, err := entity.NewGiftTransaction(
 		input.ItemName,
 		input.Quantity,
@@ -68,7 +77,7 @@ func (uc *CreateGiftTransactionUseCase) Execute(input CreateGiftTransactionInput
 		input.Date,
 		input.Time,
 		input.Price,
-		input.Representative,
+		representativeUUID,
 		input.Unit,
 	)
 	if err != nil {
@@ -98,15 +107,22 @@ func (uc *CreateGiftTransactionUseCase) Execute(input CreateGiftTransactionInput
 		price = &p
 	}
 
+	// Converter UUID para string no output
+	var representativeUUIDStr *string
+	if transaction.RepresentativeUUID() != (uuid.UUID{}) {
+		uuidStr := transaction.RepresentativeUUID().String()
+		representativeUUIDStr = &uuidStr
+	}
+
 	return &CreateGiftTransactionOutput{
-		ID:              transaction.ID(),
-		ItemName:        transaction.ItemName(),
-		Quantity:        transaction.Quantity().Value(),
-		TransactionType: string(*transaction.TransactionType()),
-		Date:            transaction.Date().Format("02/01/2006"),
-		Time:            transaction.Time(),
-		Price:           price,
-		Representative:  transaction.Representative(),
-		Unit:            transaction.Unit(),
+		ID:                 transaction.ID(),
+		ItemName:           transaction.ItemName(),
+		Quantity:           transaction.Quantity().Value(),
+		TransactionType:    string(*transaction.TransactionType()),
+		Date:               transaction.Date().Format("02/01/2006"),
+		Time:               transaction.Time(),
+		Price:              price,
+		RepresentativeUUID: representativeUUIDStr,
+		Unit:               transaction.Unit(),
 	}, nil
 }

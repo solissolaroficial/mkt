@@ -111,6 +111,8 @@ func (s *GiftSeeder) Seed(ctx context.Context) error {
 		}
 
 		// Criar gift transaction
+		// TODO: Atualizar para buscar representativeUUID do banco de dados
+		// Por enquanto, representativeUUID é nil para as transações de seeder
 		giftTransaction, err := entity.NewGiftTransaction(
 			txData.itemName,
 			txData.quantity,
@@ -118,7 +120,7 @@ func (s *GiftSeeder) Seed(ctx context.Context) error {
 			txData.date,
 			txData.time,
 			txData.price,
-			txData.representative,
+			nil, // representativeUUID - será nil até implementar busca de UUID
 			txData.unit,
 		)
 		if err != nil {

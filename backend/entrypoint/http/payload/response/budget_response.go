@@ -9,10 +9,10 @@ import (
 // BudgetItemResponse representa a resposta de um BudgetItem
 type BudgetItemResponse struct {
 	UUID         uuid.UUID  `json:"uuid"`
-	CodObj       string     `json:"codObj"`
-	Obj          string     `json:"obj"`
-	CodGrp       string     `json:"codGrp"`
-	Grp          string     `json:"grp"`
+	ObjectUUID   *uuid.UUID `json:"objectUUID,omitempty"`
+	ObjectName   string     `json:"objectName"`
+	GroupUUID    *uuid.UUID `json:"groupUUID,omitempty"`
+	GroupName    string     `json:"groupName"`
 	Cod          string     `json:"cod"`
 	Desc         string     `json:"desc"`
 	Vals         []float64  `json:"vals"`
@@ -25,13 +25,13 @@ type BudgetItemResponse struct {
 
 // BudgetSummaryResponse representa o resumo agregado de orçamento
 type BudgetSummaryResponse struct {
-	CodObj        string  `json:"codObj"`
-	Obj           string  `json:"obj"`
-	CodGrp        string  `json:"codGrp"`
-	Grp           string  `json:"grp"`
-	TotalBudget   float64 `json:"totalBudget"`
-	TotalRealized float64 `json:"totalRealized"`
-	Variance      float64 `json:"variance"`
+	ObjectUUID    *uuid.UUID `json:"objectUUID,omitempty"`
+	ObjectName    string     `json:"objectName"`
+	GroupUUID     *uuid.UUID `json:"groupUUID,omitempty"`
+	GroupName     string     `json:"groupName"`
+	TotalBudget   float64    `json:"totalBudget"`
+	TotalRealized float64    `json:"totalRealized"`
+	Variance      float64    `json:"variance"`
 }
 
 // ListBudgetItemsResponse representa a resposta paginada de BudgetItems

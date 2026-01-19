@@ -71,10 +71,10 @@ func (uc *CreateCommentUseCase) createMentionNotifications(ctx context.Context, 
 			}
 
 			// Create notification
-			taskID := comment.TaskID()
+			taskUUID := comment.TaskUUID()
 			notification, err := entity.NewNotification(
 				user.ID(),
-				&taskID,
+				&taskUUID,
 				constants.NotificationTypeMention,
 				"Você foi mencionado em um comentário",
 				comment.Text(),

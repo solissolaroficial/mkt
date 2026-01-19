@@ -1,25 +1,29 @@
 package domain
 
+import (
+	"github.com/google/uuid"
+)
+
 // BudgetCriteria define critérios de busca para BudgetItem
 type BudgetCriteria struct {
-	codObj    *string
-	obj       *string
-	codGrp    *string
-	grp       *string
-	cod       *string
-	desc      *string
-	year      *int
-	page      *int
-	limit     *int
-	sortBy    *string
-	sortOrder *string
+	objectUUID   *uuid.UUID
+	objectName   *string
+	groupUUID    *uuid.UUID
+	groupName    *string
+	cod          *string
+	desc         *string
+	year         *int
+	page         *int
+	limit        *int
+	sortBy       *string
+	sortOrder    *string
 }
 
 // NewBudgetCriteria cria um novo BudgetCriteria com valores padrão
 func NewBudgetCriteria() *BudgetCriteria {
 	defaultPage := 1
 	defaultLimit := 50
-	defaultSortBy := "codObj"
+	defaultSortBy := "objectUUID"
 	defaultSortOrder := "asc"
 
 	return &BudgetCriteria{
@@ -30,27 +34,27 @@ func NewBudgetCriteria() *BudgetCriteria {
 	}
 }
 
-// WithCodObj define filtro por código do objeto
-func (c *BudgetCriteria) WithCodObj(codObj string) *BudgetCriteria {
-	c.codObj = &codObj
+// WithObjectUUID define filtro por UUID do objeto
+func (c *BudgetCriteria) WithObjectUUID(objectUUID *uuid.UUID) *BudgetCriteria {
+	c.objectUUID = objectUUID
 	return c
 }
 
-// WithObj define filtro por nome do objeto (LIKE)
-func (c *BudgetCriteria) WithObj(obj string) *BudgetCriteria {
-	c.obj = &obj
+// WithObjectName define filtro por nome do objeto (LIKE)
+func (c *BudgetCriteria) WithObjectName(objectName *string) *BudgetCriteria {
+	c.objectName = objectName
 	return c
 }
 
-// WithCodGrp define filtro por código do grupo
-func (c *BudgetCriteria) WithCodGrp(codGrp string) *BudgetCriteria {
-	c.codGrp = &codGrp
+// WithGroupUUID define filtro por UUID do grupo
+func (c *BudgetCriteria) WithGroupUUID(groupUUID *uuid.UUID) *BudgetCriteria {
+	c.groupUUID = groupUUID
 	return c
 }
 
-// WithGrp define filtro por nome do grupo (LIKE)
-func (c *BudgetCriteria) WithGrp(grp string) *BudgetCriteria {
-	c.grp = &grp
+// WithGroupName define filtro por nome do grupo (LIKE)
+func (c *BudgetCriteria) WithGroupName(groupName *string) *BudgetCriteria {
+	c.groupName = groupName
 	return c
 }
 
@@ -85,7 +89,7 @@ func (c *BudgetCriteria) WithLimit(limit int) *BudgetCriteria {
 }
 
 // WithSortBy define o campo de ordenação
-// Opções: codObj, obj, codGrp, grp, cod, desc, createdAt
+// Opções: objectUUID, objectName, groupUUID, groupName, cod, desc, createdAt
 func (c *BudgetCriteria) WithSortBy(sortBy string) *BudgetCriteria {
 	c.sortBy = &sortBy
 	return c
@@ -99,20 +103,20 @@ func (c *BudgetCriteria) WithSortOrder(sortOrder string) *BudgetCriteria {
 }
 
 // Getters
-func (c *BudgetCriteria) GetCodObj() *string {
-	return c.codObj
+func (c *BudgetCriteria) GetObjectUUID() *uuid.UUID {
+	return c.objectUUID
 }
 
-func (c *BudgetCriteria) GetObj() *string {
-	return c.obj
+func (c *BudgetCriteria) GetObjectName() *string {
+	return c.objectName
 }
 
-func (c *BudgetCriteria) GetCodGrp() *string {
-	return c.codGrp
+func (c *BudgetCriteria) GetGroupUUID() *uuid.UUID {
+	return c.groupUUID
 }
 
-func (c *BudgetCriteria) GetGrp() *string {
-	return c.grp
+func (c *BudgetCriteria) GetGroupName() *string {
+	return c.groupName
 }
 
 func (c *BudgetCriteria) GetCod() *string {

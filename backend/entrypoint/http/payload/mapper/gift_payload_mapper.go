@@ -132,14 +132,14 @@ func NewGiftTransactionPayloadMapper() *GiftTransactionPayloadMapper {
 // CreateRequestToInput converte CreateGiftTransactionRequest para CreateGiftTransactionInput
 func (m *GiftTransactionPayloadMapper) CreateRequestToInput(req *request.CreateGiftTransactionRequest) gifts.CreateGiftTransactionInput {
 	return gifts.CreateGiftTransactionInput{
-		ItemName:        req.ItemName,
-		Quantity:        req.Quantity,
-		TransactionType: req.TransactionType,
-		Date:            req.Date,
-		Time:            req.Time,
-		Price:           req.Price,
-		Representative:  req.Representative,
-		Unit:            req.Unit,
+		ItemName:           req.ItemName,
+		Quantity:           req.Quantity,
+		TransactionType:    req.TransactionType,
+		Date:               req.Date,
+		Time:               req.Time,
+		Price:              req.Price,
+		RepresentativeUUID: req.RepresentativeUUID,
+		Unit:               req.Unit,
 	}
 }
 
@@ -150,15 +150,15 @@ func (m *GiftTransactionPayloadMapper) UpdateRequestToInput(idStr string, req *r
 		return gifts.UpdateGiftTransactionInput{}, err
 	}
 	return gifts.UpdateGiftTransactionInput{
-		ID:              id,
-		ItemName:        req.ItemName,
-		Quantity:        req.Quantity,
-		TransactionType: req.TransactionType,
-		Date:            req.Date,
-		Time:            req.Time,
-		Price:           req.Price,
-		Representative:  req.Representative,
-		Unit:            req.Unit,
+		ID:                 id,
+		ItemName:           req.ItemName,
+		Quantity:           req.Quantity,
+		TransactionType:    req.TransactionType,
+		Date:               req.Date,
+		Time:               req.Time,
+		Price:              req.Price,
+		RepresentativeUUID: req.RepresentativeUUID,
+		Unit:               req.Unit,
 	}, nil
 }
 
@@ -187,64 +187,64 @@ func (m *GiftTransactionPayloadMapper) DeleteRequestToInput(idStr string) (gifts
 // ListQueryToInput converte ListGiftTransactionsQuery para ListGiftTransactionsInput
 func (m *GiftTransactionPayloadMapper) ListQueryToInput(query *request.ListGiftTransactionsQuery) gifts.ListGiftTransactionsInput {
 	return gifts.ListGiftTransactionsInput{
-		ItemName:        query.ItemName,
-		TransactionType: query.TransactionType,
-		Representative:  query.Representative,
-		StartDate:       query.StartDate,
-		EndDate:         query.EndDate,
-		Page:            query.Page,
-		Limit:           query.Limit,
+		ItemName:           query.ItemName,
+		TransactionType:    query.TransactionType,
+		RepresentativeUUID: query.RepresentativeUUID,
+		StartDate:          query.StartDate,
+		EndDate:            query.EndDate,
+		Page:               query.Page,
+		Limit:              query.Limit,
 	}
 }
 
 // OutputToResponse converte CreateGiftTransactionOutput para GiftTransactionResponse
 func (m *GiftTransactionPayloadMapper) OutputToResponse(output *gifts.CreateGiftTransactionOutput) *response.GiftTransactionResponse {
 	return &response.GiftTransactionResponse{
-		ID:              output.ID.String(),
-		ItemName:        output.ItemName,
-		Quantity:        output.Quantity,
-		TransactionType: output.TransactionType,
-		Date:            output.Date,
-		Time:            output.Time,
-		Price:           output.Price,
-		Representative:  output.Representative,
-		Unit:            output.Unit,
-		CreatedAt:       "",
-		UpdatedAt:       "",
+		ID:                 output.ID.String(),
+		ItemName:           output.ItemName,
+		Quantity:           output.Quantity,
+		TransactionType:    output.TransactionType,
+		Date:               output.Date,
+		Time:               output.Time,
+		Price:              output.Price,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Unit:               output.Unit,
+		CreatedAt:          "",
+		UpdatedAt:          "",
 	}
 }
 
 // GetOutputToResponse converte GetGiftTransactionOutput para GiftTransactionResponse
 func (m *GiftTransactionPayloadMapper) GetOutputToResponse(output *gifts.GetGiftTransactionOutput) *response.GiftTransactionResponse {
 	return &response.GiftTransactionResponse{
-		ID:              output.ID.String(),
-		ItemName:        output.ItemName,
-		Quantity:        output.Quantity,
-		TransactionType: output.TransactionType,
-		Date:            output.Date,
-		Time:            output.Time,
-		Price:           output.Price,
-		Representative:  output.Representative,
-		Unit:            output.Unit,
-		CreatedAt:       output.CreatedAt,
-		UpdatedAt:       output.UpdatedAt,
+		ID:                 output.ID.String(),
+		ItemName:           output.ItemName,
+		Quantity:           output.Quantity,
+		TransactionType:    output.TransactionType,
+		Date:               output.Date,
+		Time:               output.Time,
+		Price:              output.Price,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Unit:               output.Unit,
+		CreatedAt:          output.CreatedAt,
+		UpdatedAt:          output.UpdatedAt,
 	}
 }
 
 // UpdateOutputToResponse converte UpdateGiftTransactionOutput para GiftTransactionResponse
 func (m *GiftTransactionPayloadMapper) UpdateOutputToResponse(output *gifts.UpdateGiftTransactionOutput) *response.GiftTransactionResponse {
 	return &response.GiftTransactionResponse{
-		ID:              output.ID.String(),
-		ItemName:        output.ItemName,
-		Quantity:        output.Quantity,
-		TransactionType: output.TransactionType,
-		Date:            output.Date,
-		Time:            output.Time,
-		Price:           output.Price,
-		Representative:  output.Representative,
-		Unit:            output.Unit,
-		CreatedAt:       output.CreatedAt,
-		UpdatedAt:       output.UpdatedAt,
+		ID:                 output.ID.String(),
+		ItemName:           output.ItemName,
+		Quantity:           output.Quantity,
+		TransactionType:    output.TransactionType,
+		Date:               output.Date,
+		Time:               output.Time,
+		Price:              output.Price,
+		RepresentativeUUID: output.RepresentativeUUID,
+		Unit:               output.Unit,
+		CreatedAt:          output.CreatedAt,
+		UpdatedAt:          output.UpdatedAt,
 	}
 }
 
@@ -253,15 +253,15 @@ func (m *GiftTransactionPayloadMapper) ListOutputsToResponses(outputs []*gifts.L
 	responses := make([]response.GiftTransactionResponse, len(outputs))
 	for i, output := range outputs {
 		responses[i] = response.GiftTransactionResponse{
-			ID:              output.ID.String(),
-			ItemName:        output.ItemName,
-			Quantity:        output.Quantity,
-			TransactionType: output.TransactionType,
-			Date:            output.Date,
-			Time:            output.Time,
-			Price:           output.Price,
-			Representative:  output.Representative,
-			Unit:            output.Unit,
+			ID:                 output.ID.String(),
+			ItemName:           output.ItemName,
+			Quantity:           output.Quantity,
+			TransactionType:    output.TransactionType,
+			Date:               output.Date,
+			Time:               output.Time,
+			Price:              output.Price,
+			RepresentativeUUID: output.RepresentativeUUID,
+			Unit:               output.Unit,
 		}
 	}
 	return responses

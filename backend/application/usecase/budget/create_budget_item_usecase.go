@@ -2,17 +2,19 @@ package budget
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	budgeterrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
 type CreateBudgetItemInput struct {
-	CodObj       string
-	Obj          string
-	CodGrp       string
-	Grp          string
+	ObjectUUID   *string // UUID string para objeto (opcional)
+	ObjectName   string  // Nome do objeto (para compatibilidade)
+	GroupUUID    *string // UUID string para grupo (opcional)
+	GroupName    string  // Nome do grupo (para compatibilidade)
 	Cod          string
 	Desc         string
 	Vals         []float64
@@ -32,18 +34,6 @@ func NewCreateBudgetItemUseCase(budgetGateway gateway.BudgetGateway) *CreateBudg
 
 func (uc *CreateBudgetItemUseCase) Execute(ctx context.Context, input CreateBudgetItemInput) (*entity.BudgetItem, error) {
 	// Validar dados de entrada
-	if input.CodObj == "" {
-		return nil, budgeterrors.ErrInvalidCodObj
-	}
-	if input.Obj == "" {
-		return nil, budgeterrors.ErrInvalidObj
-	}
-	if input.CodGrp == "" {
-		return nil, budgeterrors.ErrInvalidCodGrp
-	}
-	if input.Grp == "" {
-		return nil, budgeterrors.ErrInvalidGrp
-	}
 	if input.Cod == "" {
 		return nil, budgeterrors.ErrInvalidCod
 	}
@@ -74,8 +64,27 @@ func (uc *CreateBudgetItemUseCase) Execute(ctx context.Context, input CreateBudg
 		}
 	}
 
+	// Parse UUIDs se fornecidos
+	var objectUUID *uuid.UUID
+	if input.ObjectUUID != nil && *input.ObjectUUID != "" {
+		parsedUUID, err := uuid.Parse(*input.ObjectUUID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid object UUID: %w", err)
+		}
+		objectUUID = &parsedUUID
+	}
+
+	var groupUUID *uuid.UUID
+	if input.GroupUUID != nil && *input.GroupUUID != "" {
+		parsedUUID, err := uuid.Parse(*input.GroupUUID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid group UUID: %w", err)
+		}
+		groupUUID = &parsedUUID
+	}
+
 	// Verificar se já existe um item com o mesmo código
-	exists, err := uc.budgetGateway.ExistsByCode(ctx, input.CodObj, input.CodGrp, input.Cod, input.Year)
+	exists, err := uc.budgetGateway.ExistsByCode(ctx, objectUUID, groupUUID, input.Cod, input.Year)
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +94,10 @@ func (uc *CreateBudgetItemUseCase) Execute(ctx context.Context, input CreateBudg
 
 	// Criar a entidade
 	budget, err := entity.NewBudgetItem(
-		input.CodObj,
-		input.Obj,
-		input.CodGrp,
-		input.Grp,
+		objectUUID,
+		input.ObjectName,
+		groupUUID,
+		input.GroupName,
 		input.Cod,
 		input.Desc,
 		input.Vals,

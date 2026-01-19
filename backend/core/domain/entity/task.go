@@ -11,21 +11,21 @@ import (
 
 // Task representa uma tarefa do sistema
 type Task struct {
-	id          uuid.UUID
-	title       string
-	description *string
-	startDate   *time.Time
-	dueDate     time.Time
-	status      constants.TaskStatus
-	priority    constants.TaskPriority
-	category    constants.TaskCategory
-	assigneeID  *uuid.UUID
-	flows       []string
-	archived    bool
-	sortOrder   int
-	createdAt   time.Time
-	updatedAt   time.Time
-	deletedAt   *time.Time
+	id           uuid.UUID
+	title        string
+	description  *string
+	startDate    *time.Time
+	dueDate      time.Time
+	status       constants.TaskStatus
+	priority     constants.TaskPriority
+	category     constants.TaskCategory
+	assigneeUUID *uuid.UUID
+	flows        []string
+	archived     bool
+	sortOrder    int
+	createdAt    time.Time
+	updatedAt    time.Time
+	deletedAt    *time.Time
 }
 
 // NewTask cria uma nova tarefa
@@ -83,7 +83,7 @@ func ReconstructTask(
 	priority constants.TaskPriority,
 	status constants.TaskStatus,
 	category constants.TaskCategory,
-	assigneeID *uuid.UUID,
+	assigneeUUID *uuid.UUID,
 	flows []string,
 	archived bool,
 	sortOrder int,
@@ -92,21 +92,21 @@ func ReconstructTask(
 	deletedAt *time.Time,
 ) *Task {
 	return &Task{
-		id:          id,
-		title:       title,
-		description: description,
-		startDate:   startDate,
-		dueDate:     dueDate,
-		priority:    priority,
-		status:      status,
-		category:    category,
-		assigneeID:  assigneeID,
-		flows:       flows,
-		archived:    archived,
-		sortOrder:   sortOrder,
-		createdAt:   createdAt,
-		updatedAt:   updatedAt,
-		deletedAt:   deletedAt,
+		id:           id,
+		title:        title,
+		description:  description,
+		startDate:    startDate,
+		dueDate:      dueDate,
+		priority:     priority,
+		status:       status,
+		category:     category,
+		assigneeUUID: assigneeUUID,
+		flows:        flows,
+		archived:     archived,
+		sortOrder:    sortOrder,
+		createdAt:    createdAt,
+		updatedAt:    updatedAt,
+		deletedAt:    deletedAt,
 	}
 }
 
@@ -144,8 +144,8 @@ func (t *Task) Category() constants.TaskCategory {
 	return t.category
 }
 
-func (t *Task) AssigneeID() *uuid.UUID {
-	return t.assigneeID
+func (t *Task) AssigneeUUID() *uuid.UUID {
+	return t.assigneeUUID
 }
 
 func (t *Task) Flows() []string {
@@ -232,9 +232,9 @@ func (t *Task) SetCategory(category constants.TaskCategory) error {
 	return nil
 }
 
-// SetAssigneeID atualiza o responsável pela tarefa
-func (t *Task) SetAssigneeID(assigneeID *uuid.UUID) {
-	t.assigneeID = assigneeID
+// SetAssigneeUUID atualiza o responsável pela tarefa
+func (t *Task) SetAssigneeUUID(assigneeUUID *uuid.UUID) {
+	t.assigneeUUID = assigneeUUID
 	t.updatedAt = time.Now()
 }
 

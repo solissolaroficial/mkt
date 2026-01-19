@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
@@ -42,10 +43,10 @@ func (s *BudgetSeeder) Seed(ctx context.Context) error {
 	for _, itemData := range budgetItemsToCreate {
 		// Criar item de orçamento
 		budgetItem, err := entity.NewBudgetItem(
-			itemData.codObj,
-			itemData.obj,
-			itemData.codGrp,
-			itemData.grp,
+			itemData.objectUUID,
+			itemData.objectName,
+			itemData.groupUUID,
+			itemData.groupName,
 			itemData.cod,
 			itemData.desc,
 			itemData.vals[:],
@@ -72,21 +73,39 @@ func (s *BudgetSeeder) Seed(ctx context.Context) error {
 
 // getMockBudgetItems retorna os dados mockados dos itens de orçamento
 func (s *BudgetSeeder) getMockBudgetItems() []struct {
-	codObj       string
-	obj          string
-	codGrp       string
-	grp          string
+	objectUUID   *uuid.UUID
+	objectName   string
+	groupUUID    *uuid.UUID
+	groupName    string
 	cod          string
 	desc         string
 	vals         [12]float64
 	realizedVals [12]float64
 	year         int
 } {
+	// UUIDs para objetos e grupos (mock - em produção seriam criados via BudgetObject e BudgetGroup)
+	receitasUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	despesasUUID := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	investimentosUUID := uuid.MustParse("00000000-0000-0000-0000-000000000003")
+	impostosUUID := uuid.MustParse("00000000-0000-0000-0000-000000000004")
+	outrosUUID := uuid.MustParse("00000000-0000-0000-0000-000000000005")
+
+	receitasOpUUID := uuid.MustParse("00000000-0000-0000-0000-000000000010")
+	despesasOpUUID := uuid.MustParse("00000000-0000-0000-0000-000000000011")
+	despesasAdminUUID := uuid.MustParse("00000000-0000-0000-0000-000000000012")
+	investimentosAtivosUUID := uuid.MustParse("00000000-0000-0000-0000-000000000013")
+	investimentosTecUUID := uuid.MustParse("00000000-0000-0000-0000-000000000014")
+	impostosFederaisUUID := uuid.MustParse("00000000-0000-0000-0000-000000000015")
+	impostosEstaduaisUUID := uuid.MustParse("00000000-0000-0000-0000-000000000016")
+	impostosMunicipaisUUID := uuid.MustParse("00000000-0000-0000-0000-000000000017")
+	outrasReceitasUUID := uuid.MustParse("00000000-0000-0000-0000-000000000018")
+	outrasDespesasUUID := uuid.MustParse("00000000-0000-0000-0000-000000000019")
+
 	return []struct {
-		codObj       string
-		obj          string
-		codGrp       string
-		grp          string
+		objectUUID   *uuid.UUID
+		objectName   string
+		groupUUID    *uuid.UUID
+		groupName    string
 		cod          string
 		desc         string
 		vals         [12]float64
@@ -94,10 +113,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 		year         int
 	}{
 		{
-			codObj:       "1",
-			obj:          "Receitas",
-			codGrp:       "1.1",
-			grp:          "Receitas Operacionais",
+			objectUUID:   &receitasUUID,
+			objectName:   "Receitas",
+			groupUUID:    &receitasOpUUID,
+			groupName:    "Receitas Operacionais",
 			cod:          "1.1.1",
 			desc:         "Vendas de Produtos",
 			vals:         [12]float64{100000, 110000, 120000, 130000, 140000, 150000, 160000, 170000, 180000, 190000, 200000, 210000},
@@ -105,10 +124,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "1",
-			obj:          "Receitas",
-			codGrp:       "1.1",
-			grp:          "Receitas Operacionais",
+			objectUUID:   &receitasUUID,
+			objectName:   "Receitas",
+			groupUUID:    &receitasOpUUID,
+			groupName:    "Receitas Operacionais",
 			cod:          "1.1.2",
 			desc:         "Vendas de Serviços",
 			vals:         [12]float64{50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000, 100000, 105000},
@@ -116,10 +135,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.1",
-			grp:          "Despesas Operacionais",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasOpUUID,
+			groupName:    "Despesas Operacionais",
 			cod:          "2.1.1",
 			desc:         "Custo dos Produtos Vendidos",
 			vals:         [12]float64{60000, 66000, 72000, 78000, 84000, 90000, 96000, 102000, 108000, 114000, 120000, 126000},
@@ -127,10 +146,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.1",
-			grp:          "Despesas Operacionais",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasOpUUID,
+			groupName:    "Despesas Operacionais",
 			cod:          "2.1.2",
 			desc:         "Custo dos Serviços Prestados",
 			vals:         [12]float64{30000, 33000, 36000, 39000, 42000, 45000, 48000, 51000, 54000, 57000, 60000, 63000},
@@ -138,120 +157,120 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.2",
-			grp:          "Despesas Administrativas",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.2.1",
 			desc:         "Salários e Encargos",
-			vals:         [12]float64{40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000},
-			realizedVals: [12]float64{40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000},
+			vals:         [12]float64{40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000},
+			realizedVals: [12]float64{40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000, 40000},
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.2",
-			grp:          "Despesas Administrativas",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.2.2",
 			desc:         "Aluguel",
-			vals:         [12]float64{15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000},
-			realizedVals: [12]float64{15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000},
+			vals:         [12]float64{15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000},
+			realizedVals: [12]float64{15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000},
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.2",
-			grp:          "Despesas Administrativas",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.2.3",
 			desc:         "Marketing e Publicidade",
-			vals:         [12]float64{8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000},
-			realizedVals: [12]float64{7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500},
+			vals:         [12]float64{8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000, 8000},
+			realizedVals: [12]float64{7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500, 7500},
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.2",
-			grp:          "Despesas Administrativas",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.2.4",
 			desc:         "Utilidades (Água, Luz, Telefone)",
-			vals:         [12]float64{3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000},
-			realizedVals: [12]float64{2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800},
+			vals:         [12]float64{3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000},
+			realizedVals: [12]float64{2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800, 2800},
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.2",
-			grp:          "Despesas Administrativas",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.2.5",
 			desc:         "Manutenção e Reparos",
-			vals:         [12]float64{2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000},
-			realizedVals: [12]float64{1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800},
+			vals:         [12]float64{2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000},
+			realizedVals: [12]float64{1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800},
 			year:         2025,
 		},
 		{
-			codObj:       "2",
-			obj:          "Despesas",
-			codGrp:       "2.3",
-			grp:          "Despesas Financeiras",
+			objectUUID:   &despesasUUID,
+			objectName:   "Despesas",
+			groupUUID:    &despesasAdminUUID,
+			groupName:    "Despesas Administrativas",
 			cod:          "2.3.1",
 			desc:         "Juros Pagos",
-			vals:         [12]float64{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000},
-			realizedVals: [12]float64{950, 950, 950, 950, 950, 950, 950, 950, 950, 950, 950, 950},
+			vals:         [12]float64{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000},
+			realizedVals: [12]float64{950, 950, 950, 950, 950, 950, 950, 950, 950, 950},
 			year:         2025,
 		},
 		{
-			codObj:       "3",
-			obj:          "Investimentos",
-			codGrp:       "3.1",
-			grp:          "Investimentos em Ativos Fixos",
+			objectUUID:   &investimentosUUID,
+			objectName:   "Investimentos",
+			groupUUID:    &investimentosAtivosUUID,
+			groupName:    "Investimentos em Ativos Fixos",
 			cod:          "3.1.1",
 			desc:         "Compra de Equipamentos",
-			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50000},
-			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 50000},
+			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			year:         2025,
 		},
 		{
-			codObj:       "3",
-			obj:          "Investimentos",
-			codGrp:       "3.1",
-			grp:          "Investimentos em Ativos Fixos",
+			objectUUID:   &investimentosUUID,
+			objectName:   "Investimentos",
+			groupUUID:    &investimentosAtivosUUID,
+			groupName:    "Investimentos em Ativos Fixos",
 			cod:          "3.1.2",
 			desc:         "Compra de Veículos",
-			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			year:         2025,
 		},
 		{
-			codObj:       "3",
-			obj:          "Investimentos",
-			codGrp:       "3.2",
-			grp:          "Investimentos em Tecnologia",
+			objectUUID:   &investimentosUUID,
+			objectName:   "Investimentos",
+			groupUUID:    &investimentosTecUUID,
+			groupName:    "Investimentos em Tecnologia",
 			cod:          "3.2.1",
 			desc:         "Software e Sistemas",
-			vals:         [12]float64{5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000},
-			realizedVals: [12]float64{4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800},
+			vals:         [12]float64{5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000},
+			realizedVals: [12]float64{4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800, 4800},
 			year:         2025,
 		},
 		{
-			codObj:       "3",
-			obj:          "Investimentos",
-			codGrp:       "3.2",
-			grp:          "Investimentos em Tecnologia",
+			objectUUID:   &investimentosUUID,
+			objectName:   "Investimentos",
+			groupUUID:    &investimentosTecUUID,
+			groupName:    "Investimentos em Tecnologia",
 			cod:          "3.2.2",
 			desc:         "Hardware e Equipamentos de TI",
-			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30000},
-			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 30000},
+			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0},
 			year:         2025,
 		},
 		{
-			codObj:       "4",
-			obj:          "Impostos e Taxas",
-			codGrp:       "4.1",
-			grp:          "Impostos Federais",
+			objectUUID:   &impostosUUID,
+			objectName:   "Impostos e Taxas",
+			groupUUID:    &impostosFederaisUUID,
+			groupName:    "Impostos Federais",
 			cod:          "4.1.1",
 			desc:         "IRPJ",
 			vals:         [12]float64{5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500},
@@ -259,10 +278,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "4",
-			obj:          "Impostos e Taxas",
-			codGrp:       "4.1",
-			grp:          "Impostos Federais",
+			objectUUID:   &impostosUUID,
+			objectName:   "Impostos e Taxas",
+			groupUUID:    &impostosFederaisUUID,
+			groupName:    "Impostos Federais",
 			cod:          "4.1.2",
 			desc:         "CSLL",
 			vals:         [12]float64{2500, 2750, 3000, 3250, 3500, 3750, 4000, 4250, 4500, 4750, 5000, 5250},
@@ -270,10 +289,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "4",
-			obj:          "Impostos e Taxas",
-			codGrp:       "4.2",
-			grp:          "Impostos Estaduais",
+			objectUUID:   &impostosUUID,
+			objectName:   "Impostos e Taxas",
+			groupUUID:    &impostosEstaduaisUUID,
+			groupName:    "Impostos Estaduais",
 			cod:          "4.2.1",
 			desc:         "ICMS",
 			vals:         [12]float64{8000, 8800, 9600, 10400, 11200, 12000, 12800, 13600, 14400, 15200, 16000, 16800},
@@ -281,10 +300,10 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "4",
-			obj:          "Impostos e Taxas",
-			codGrp:       "4.3",
-			grp:          "Impostos Municipais",
+			objectUUID:   &impostosUUID,
+			objectName:   "Impostos e Taxas",
+			groupUUID:    &impostosMunicipaisUUID,
+			groupName:    "Impostos Municipais",
 			cod:          "4.3.1",
 			desc:         "ISS",
 			vals:         [12]float64{2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200},
@@ -292,36 +311,36 @@ func (s *BudgetSeeder) getMockBudgetItems() []struct {
 			year:         2025,
 		},
 		{
-			codObj:       "5",
-			obj:          "Outros",
-			codGrp:       "5.1",
-			grp:          "Outras Receitas",
+			objectUUID:   &outrosUUID,
+			objectName:   "Outros",
+			groupUUID:    &outrasReceitasUUID,
+			groupName:    "Outras Receitas",
 			cod:          "5.1.1",
 			desc:         "Rendimento de Investimentos",
-			vals:         [12]float64{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000},
-			realizedVals: [12]float64{950, 950, 950, 950, 950, 950, 950, 950, 950, 950, 950, 950},
+			vals:         [12]float64{1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000},
+			realizedVals: [12]float64{950, 950, 950, 950, 950, 950, 950, 950, 950},
 			year:         2025,
 		},
 		{
-			codObj:       "5",
-			obj:          "Outros",
-			codGrp:       "5.1",
-			grp:          "Outras Receitas",
+			objectUUID:   &outrosUUID,
+			objectName:   "Outros",
+			groupUUID:    &outrasReceitasUUID,
+			groupName:    "Outras Receitas",
 			cod:          "5.1.2",
 			desc:         "Venda de Ativos",
-			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			vals:         [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			realizedVals: [12]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			year:         2025,
 		},
 		{
-			codObj:       "5",
-			obj:          "Outros",
-			codGrp:       "5.2",
-			grp:          "Outras Despesas",
+			objectUUID:   &outrosUUID,
+			objectName:   "Outros",
+			groupUUID:    &outrasDespesasUUID,
+			groupName:    "Outras Despesas",
 			cod:          "5.2.1",
 			desc:         "Provisões",
-			vals:         [12]float64{2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000},
-			realizedVals: [12]float64{1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800},
+			vals:         [12]float64{2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000},
+			realizedVals: [12]float64{1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800},
 			year:         2025,
 		},
 	}

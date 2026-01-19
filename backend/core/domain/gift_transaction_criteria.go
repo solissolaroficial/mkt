@@ -7,13 +7,13 @@ import (
 // GiftTransactionCriteria representa filtros para busca de transações de brinde
 // CORREÇÃO: itemName usa string para consistência com GiftTransaction entity
 type GiftTransactionCriteria struct {
-	itemName        *string // CORRIGIDO: era *valueobject.GiftName
-	transactionType *valueobject.TransactionType
-	representative  *string
-	startDate       *string
-	endDate         *string
-	page            *int
-	limit           *int
+	itemName           *string // CORRIGIDO: era *valueobject.GiftName
+	transactionType    *valueobject.TransactionType
+	representativeUUID *string
+	startDate          *string
+	endDate            *string
+	page               *int
+	limit              *int
 }
 
 func NewGiftTransactionCriteria() *GiftTransactionCriteria {
@@ -30,8 +30,8 @@ func (c *GiftTransactionCriteria) WithTransactionType(transactionType *valueobje
 	return c
 }
 
-func (c *GiftTransactionCriteria) WithRepresentative(representative *string) *GiftTransactionCriteria {
-	c.representative = representative
+func (c *GiftTransactionCriteria) WithRepresentativeUUID(representativeUUID *string) *GiftTransactionCriteria {
+	c.representativeUUID = representativeUUID
 	return c
 }
 
@@ -60,11 +60,16 @@ func (c *GiftTransactionCriteria) ItemName() *string { return c.itemName }
 func (c *GiftTransactionCriteria) TransactionType() *valueobject.TransactionType {
 	return c.transactionType
 }
-func (c *GiftTransactionCriteria) Representative() *string { return c.representative }
-func (c *GiftTransactionCriteria) StartDate() *string      { return c.startDate }
-func (c *GiftTransactionCriteria) EndDate() *string        { return c.endDate }
-func (c *GiftTransactionCriteria) Page() *int              { return c.page }
-func (c *GiftTransactionCriteria) Limit() *int             { return c.limit }
+func (c *GiftTransactionCriteria) RepresentativeUUID() *string {
+	if c.representativeUUID == nil {
+		return nil
+	}
+	return c.representativeUUID
+}
+func (c *GiftTransactionCriteria) StartDate() *string { return c.startDate }
+func (c *GiftTransactionCriteria) EndDate() *string   { return c.endDate }
+func (c *GiftTransactionCriteria) Page() *int         { return c.page }
+func (c *GiftTransactionCriteria) Limit() *int        { return c.limit }
 
 // GetOffset calcula o offset para paginação
 func (c *GiftTransactionCriteria) GetOffset() int {

@@ -30,7 +30,7 @@ func (m *GiftTransactionMapper) ModelToEntity(model *model.GiftTransactionModel)
 		model.Date,
 		model.Time,
 		model.Price,
-		model.Representative,
+		model.RepresentativeUUID,
 		model.Unit,
 		model.CreatedAt,
 		model.UpdatedAt,
@@ -68,17 +68,17 @@ func (m *GiftTransactionMapper) EntityToModel(transaction *entity.GiftTransactio
 	}
 
 	return &model.GiftTransactionModel{
-		UUID:            transaction.ID(),
-		ItemName:        transaction.ItemName(),
-		Quantity:        transaction.Quantity().Value(),
-		TransactionType: string(*transaction.TransactionType()),
-		Date:            transaction.Date(),
-		Time:            transaction.Time(),
-		Price:           price,
-		Representative:  transaction.Representative(),
-		Unit:            transaction.Unit(),
-		CreatedAt:       transaction.CreatedAt(),
-		UpdatedAt:       transaction.UpdatedAt(),
-		DeletedAt:       deletedAt,
+		UUID:               transaction.ID(),
+		ItemName:           transaction.ItemName(),
+		Quantity:           transaction.Quantity().Value(),
+		TransactionType:    string(*transaction.TransactionType()),
+		Date:               transaction.Date(),
+		Time:               transaction.Time(),
+		Price:              price,
+		RepresentativeUUID: transaction.RepresentativeUUID(),
+		Unit:               transaction.Unit(),
+		CreatedAt:          transaction.CreatedAt(),
+		UpdatedAt:          transaction.UpdatedAt(),
+		DeletedAt:          deletedAt,
 	}
 }

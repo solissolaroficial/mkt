@@ -42,6 +42,7 @@ func (g *BudgetGatewayImpl) Create(ctx context.Context, budget *entity.BudgetIte
 }
 
 // FindByID busca um BudgetItem pelo ID
+// Retorna ErrBudgetNotFound se não encontrado
 func (g *BudgetGatewayImpl) FindByID(ctx context.Context, id uuid.UUID) (*entity.BudgetItem, error) {
 	var model model.BudgetItemModel
 
@@ -57,6 +58,7 @@ func (g *BudgetGatewayImpl) FindByID(ctx context.Context, id uuid.UUID) (*entity
 }
 
 // List busca BudgetItems baseados em critérios
+// Aceita *BudgetCriteria como parâmetro
 func (g *BudgetGatewayImpl) List(ctx context.Context, criteria interface{}) ([]*entity.BudgetItem, error) {
 	query := g.buildQuery(ctx, criteria)
 
@@ -69,6 +71,7 @@ func (g *BudgetGatewayImpl) List(ctx context.Context, criteria interface{}) ([]*
 }
 
 // Update atualiza um BudgetItem existente
+// Retorna ErrBudgetNotFound se não encontrado
 func (g *BudgetGatewayImpl) Update(ctx context.Context, budget *entity.BudgetItem) error {
 	if budget == nil {
 		return errors.New("budget cannot be nil")
@@ -82,10 +85,8 @@ func (g *BudgetGatewayImpl) Update(ctx context.Context, budget *entity.BudgetIte
 	result := g.db.WithContext(ctx).Model(&model.BudgetItemModel{}).
 		Where("uuid = ?", budget.ID()).
 		Updates(map[string]interface{}{
-			"cod_obj":       budgetModel.CodObj,
-			"obj":           budgetModel.Obj,
-			"cod_grp":       budgetModel.CodGrp,
-			"grp":           budgetModel.Grp,
+			"object_uuid":   budgetModel.ObjectUUID,
+			"group_uuid":    budgetModel.GroupUUID,
 			"cod":           budgetModel.Cod,
 			"desc":          budgetModel.Desc,
 			"vals":          budgetModel.Vals,
@@ -106,6 +107,7 @@ func (g *BudgetGatewayImpl) Update(ctx context.Context, budget *entity.BudgetIte
 }
 
 // Delete remove um BudgetItem (soft delete)
+// Retorna ErrBudgetNotFound se não encontrado
 func (g *BudgetGatewayImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	result := g.db.WithContext(ctx).Delete(&model.BudgetItemModel{}, "uuid = ?", id)
 
@@ -133,11 +135,26 @@ func (g *BudgetGatewayImpl) Count(ctx context.Context, criteria interface{}) (in
 }
 
 // ExistsByCode verifica se existe um item com o mesmo código
-func (g *BudgetGatewayImpl) ExistsByCode(ctx context.Context, codObj, codGrp, cod string, year int) (bool, error) {
+// Considera objectUUID, groupUUID, cod e year para unicidade
+func (g *BudgetGatewayImpl) ExistsByCode(ctx context.Context, objectUUID *uuid.UUID, groupUUID *uuid.UUID, cod string, year int) (bool, error) {
 	var count int64
-	err := g.db.WithContext(ctx).Model(&model.BudgetItemModel{}).
-		Where("cod_obj = ? AND cod_grp = ? AND cod = ? AND year = ?", codObj, codGrp, cod, year).
-		Count(&count).Error
+	query := g.db.WithContext(ctx).Model(&model.BudgetItemModel{})
+
+	// Construir query baseada nos parâmetros fornecidos
+	if objectUUID != nil {
+		query = query.Where("object_uuid = ?", objectUUID)
+	}
+	if groupUUID != nil {
+		query = query.Where("group_uuid = ?", groupUUID)
+	}
+	if cod != "" {
+		query = query.Where("cod = ?", cod)
+	}
+	if year > 0 {
+		query = query.Where("year = ?", year)
+	}
+
+	err := query.Count(&count).Error
 
 	if err != nil {
 		return false, err
@@ -147,6 +164,7 @@ func (g *BudgetGatewayImpl) ExistsByCode(ctx context.Context, codObj, codGrp, co
 }
 
 // BatchCreate cria múltiplos BudgetItems em lote
+// Usa transação para garantir atomicidade
 func (g *BudgetGatewayImpl) BatchCreate(ctx context.Context, budgets []*entity.BudgetItem) error {
 	if len(budgets) == 0 {
 		return nil
@@ -165,7 +183,7 @@ func (g *BudgetGatewayImpl) BatchCreate(ctx context.Context, budgets []*entity.B
 	})
 }
 
-// GetDistinctYears retorna os anos disponíveis
+// GetDistinctYears retorna os anos disponíveis no banco
 func (g *BudgetGatewayImpl) GetDistinctYears(ctx context.Context) ([]int, error) {
 	var years []int
 
@@ -182,6 +200,7 @@ func (g *BudgetGatewayImpl) GetDistinctYears(ctx context.Context) ([]int, error)
 }
 
 // GetSummary retorna resumo agregado por objeto/grupo
+// Aceita *BudgetCriteria como parâmetro
 func (g *BudgetGatewayImpl) GetSummary(ctx context.Context, criteria interface{}) ([]*gateway.BudgetSummary, error) {
 	// Buscar todos os items filtrados
 	items, err := g.List(ctx, criteria)
@@ -193,17 +212,17 @@ func (g *BudgetGatewayImpl) GetSummary(ctx context.Context, criteria interface{}
 	summaryMap := make(map[string]*gateway.BudgetSummary)
 
 	for _, item := range items {
-		key := item.CodObj() + "|" + item.CodGrp()
+		key := item.ObjectName() + "|" + item.GroupName()
 
 		if summary, exists := summaryMap[key]; exists {
 			summary.TotalBudget += item.GetTotalBudget()
 			summary.TotalRealized += item.GetTotalRealized()
 		} else {
 			summaryMap[key] = &gateway.BudgetSummary{
-				CodObj:        item.CodObj(),
-				Obj:           item.Obj(),
-				CodGrp:        item.CodGrp(),
-				Grp:           item.Grp(),
+				ObjectUUID:    item.ObjectUUID(),
+				ObjectName:    item.ObjectName(),
+				GroupUUID:     item.GroupUUID(),
+				GroupName:     item.GroupName(),
 				TotalBudget:   item.GetTotalBudget(),
 				TotalRealized: item.GetTotalRealized(),
 			}
@@ -219,10 +238,10 @@ func (g *BudgetGatewayImpl) GetSummary(ctx context.Context, criteria interface{}
 
 	// Ordenar
 	sort.Slice(summaries, func(i, j int) bool {
-		if summaries[i].CodObj == summaries[j].CodObj {
-			return summaries[i].CodGrp < summaries[j].CodGrp
+		if summaries[i].ObjectName == summaries[j].ObjectName {
+			return summaries[i].GroupName < summaries[j].GroupName
 		}
-		return summaries[i].CodObj < summaries[j].CodObj
+		return summaries[i].ObjectName < summaries[j].ObjectName
 	})
 
 	return summaries, nil
@@ -233,10 +252,10 @@ func (g *BudgetGatewayImpl) buildQuery(ctx context.Context, criteria interface{}
 	query := g.db.WithContext(ctx).Model(&model.BudgetItemModel{})
 
 	if c, ok := criteria.(interface {
-		GetCodObj() *string
-		GetObj() *string
-		GetCodGrp() *string
-		GetGrp() *string
+		GetObjectUUID() *uuid.UUID
+		GetObjectName() *string
+		GetGroupUUID() *uuid.UUID
+		GetGroupName() *string
 		GetCod() *string
 		GetDesc() *string
 		GetYear() *int
@@ -245,17 +264,17 @@ func (g *BudgetGatewayImpl) buildQuery(ctx context.Context, criteria interface{}
 		GetSortBy() *string
 		GetSortOrder() *string
 	}); ok {
-		if c.GetCodObj() != nil {
-			query = query.Where("cod_obj = ?", *c.GetCodObj())
+		if c.GetObjectUUID() != nil {
+			query = query.Where("object_uuid = ?", *c.GetObjectUUID())
 		}
-		if c.GetObj() != nil {
-			query = query.Where("obj ILIKE ?", "%"+*c.GetObj()+"%")
+		if c.GetObjectName() != nil {
+			query = query.Where("object_name ILIKE ?", "%"+*c.GetObjectName()+"%")
 		}
-		if c.GetCodGrp() != nil {
-			query = query.Where("cod_grp = ?", *c.GetCodGrp())
+		if c.GetGroupUUID() != nil {
+			query = query.Where("group_uuid = ?", *c.GetGroupUUID())
 		}
-		if c.GetGrp() != nil {
-			query = query.Where("grp ILIKE ?", "%"+*c.GetGrp()+"%")
+		if c.GetGroupName() != nil {
+			query = query.Where("group_name ILIKE ?", "%"+*c.GetGroupName()+"%")
 		}
 		if c.GetCod() != nil {
 			query = query.Where("cod = ?", *c.GetCod())
@@ -284,7 +303,7 @@ func (g *BudgetGatewayImpl) buildQuery(ctx context.Context, criteria interface{}
 func (g *BudgetGatewayImpl) applySorting(query *gorm.DB, sortBy, sortOrder *string) *gorm.DB {
 	if sortBy == nil || *sortBy == "" {
 		sortBy = new(string)
-		*sortBy = "codObj"
+		*sortBy = "objectUUID"
 	}
 
 	if sortOrder == nil || *sortOrder == "" {
@@ -294,14 +313,14 @@ func (g *BudgetGatewayImpl) applySorting(query *gorm.DB, sortBy, sortOrder *stri
 
 	column := ""
 	switch *sortBy {
-	case "codObj":
-		column = "cod_obj"
-	case "obj":
-		column = "obj"
-	case "codGrp":
-		column = "cod_grp"
-	case "grp":
-		column = "grp"
+	case "objectUUID":
+		column = "object_uuid"
+	case "objectName":
+		column = "object_name"
+	case "groupUUID":
+		column = "group_uuid"
+	case "groupName":
+		column = "group_name"
 	case "cod":
 		column = "cod"
 	case "desc":
@@ -309,7 +328,7 @@ func (g *BudgetGatewayImpl) applySorting(query *gorm.DB, sortBy, sortOrder *stri
 	case "createdAt":
 		column = "created_at"
 	default:
-		column = "cod_obj"
+		column = "object_uuid"
 	}
 
 	order := *sortOrder

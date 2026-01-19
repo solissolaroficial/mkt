@@ -18,8 +18,8 @@ func NewNotificationMapper() *NotificationMapper {
 func (m *NotificationMapper) ToEntity(model *model.Notification) *entity.Notification {
 	return entity.ReconstructNotification(
 		model.UUID,
-		model.UserID,
-		model.TaskID,
+		model.UserUUID,
+		model.TaskUUID,
 		constants.NotificationType(model.Type),
 		model.Title,
 		model.Message,
@@ -34,8 +34,8 @@ func (m *NotificationMapper) ToModel(entity *entity.Notification) *model.Notific
 	notificationType := entity.Type()
 	return &model.Notification{
 		UUID:      entity.ID(),
-		UserID:    entity.UserID(),
-		TaskID:    entity.TaskID(),
+		UserUUID:  entity.UserUUID(),
+		TaskUUID:  entity.TaskUUID(),
 		Type:      string(notificationType),
 		Title:     entity.Title(),
 		Message:   entity.Message(),

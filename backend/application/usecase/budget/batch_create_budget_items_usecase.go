@@ -2,7 +2,9 @@ package budget
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	budgeterrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -33,18 +35,6 @@ func (uc *BatchCreateBudgetItemsUseCase) Execute(ctx context.Context, input Batc
 
 	for i, item := range input.Items {
 		// Validar dados de entrada
-		if item.CodObj == "" {
-			return nil, budgeterrors.ErrInvalidCodObj
-		}
-		if item.Obj == "" {
-			return nil, budgeterrors.ErrInvalidObj
-		}
-		if item.CodGrp == "" {
-			return nil, budgeterrors.ErrInvalidCodGrp
-		}
-		if item.Grp == "" {
-			return nil, budgeterrors.ErrInvalidGrp
-		}
 		if item.Cod == "" {
 			return nil, budgeterrors.ErrInvalidCod
 		}
@@ -82,12 +72,31 @@ func (uc *BatchCreateBudgetItemsUseCase) Execute(ctx context.Context, input Batc
 			return nil, budgeterrors.ErrInvalidBudgetData
 		}
 
+		// Parse UUIDs se fornecidos
+		var objectUUID *uuid.UUID
+		if item.ObjectUUID != nil && *item.ObjectUUID != "" {
+			parsedUUID, err := uuid.Parse(*item.ObjectUUID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid object UUID: %w", err)
+			}
+			objectUUID = &parsedUUID
+		}
+
+		var groupUUID *uuid.UUID
+		if item.GroupUUID != nil && *item.GroupUUID != "" {
+			parsedUUID, err := uuid.Parse(*item.GroupUUID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid group UUID: %w", err)
+			}
+			groupUUID = &parsedUUID
+		}
+
 		// Criar a entidade
 		budget, err := entity.NewBudgetItem(
-			item.CodObj,
-			item.Obj,
-			item.CodGrp,
-			item.Grp,
+			objectUUID,
+			item.ObjectName,
+			groupUUID,
+			item.GroupName,
 			item.Cod,
 			item.Desc,
 			item.Vals,

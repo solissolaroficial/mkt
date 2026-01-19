@@ -10,18 +10,18 @@ import (
 )
 
 type GiftTransaction struct {
-	id              uuid.UUID
-	itemName        string
-	quantity        *valueobject.TransactionQuantity
-	transactionType *valueobject.TransactionType
-	date            time.Time
-	time            string
-	price           *valueobject.GiftPrice // Apenas para entradas
-	representative  *string                // Apenas para saídas
-	unit            string
-	createdAt       time.Time
-	updatedAt       time.Time
-	deletedAt       *time.Time
+	id                 uuid.UUID
+	itemName           string
+	quantity           *valueobject.TransactionQuantity
+	transactionType    *valueobject.TransactionType
+	date               time.Time
+	time               string
+	price              *valueobject.GiftPrice // Apenas para entradas
+	representativeUUID uuid.UUID              // Apenas para saídas
+	unit               string
+	createdAt          time.Time
+	updatedAt          time.Time
+	deletedAt          *time.Time
 }
 
 // NewGiftTransaction cria uma nova entidade GiftTransaction
@@ -32,7 +32,7 @@ func NewGiftTransaction(
 	date string,
 	timeStr string,
 	price *float64,
-	representative *string,
+	representativeUUID *uuid.UUID,
 	unit string,
 ) (*GiftTransaction, error) {
 	// Validar itemName
@@ -79,19 +79,16 @@ func NewGiftTransaction(
 		giftPrice = nil
 	}
 
-	// Validar representative (obrigatório para saídas, opcional para entradas)
-	var rep *string
+	// Validar representativeUUID (obrigatório para saídas, opcional para entradas)
+	var repUUID uuid.UUID
 	if txType.IsExit() {
-		if representative == nil || strings.TrimSpace(*representative) == "" {
-			return nil, errors.New("representative is required for exit transactions")
+		if representativeUUID == nil {
+			return nil, errors.New("representativeUUID is required for exit transactions")
 		}
-		trimmed := strings.TrimSpace(*representative)
-		rep = &trimmed
-	} else if representative != nil {
-		trimmed := strings.TrimSpace(*representative)
-		if trimmed != "" {
-			rep = &trimmed
-		}
+		repUUID = *representativeUUID
+	} else if representativeUUID != nil {
+		// Se fornecido para entrada, usar o UUID fornecido
+		repUUID = *representativeUUID
 	}
 
 	// Validar unit
@@ -101,17 +98,17 @@ func NewGiftTransaction(
 	}
 
 	transaction := &GiftTransaction{
-		id:              uuid.New(),
-		itemName:        itemName,
-		quantity:        txQuantity,
-		transactionType: &txType,
-		date:            txDate,
-		time:            timeStr,
-		price:           giftPrice,
-		representative:  rep,
-		unit:            unit,
-		createdAt:       time.Now(),
-		updatedAt:       time.Now(),
+		id:                 uuid.New(),
+		itemName:           itemName,
+		quantity:           txQuantity,
+		transactionType:    &txType,
+		date:               txDate,
+		time:               timeStr,
+		price:              giftPrice,
+		representativeUUID: repUUID,
+		unit:               unit,
+		createdAt:          time.Now(),
+		updatedAt:          time.Now(),
 	}
 
 	if err := transaction.Validate(); err != nil {
@@ -130,14 +127,14 @@ func ReconstructGiftTransaction(
 	date time.Time,
 	timeStr string,
 	price *float64,
-	representative *string,
+	representativeUUID uuid.UUID,
 	unit string,
 	createdAt time.Time,
 	updatedAt time.Time,
 	deletedAt *time.Time,
 ) *GiftTransaction {
 	txQuantity := valueobject.ReconstructTransactionQuantity(quantity)
-	txType := valueobject.ReconstructTransactionType(transactionType) // CORRIGIDO: Usa ReconstructTransactionType
+	txType := valueobject.ReconstructTransactionType(transactionType)
 
 	var giftPrice *valueobject.GiftPrice
 	if price != nil {
@@ -145,18 +142,18 @@ func ReconstructGiftTransaction(
 	}
 
 	return &GiftTransaction{
-		id:              id,
-		itemName:        itemName,
-		quantity:        txQuantity,
-		transactionType: &txType,
-		date:            date,
-		time:            timeStr,
-		price:           giftPrice,
-		representative:  representative,
-		unit:            unit,
-		createdAt:       createdAt,
-		updatedAt:       updatedAt,
-		deletedAt:       deletedAt,
+		id:                 id,
+		itemName:           itemName,
+		quantity:           txQuantity,
+		transactionType:    &txType,
+		date:               date,
+		time:               timeStr,
+		price:              giftPrice,
+		representativeUUID: representativeUUID,
+		unit:               unit,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+		deletedAt:          deletedAt,
 	}
 }
 
@@ -168,7 +165,7 @@ func (g *GiftTransaction) TransactionType() *valueobject.TransactionType { retur
 func (g *GiftTransaction) Date() time.Time                               { return g.date }
 func (g *GiftTransaction) Time() string                                  { return g.time }
 func (g *GiftTransaction) Price() *valueobject.GiftPrice                 { return g.price }
-func (g *GiftTransaction) Representative() *string                       { return g.representative }
+func (g *GiftTransaction) RepresentativeUUID() uuid.UUID                 { return g.representativeUUID }
 func (g *GiftTransaction) Unit() string                                  { return g.unit }
 func (g *GiftTransaction) CreatedAt() time.Time                          { return g.createdAt }
 func (g *GiftTransaction) UpdatedAt() time.Time                          { return g.updatedAt }
@@ -195,9 +192,9 @@ func (g *GiftTransaction) Validate() error {
 		return errors.New("price is required for entry transactions")
 	}
 
-	// Para saídas, representante é obrigatório
-	if g.transactionType.IsExit() && (g.representative == nil || *g.representative == "") {
-		return errors.New("representative is required for exit transactions")
+	// Para saídas, representanteUUID é obrigatório
+	if g.transactionType.IsExit() && g.representativeUUID == (uuid.UUID{}) {
+		return errors.New("representativeUUID is required for exit transactions")
 	}
 
 	return nil
@@ -257,21 +254,9 @@ func (g *GiftTransaction) UpdatePrice(price *float64) error {
 	return nil
 }
 
-// UpdateRepresentative atualiza o representante
-func (g *GiftTransaction) UpdateRepresentative(representative *string) error {
-	if representative == nil {
-		g.representative = nil
-		g.updatedAt = time.Now()
-		return nil
-	}
-
-	trimmed := strings.TrimSpace(*representative)
-	if trimmed == "" {
-		g.representative = nil
-	} else {
-		g.representative = &trimmed
-	}
-
+// UpdateRepresentativeUUID atualiza o representante
+func (g *GiftTransaction) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+	g.representativeUUID = representativeUUID
 	g.updatedAt = time.Now()
 	return nil
 }

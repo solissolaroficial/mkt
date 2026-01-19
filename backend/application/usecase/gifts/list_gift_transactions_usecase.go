@@ -9,26 +9,26 @@ import (
 
 // ListGiftTransactionsInput define os dados de entrada para listar GiftTransactions
 type ListGiftTransactionsInput struct {
-	ItemName        *string
-	TransactionType *string
-	Representative  *string
-	StartDate       *string
-	EndDate         *string
-	Page            *int
-	Limit           *int
+	ItemName           *string
+	TransactionType    *string
+	RepresentativeUUID *string
+	StartDate          *string
+	EndDate            *string
+	Page               *int
+	Limit              *int
 }
 
 // ListGiftTransactionsOutput define os dados de saída após listar GiftTransactions
 type ListGiftTransactionsOutput struct {
-	ID              uuid.UUID
-	ItemName        string
-	Quantity        int
-	TransactionType string
-	Date            string
-	Time            string
-	Price           *float64
-	Representative  *string
-	Unit            string
+	ID                 uuid.UUID
+	ItemName           string
+	Quantity           int
+	TransactionType    string
+	Date               string
+	Time               string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               string
 }
 
 // ListGiftTransactionsUseCase define o use case para listar GiftTransactions
@@ -57,8 +57,8 @@ func (uc *ListGiftTransactionsUseCase) Execute(input ListGiftTransactionsInput) 
 			criteria.WithTransactionType(&txType)
 		}
 	}
-	if input.Representative != nil {
-		criteria.WithRepresentative(input.Representative)
+	if input.RepresentativeUUID != nil {
+		criteria.WithRepresentativeUUID(input.RepresentativeUUID)
 	}
 	if input.StartDate != nil {
 		criteria.WithStartDate(input.StartDate)
@@ -88,16 +88,23 @@ func (uc *ListGiftTransactionsUseCase) Execute(input ListGiftTransactionsInput) 
 			price = &p
 		}
 
+		// Converter UUID para string no output
+		var representativeUUIDStr *string
+		if tx.RepresentativeUUID() != (uuid.UUID{}) {
+			uuidStr := tx.RepresentativeUUID().String()
+			representativeUUIDStr = &uuidStr
+		}
+
 		output[i] = &ListGiftTransactionsOutput{
-			ID:              tx.ID(),
-			ItemName:        tx.ItemName(),
-			Quantity:        tx.Quantity().Value(),
-			TransactionType: string(*tx.TransactionType()),
-			Date:            tx.Date().Format("02/01/2006"),
-			Time:            tx.Time(),
-			Price:           price,
-			Representative:  tx.Representative(),
-			Unit:            tx.Unit(),
+			ID:                 tx.ID(),
+			ItemName:           tx.ItemName(),
+			Quantity:           tx.Quantity().Value(),
+			TransactionType:    string(*tx.TransactionType()),
+			Date:               tx.Date().Format("02/01/2006"),
+			Time:               tx.Time(),
+			Price:              price,
+			RepresentativeUUID: representativeUUIDStr,
+			Unit:               tx.Unit(),
 		}
 	}
 

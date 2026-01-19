@@ -8,30 +8,30 @@ import (
 
 // UpdateGiftTransactionInput define os dados de entrada para atualizar uma GiftTransaction
 type UpdateGiftTransactionInput struct {
-	ID              uuid.UUID
-	ItemName        *string
-	Quantity        *int
-	TransactionType *string
-	Date            *string
-	Time            *string
-	Price           *float64
-	Representative  *string
-	Unit            *string
+	ID                 uuid.UUID
+	ItemName           *string
+	Quantity           *int
+	TransactionType    *string
+	Date               *string
+	Time               *string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               *string
 }
 
 // UpdateGiftTransactionOutput define os dados de saída após atualizar uma GiftTransaction
 type UpdateGiftTransactionOutput struct {
-	ID              uuid.UUID
-	ItemName        string
-	Quantity        int
-	TransactionType string
-	Date            string
-	Time            string
-	Price           *float64
-	Representative  *string
-	Unit            string
-	CreatedAt       string
-	UpdatedAt       string
+	ID                 uuid.UUID
+	ItemName           string
+	Quantity           int
+	TransactionType    string
+	Date               string
+	Time               string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               string
+	CreatedAt          string
+	UpdatedAt          string
 }
 
 // UpdateGiftTransactionUseCase define o use case para atualizar uma GiftTransaction
@@ -78,8 +78,8 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 			if newType == "out" && (input.Price != nil || transaction.Price() != nil) {
 				return nil, domainerrors.ErrInvalidFieldForTransactionType
 			}
-			// Transação "in" não deve ter representative
-			if newType == "in" && (input.Representative != nil || (transaction.Representative() != nil && *transaction.Representative() != "")) {
+			// Transação "in" não deve ter representativeUUID
+			if newType == "in" && (input.RepresentativeUUID != nil || (transaction.RepresentativeUUID() != (uuid.UUID{}))) {
 				return nil, domainerrors.ErrInvalidFieldForTransactionType
 			}
 		}
@@ -93,8 +93,12 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 			return nil, err
 		}
 	}
-	if input.Representative != nil {
-		if err := transaction.UpdateRepresentative(input.Representative); err != nil {
+	if input.RepresentativeUUID != nil {
+		parsedUUID, err := uuid.Parse(*input.RepresentativeUUID)
+		if err != nil {
+			return nil, err
+		}
+		if err := transaction.UpdateRepresentativeUUID(parsedUUID); err != nil {
 			return nil, err
 		}
 	}
@@ -121,17 +125,24 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 		price = &p
 	}
 
+	// Converter UUID para string no output
+	var representativeUUIDStr *string
+	if transaction.RepresentativeUUID() != (uuid.UUID{}) {
+		uuidStr := transaction.RepresentativeUUID().String()
+		representativeUUIDStr = &uuidStr
+	}
+
 	return &UpdateGiftTransactionOutput{
-		ID:              transaction.ID(),
-		ItemName:        transaction.ItemName(),
-		Quantity:        transaction.Quantity().Value(),
-		TransactionType: string(*transaction.TransactionType()),
-		Date:            transaction.Date().Format("02/01/2006"),
-		Time:            transaction.Time(),
-		Price:           price,
-		Representative:  transaction.Representative(),
-		Unit:            transaction.Unit(),
-		CreatedAt:       transaction.CreatedAt().Format("2006-01-02 15:04:05"),
-		UpdatedAt:       transaction.UpdatedAt().Format("2006-01-02 15:04:05"),
+		ID:                 transaction.ID(),
+		ItemName:           transaction.ItemName(),
+		Quantity:           transaction.Quantity().Value(),
+		TransactionType:    string(*transaction.TransactionType()),
+		Date:               transaction.Date().Format("02/01/2006"),
+		Time:               transaction.Time(),
+		Price:              price,
+		RepresentativeUUID: representativeUUIDStr,
+		Unit:               transaction.Unit(),
+		CreatedAt:          transaction.CreatedAt().Format("2006-01-02 15:04:05"),
+		UpdatedAt:          transaction.UpdatedAt().Format("2006-01-02 15:04:05"),
 	}, nil
 }

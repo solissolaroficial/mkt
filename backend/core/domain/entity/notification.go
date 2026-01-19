@@ -12,8 +12,8 @@ import (
 // Notification representa uma notificação do sistema
 type Notification struct {
 	id               uuid.UUID
-	userID           uuid.UUID
-	taskID           *uuid.UUID
+	userUUID         uuid.UUID
+	taskUUID         *uuid.UUID
 	notificationType constants.NotificationType
 	title            string
 	message          string
@@ -24,8 +24,8 @@ type Notification struct {
 
 // NewNotification cria uma nova notificação
 func NewNotification(
-	userID uuid.UUID,
-	taskID *uuid.UUID,
+	userUUID uuid.UUID,
+	taskUUID *uuid.UUID,
 	notificationType constants.NotificationType,
 	title string,
 	message string,
@@ -37,8 +37,8 @@ func NewNotification(
 	now := time.Now()
 	return &Notification{
 		id:               uuid.New(),
-		userID:           userID,
-		taskID:           taskID,
+		userUUID:         userUUID,
+		taskUUID:         taskUUID,
 		notificationType: notificationType,
 		title:            title,
 		message:          message,
@@ -51,8 +51,8 @@ func NewNotification(
 // ReconstructNotification reconstrói uma notificação a partir de dados persistidos
 func ReconstructNotification(
 	id uuid.UUID,
-	userID uuid.UUID,
-	taskID *uuid.UUID,
+	userUUID uuid.UUID,
+	taskUUID *uuid.UUID,
 	notificationType constants.NotificationType,
 	title string,
 	message string,
@@ -62,8 +62,8 @@ func ReconstructNotification(
 ) *Notification {
 	return &Notification{
 		id:               id,
-		userID:           userID,
-		taskID:           taskID,
+		userUUID:         userUUID,
+		taskUUID:         taskUUID,
 		notificationType: notificationType,
 		title:            title,
 		message:          message,
@@ -79,12 +79,12 @@ func (n *Notification) ID() uuid.UUID {
 	return n.id
 }
 
-func (n *Notification) UserID() uuid.UUID {
-	return n.userID
+func (n *Notification) UserUUID() uuid.UUID {
+	return n.userUUID
 }
 
-func (n *Notification) TaskID() *uuid.UUID {
-	return n.taskID
+func (n *Notification) TaskUUID() *uuid.UUID {
+	return n.taskUUID
 }
 
 func (n *Notification) Type() constants.NotificationType {

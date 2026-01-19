@@ -91,7 +91,7 @@ func (uc *UpdateTaskUseCase) Execute(id string, title string, description *strin
 		if err != nil {
 			return nil, fmt.Errorf("invalid assignee ID: %w", err)
 		}
-		task.SetAssigneeID(&assigneeUUID)
+		task.SetAssigneeUUID(&assigneeUUID)
 	}
 
 	if flows != nil {

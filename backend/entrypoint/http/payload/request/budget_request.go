@@ -1,15 +1,16 @@
 package request
 
 import (
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 )
 
 // CreateBudgetItemRequest representa o payload para criar um BudgetItem
 type CreateBudgetItemRequest struct {
-	CodObj       string    `json:"codObj" validate:"required,max=20"`
-	Obj          string    `json:"obj" validate:"required,max=200"`
-	CodGrp       string    `json:"codGrp" validate:"required,max=20"`
-	Grp          string    `json:"grp" validate:"required,max=200"`
+	ObjectUUID   *string   `json:"objectUUID" validate:"omitempty,uuid"`
+	ObjectName   string    `json:"objectName" validate:"required,max=200"`
+	GroupUUID    *string   `json:"groupUUID" validate:"omitempty,uuid"`
+	GroupName    string    `json:"groupName" validate:"required,max=200"`
 	Cod          string    `json:"cod" validate:"required,max=20"`
 	Desc         string    `json:"desc" validate:"required,max=500"`
 	Vals         []float64 `json:"vals" validate:"required,len=12"`
@@ -19,10 +20,10 @@ type CreateBudgetItemRequest struct {
 
 // UpdateBudgetItemRequest representa o payload para atualizar um BudgetItem
 type UpdateBudgetItemRequest struct {
-	CodObj       *string    `json:"codObj,omitempty" validate:"omitempty,max=20"`
-	Obj          *string    `json:"obj,omitempty" validate:"omitempty,max=200"`
-	CodGrp       *string    `json:"codGrp,omitempty" validate:"omitempty,max=20"`
-	Grp          *string    `json:"grp,omitempty" validate:"omitempty,max=200"`
+	ObjectUUID   *string    `json:"objectUUID,omitempty" validate:"omitempty,uuid"`
+	ObjectName   string     `json:"objectName,omitempty" validate:"omitempty,max=200"`
+	GroupUUID    *string    `json:"groupUUID,omitempty" validate:"omitempty,uuid"`
+	GroupName    string     `json:"groupName,omitempty" validate:"omitempty,max=200"`
 	Cod          *string    `json:"cod,omitempty" validate:"omitempty,max=20"`
 	Desc         *string    `json:"desc,omitempty" validate:"omitempty,max=500"`
 	Vals         *[]float64 `json:"vals,omitempty" validate:"omitempty,len=12"`
@@ -37,53 +38,75 @@ type BatchCreateBudgetItemsRequest struct {
 
 // ListBudgetItemsQuery representa os parâmetros de query para listar BudgetItems
 type ListBudgetItemsQuery struct {
-	CodObj    *string `query:"codObj"`
-	Obj       *string `query:"obj"`
-	CodGrp    *string `query:"codGrp"`
-	Grp       *string `query:"grp"`
-	Cod       *string `query:"cod"`
-	Desc      *string `query:"desc"`
-	Year      *int    `query:"year"`
-	Page      *int    `query:"page" validate:"omitempty,min=1"`
-	Limit     *int    `query:"limit" validate:"omitempty,min=1,max=100"`
-	SortBy    *string `query:"sortBy" validate:"omitempty,oneof=codObj obj codGrp grp cod desc createdAt"`
-	SortOrder *string `query:"sortOrder" validate:"omitempty,oneof=asc desc"`
+	ObjectUUID *string `query:"objectUUID"`
+	ObjectName *string `query:"objectName"`
+	GroupUUID  *string `query:"groupUUID"`
+	GroupName  *string `query:"groupName"`
+	Cod        *string `query:"cod"`
+	Desc       *string `query:"desc"`
+	Year       *int    `query:"year"`
+	Page       *int    `query:"page" validate:"omitempty,min=1"`
+	Limit      *int    `query:"limit" validate:"omitempty,min=1,max=100"`
+	SortBy     *string `query:"sortBy" validate:"omitempty,oneof=objectUUID objectName groupUUID groupName cod desc createdAt"`
+	SortOrder  *string `query:"sortOrder" validate:"omitempty,oneof=asc desc"`
 }
 
 // ToCriteria converte os parâmetros de query para BudgetCriteria
 func (q *ListBudgetItemsQuery) ToCriteria() *domain.BudgetCriteria {
 	criteria := domain.NewBudgetCriteria()
 
-	if q.CodObj != nil {
-		criteria.WithCodObj(*q.CodObj)
+	if q.ObjectUUID != nil {
+		parsedUUID, err := uuid.Parse(*q.ObjectUUID)
+		if err != nil {
+			// Em caso de erro, continua sem esse filtro
+			// O erro será tratado no usecase
+		} else {
+			criteria.WithObjectUUID(&parsedUUID)
+		}
 	}
-	if q.Obj != nil {
-		criteria.WithObj(*q.Obj)
+
+	if q.ObjectName != nil {
+		criteria.WithObjectName(q.ObjectName)
 	}
-	if q.CodGrp != nil {
-		criteria.WithCodGrp(*q.CodGrp)
+
+	if q.GroupUUID != nil {
+		parsedUUID, err := uuid.Parse(*q.GroupUUID)
+		if err != nil {
+			// Em caso de erro, continua sem esse filtro
+			// O erro será tratado no usecase
+		} else {
+			criteria.WithGroupUUID(&parsedUUID)
+		}
 	}
-	if q.Grp != nil {
-		criteria.WithGrp(*q.Grp)
+
+	if q.GroupName != nil {
+		criteria.WithGroupName(q.GroupName)
 	}
+
 	if q.Cod != nil {
 		criteria.WithCod(*q.Cod)
 	}
+
 	if q.Desc != nil {
 		criteria.WithDesc(*q.Desc)
 	}
+
 	if q.Year != nil {
 		criteria.WithYear(*q.Year)
 	}
+
 	if q.Page != nil {
 		criteria.WithPage(*q.Page)
 	}
+
 	if q.Limit != nil {
 		criteria.WithLimit(*q.Limit)
 	}
+
 	if q.SortBy != nil {
 		criteria.WithSortBy(*q.SortBy)
 	}
+
 	if q.SortOrder != nil {
 		criteria.WithSortOrder(*q.SortOrder)
 	}

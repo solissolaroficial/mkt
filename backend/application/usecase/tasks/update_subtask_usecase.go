@@ -50,7 +50,7 @@ func (uc *UpdateSubtaskUseCase) Execute(id, title string, completed *bool, assig
 		if err != nil {
 			return nil, fmt.Errorf("invalid assignee ID: %w", err)
 		}
-		subtask.SetAssigneeID(&assigneeUUID)
+		subtask.SetAssigneeUUID(&assigneeUUID)
 	}
 
 	// Save subtask

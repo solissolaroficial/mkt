@@ -2,6 +2,7 @@ package budget
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
@@ -10,10 +11,10 @@ import (
 )
 
 type UpdateBudgetItemInput struct {
-	CodObj       *string
-	Obj          *string
-	CodGrp       *string
-	Grp          *string
+	ObjectUUID   *string // UUID string para objeto (opcional)
+	ObjectName   *string // Nome do objeto (para compatibilidade)
+	GroupUUID    *string // UUID string para grupo (opcional)
+	GroupName    *string // Nome do grupo (para compatibilidade)
 	Cod          *string
 	Desc         *string
 	Vals         *[]float64
@@ -45,26 +46,46 @@ func (uc *UpdateBudgetItemUseCase) Execute(ctx context.Context, id string, input
 	}
 
 	// Atualizar campos se fornecidos
-	if input.CodObj != nil {
-		if err := budget.UpdateCodObj(*input.CodObj); err != nil {
-			return nil, err
+	if input.ObjectUUID != nil || input.ObjectName != nil {
+		var objectUUID *uuid.UUID
+		if input.ObjectUUID != nil && *input.ObjectUUID != "" {
+			parsedUUID, err := uuid.Parse(*input.ObjectUUID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid object UUID: %w", err)
+			}
+			objectUUID = &parsedUUID
 		}
-	}
-	if input.Obj != nil {
-		if err := budget.UpdateObj(*input.Obj); err != nil {
-			return nil, err
+
+		var objectName string
+		if input.ObjectName != nil {
+			objectName = *input.ObjectName
+		} else {
+			objectName = budget.ObjectName()
 		}
+
+		budget.UpdateObject(objectUUID, objectName)
 	}
-	if input.CodGrp != nil {
-		if err := budget.UpdateCodGrp(*input.CodGrp); err != nil {
-			return nil, err
+
+	if input.GroupUUID != nil || input.GroupName != nil {
+		var groupUUID *uuid.UUID
+		if input.GroupUUID != nil && *input.GroupUUID != "" {
+			parsedUUID, err := uuid.Parse(*input.GroupUUID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid group UUID: %w", err)
+			}
+			groupUUID = &parsedUUID
 		}
-	}
-	if input.Grp != nil {
-		if err := budget.UpdateGrp(*input.Grp); err != nil {
-			return nil, err
+
+		var groupName string
+		if input.GroupName != nil {
+			groupName = *input.GroupName
+		} else {
+			groupName = budget.GroupName()
 		}
+
+		budget.UpdateGroup(groupUUID, groupName)
 	}
+
 	if input.Cod != nil {
 		if err := budget.UpdateCod(*input.Cod); err != nil {
 			return nil, err

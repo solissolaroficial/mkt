@@ -13,17 +13,17 @@ type GetGiftTransactionInput struct {
 
 // GetGiftTransactionOutput define os dados de saída após buscar uma GiftTransaction
 type GetGiftTransactionOutput struct {
-	ID              uuid.UUID
-	ItemName        string
-	Quantity        int
-	TransactionType string
-	Date            string
-	Time            string
-	Price           *float64
-	Representative  *string
-	Unit            string
-	CreatedAt       string
-	UpdatedAt       string
+	ID                 uuid.UUID
+	ItemName           string
+	Quantity           int
+	TransactionType    string
+	Date               string
+	Time               string
+	Price              *float64
+	RepresentativeUUID *string
+	Unit               string
+	CreatedAt          string
+	UpdatedAt          string
 }
 
 // GetGiftTransactionUseCase define o use case para buscar uma GiftTransaction
@@ -56,16 +56,16 @@ func (uc *GetGiftTransactionUseCase) Execute(input GetGiftTransactionInput) (*Ge
 	}
 
 	return &GetGiftTransactionOutput{
-		ID:              transaction.ID(),
-		ItemName:        transaction.ItemName(),
-		Quantity:        transaction.Quantity().Value(),
-		TransactionType: string(*transaction.TransactionType()),
-		Date:            transaction.Date().Format("02/01/2006"),
-		Time:            transaction.Time(),
-		Price:           price,
-		Representative:  transaction.Representative(),
-		Unit:            transaction.Unit(),
-		CreatedAt:       transaction.CreatedAt().Format("2006-01-02 15:04:05"),
-		UpdatedAt:       transaction.UpdatedAt().Format("2006-01-02 15:04:05"),
+		ID:                 transaction.ID(),
+		ItemName:           transaction.ItemName(),
+		Quantity:           transaction.Quantity().Value(),
+		TransactionType:    string(*transaction.TransactionType()),
+		Date:               transaction.Date().Format("02/01/2006"),
+		Time:               transaction.Time(),
+		Price:              price,
+		RepresentativeUUID: func() *string { s := transaction.RepresentativeUUID().String(); return &s }(),
+		Unit:               transaction.Unit(),
+		CreatedAt:          transaction.CreatedAt().Format("2006-01-02 15:04:05"),
+		UpdatedAt:          transaction.UpdatedAt().Format("2006-01-02 15:04:05"),
 	}, nil
 }

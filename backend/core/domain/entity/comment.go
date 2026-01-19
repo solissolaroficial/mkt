@@ -11,16 +11,16 @@ import (
 // Comment representa um comentário em uma tarefa
 type Comment struct {
 	id        uuid.UUID
-	taskID    uuid.UUID
-	userID    uuid.UUID
+	taskUUID  uuid.UUID
+	userUUID  uuid.UUID
 	text      string
 	timestamp time.Time
 }
 
 // NewComment cria um novo comentário
 func NewComment(
-	taskID uuid.UUID,
-	userID uuid.UUID,
+	taskUUID uuid.UUID,
+	userUUID uuid.UUID,
 	content string,
 ) (*Comment, error) {
 	if content == "" {
@@ -30,8 +30,8 @@ func NewComment(
 	now := time.Now()
 	return &Comment{
 		id:        uuid.New(),
-		taskID:    taskID,
-		userID:    userID,
+		taskUUID:  taskUUID,
+		userUUID:  userUUID,
 		text:      content,
 		timestamp: now,
 	}, nil
@@ -40,15 +40,15 @@ func NewComment(
 // ReconstructComment reconstrói um comentário a partir de dados persistidos
 func ReconstructComment(
 	id uuid.UUID,
-	taskID uuid.UUID,
-	userID uuid.UUID,
+	taskUUID uuid.UUID,
+	userUUID uuid.UUID,
 	text string,
 	timestamp time.Time,
 ) *Comment {
 	return &Comment{
 		id:        id,
-		taskID:    taskID,
-		userID:    userID,
+		taskUUID:  taskUUID,
+		userUUID:  userUUID,
 		text:      text,
 		timestamp: timestamp,
 	}
@@ -60,12 +60,12 @@ func (c *Comment) ID() uuid.UUID {
 	return c.id
 }
 
-func (c *Comment) TaskID() uuid.UUID {
-	return c.taskID
+func (c *Comment) TaskUUID() uuid.UUID {
+	return c.taskUUID
 }
 
-func (c *Comment) UserID() uuid.UUID {
-	return c.userID
+func (c *Comment) UserUUID() uuid.UUID {
+	return c.userUUID
 }
 
 func (c *Comment) Text() string {

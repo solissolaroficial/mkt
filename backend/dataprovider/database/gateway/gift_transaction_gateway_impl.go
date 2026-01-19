@@ -66,8 +66,8 @@ func (g *giftTransactionGatewayImpl) List(criteria interface{}) ([]*entity.GiftT
 		if crit.TransactionType() != nil {
 			query = query.Where("transaction_type = ?", string(*crit.TransactionType()))
 		}
-		if crit.Representative() != nil {
-			query = query.Where("representative = ?", *crit.Representative())
+		if crit.RepresentativeUUID() != nil {
+			query = query.Where("representative_uuid = ?", *crit.RepresentativeUUID())
 		}
 		if crit.StartDate() != nil {
 			query = query.Where("date >= ?", *crit.StartDate())
@@ -136,8 +136,8 @@ func (g *giftTransactionGatewayImpl) Count(criteria interface{}) (int64, error) 
 		if crit.TransactionType() != nil {
 			query = query.Where("transaction_type = ?", string(*crit.TransactionType()))
 		}
-		if crit.Representative() != nil {
-			query = query.Where("representative = ?", *crit.Representative())
+		if crit.RepresentativeUUID() != nil {
+			query = query.Where("representative_uuid = ?", *crit.RepresentativeUUID())
 		}
 		if crit.StartDate() != nil {
 			query = query.Where("date >= ?", *crit.StartDate())

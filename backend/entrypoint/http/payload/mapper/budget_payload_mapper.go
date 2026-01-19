@@ -24,10 +24,10 @@ func (m *BudgetPayloadMapper) ToBudgetItemResponse(budget *entity.BudgetItem) *b
 
 	return &budgetresponse.BudgetItemResponse{
 		UUID:         budget.ID(),
-		CodObj:       budget.CodObj(),
-		Obj:          budget.Obj(),
-		CodGrp:       budget.CodGrp(),
-		Grp:          budget.Grp(),
+		ObjectUUID:   budget.ObjectUUID(),
+		ObjectName:   budget.ObjectName(),
+		GroupUUID:    budget.GroupUUID(),
+		GroupName:    budget.GroupName(),
 		Cod:          budget.Cod(),
 		Desc:         budget.Desc(),
 		Vals:         budget.Vals(),
@@ -60,10 +60,10 @@ func (m *BudgetPayloadMapper) ToBudgetSummaryResponse(summary *gateway.BudgetSum
 	}
 
 	return &budgetresponse.BudgetSummaryResponse{
-		CodObj:        summary.CodObj,
-		Obj:           summary.Obj,
-		CodGrp:        summary.CodGrp,
-		Grp:           summary.Grp,
+		ObjectUUID:    summary.ObjectUUID,
+		ObjectName:    summary.ObjectName,
+		GroupUUID:     summary.GroupUUID,
+		GroupName:     summary.GroupName,
 		TotalBudget:   summary.TotalBudget,
 		TotalRealized: summary.TotalRealized,
 		Variance:      summary.Variance,
@@ -87,10 +87,10 @@ func (m *BudgetPayloadMapper) ToBudgetSummaryResponseList(summaries []*gateway.B
 // CreateRequestToInput converte CreateBudgetItemRequest para o input do use case
 func (m *BudgetPayloadMapper) CreateRequestToInput(req *budgetrequest.CreateBudgetItemRequest) budget.CreateBudgetItemInput {
 	return budget.CreateBudgetItemInput{
-		CodObj:       req.CodObj,
-		Obj:          req.Obj,
-		CodGrp:       req.CodGrp,
-		Grp:          req.Grp,
+		ObjectUUID:   req.ObjectUUID,
+		ObjectName:   req.ObjectName,
+		GroupUUID:    req.GroupUUID,
+		GroupName:    req.GroupName,
 		Cod:          req.Cod,
 		Desc:         req.Desc,
 		Vals:         req.Vals,
@@ -101,11 +101,22 @@ func (m *BudgetPayloadMapper) CreateRequestToInput(req *budgetrequest.CreateBudg
 
 // UpdateRequestToInput converte UpdateBudgetItemRequest para o input do use case
 func (m *BudgetPayloadMapper) UpdateRequestToInput(id string, req *budgetrequest.UpdateBudgetItemRequest) (string, budget.UpdateBudgetItemInput) {
+	// Converter string para *string para ObjectName e GroupName
+	var objectName *string
+	if req.ObjectName != "" {
+		objectName = &req.ObjectName
+	}
+
+	var groupName *string
+	if req.GroupName != "" {
+		groupName = &req.GroupName
+	}
+
 	return id, budget.UpdateBudgetItemInput{
-		CodObj:       req.CodObj,
-		Obj:          req.Obj,
-		CodGrp:       req.CodGrp,
-		Grp:          req.Grp,
+		ObjectUUID:   req.ObjectUUID,
+		ObjectName:   objectName,
+		GroupUUID:    req.GroupUUID,
+		GroupName:    groupName,
 		Cod:          req.Cod,
 		Desc:         req.Desc,
 		Vals:         req.Vals,

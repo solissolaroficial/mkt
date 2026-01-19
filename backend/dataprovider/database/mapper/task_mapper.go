@@ -35,7 +35,7 @@ func (m *TaskMapper) ToEntity(model *model.Task) (*entity.Task, error) {
 		constants.TaskPriority(model.Priority),
 		constants.TaskStatus(model.Status),
 		constants.TaskCategory(model.Category),
-		model.AssigneeID,
+		model.AssigneeUUID,
 		flows,
 		model.Archived,
 		model.SortOrder,
@@ -54,20 +54,20 @@ func (m *TaskMapper) ToModel(entity *entity.Task) (*model.Task, error) {
 	}
 
 	return &model.Task{
-		UUID:        entity.ID(),
-		Title:       entity.Title(),
-		Description: entity.Description(),
-		StartDate:   entity.StartDate(),
-		DueDate:     entity.DueDate(),
-		Priority:    string(entity.Priority()),
-		Status:      string(entity.Status()),
-		Category:    string(entity.Category()),
-		AssigneeID:  entity.AssigneeID(),
-		Flows:       string(flowsJSON),
-		Archived:    entity.Archived(),
-		SortOrder:   entity.SortOrder(),
-		CreatedAt:   entity.CreatedAt(),
-		UpdatedAt:   entity.UpdatedAt(),
+		UUID:         entity.ID(),
+		Title:        entity.Title(),
+		Description:  entity.Description(),
+		StartDate:    entity.StartDate(),
+		DueDate:      entity.DueDate(),
+		Priority:     string(entity.Priority()),
+		Status:       string(entity.Status()),
+		Category:     string(entity.Category()),
+		AssigneeUUID: entity.AssigneeUUID(),
+		Flows:        string(flowsJSON),
+		Archived:     entity.Archived(),
+		SortOrder:    entity.SortOrder(),
+		CreatedAt:    entity.CreatedAt(),
+		UpdatedAt:    entity.UpdatedAt(),
 	}, nil
 }
 

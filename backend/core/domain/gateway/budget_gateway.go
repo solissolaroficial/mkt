@@ -32,8 +32,8 @@ type BudgetGateway interface {
 	Count(ctx context.Context, criteria interface{}) (int64, error)
 
 	// ExistsByCode verifica se existe um item com o mesmo código
-	// Considera codObj, codGrp, cod e year para unicidade
-	ExistsByCode(ctx context.Context, codObj, codGrp, cod string, year int) (bool, error)
+	// Considera objectUUID, groupUUID, cod e year para unicidade
+	ExistsByCode(ctx context.Context, objectUUID *uuid.UUID, groupUUID *uuid.UUID, cod string, year int) (bool, error)
 
 	// BatchCreate cria múltiplos BudgetItems em lote
 	// Usa transação para garantir atomicidade
@@ -49,11 +49,11 @@ type BudgetGateway interface {
 
 // BudgetSummary representa um resumo agregado de orçamento
 type BudgetSummary struct {
-	CodObj        string  // Código do objeto
-	Obj           string  // Nome do objeto
-	CodGrp        string  // Código do grupo
-	Grp           string  // Nome do grupo
-	TotalBudget   float64 // Soma de todos os valores orçados
-	TotalRealized float64 // Soma de todos os valores realizados
-	Variance      float64 // Diferença (orçado - realizado)
+	ObjectUUID    *uuid.UUID // UUID do objeto
+	ObjectName    string     // Nome do objeto
+	GroupUUID     *uuid.UUID // UUID do grupo
+	GroupName     string     // Nome do grupo
+	TotalBudget   float64    // Soma de todos os valores orçados
+	TotalRealized float64    // Soma de todos os valores realizados
+	Variance      float64    // Diferença (orçado - realizado)
 }

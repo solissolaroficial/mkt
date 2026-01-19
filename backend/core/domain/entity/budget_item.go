@@ -10,10 +10,10 @@ import (
 
 type BudgetItem struct {
 	id           uuid.UUID
-	codObj       *valueobject.BudgetCode
-	obj          string
-	codGrp       *valueobject.BudgetCode
-	grp          string
+	objectUUID   *uuid.UUID
+	objectName   string // Populado via JOIN com BudgetObject
+	groupUUID    *uuid.UUID
+	groupName    string // Populado via JOIN com BudgetGroup
 	cod          *valueobject.BudgetCode
 	desc         string
 	vals         []float64 // 12 valores orçados (JAN-DEZ)
@@ -30,13 +30,12 @@ type BudgetItem struct {
 // - Todos os valores devem ser não-negativos
 // - Year deve estar entre 2000 e 2100
 // - Desc não pode ser vazio
-// - Obj e Grp não podem ser vazios
-// - Códigos devem ser válidos (validados no Value Object)
+// - objectUUID e groupUUID são opcionais (podem ser nil)
 func NewBudgetItem(
-	codObj string,
-	obj string,
-	codGrp string,
-	grp string,
+	objectUUID *uuid.UUID,
+	objectName string,
+	groupUUID *uuid.UUID,
+	groupName string,
 	cod string,
 	desc string,
 	vals []float64,
@@ -72,24 +71,8 @@ func NewBudgetItem(
 	if desc == "" {
 		return nil, budgeterrors.ErrInvalidDescription
 	}
-	if obj == "" {
-		return nil, budgeterrors.ErrInvalidObj
-	}
-	if grp == "" {
-		return nil, budgeterrors.ErrInvalidGrp
-	}
 
-	// Criar Value Objects para códigos
-	codObjVO, err := valueobject.NewBudgetCode(codObj)
-	if err != nil {
-		return nil, budgeterrors.ErrInvalidCodObj
-	}
-
-	codGrpVO, err := valueobject.NewBudgetCode(codGrp)
-	if err != nil {
-		return nil, budgeterrors.ErrInvalidCodGrp
-	}
-
+	// Validar código
 	codVO, err := valueobject.NewBudgetCode(cod)
 	if err != nil {
 		return nil, budgeterrors.ErrInvalidCod
@@ -99,10 +82,10 @@ func NewBudgetItem(
 
 	return &BudgetItem{
 		id:           uuid.New(),
-		codObj:       codObjVO,
-		obj:          obj,
-		codGrp:       codGrpVO,
-		grp:          grp,
+		objectUUID:   objectUUID,
+		objectName:   objectName,
+		groupUUID:    groupUUID,
+		groupName:    groupName,
 		cod:          codVO,
 		desc:         desc,
 		vals:         vals,
@@ -118,10 +101,10 @@ func NewBudgetItem(
 // Não realiza validações, assume que os dados são válidos
 func ReconstructBudgetItem(
 	id uuid.UUID,
-	codObj string,
-	obj string,
-	codGrp string,
-	grp string,
+	objectUUID *uuid.UUID,
+	objectName string,
+	groupUUID *uuid.UUID,
+	groupName string,
 	cod string,
 	desc string,
 	vals []float64,
@@ -133,10 +116,10 @@ func ReconstructBudgetItem(
 ) *BudgetItem {
 	return &BudgetItem{
 		id:           id,
-		codObj:       valueobject.ReconstructBudgetCode(codObj),
-		obj:          obj,
-		codGrp:       valueobject.ReconstructBudgetCode(codGrp),
-		grp:          grp,
+		objectUUID:   objectUUID,
+		objectName:   objectName,
+		groupUUID:    groupUUID,
+		groupName:    groupName,
 		cod:          valueobject.ReconstructBudgetCode(cod),
 		desc:         desc,
 		vals:         vals,
@@ -153,26 +136,20 @@ func (b *BudgetItem) ID() uuid.UUID {
 	return b.id
 }
 
-func (b *BudgetItem) CodObj() string {
-	if b.codObj == nil {
-		return ""
-	}
-	return b.codObj.String()
+func (b *BudgetItem) ObjectUUID() *uuid.UUID {
+	return b.objectUUID
 }
 
-func (b *BudgetItem) Obj() string {
-	return b.obj
+func (b *BudgetItem) ObjectName() string {
+	return b.objectName
 }
 
-func (b *BudgetItem) CodGrp() string {
-	if b.codGrp == nil {
-		return ""
-	}
-	return b.codGrp.String()
+func (b *BudgetItem) GroupUUID() *uuid.UUID {
+	return b.groupUUID
 }
 
-func (b *BudgetItem) Grp() string {
-	return b.grp
+func (b *BudgetItem) GroupName() string {
+	return b.groupName
 }
 
 func (b *BudgetItem) Cod() string {
@@ -235,12 +212,6 @@ func (b *BudgetItem) Validate() error {
 	}
 	if b.desc == "" {
 		return budgeterrors.ErrInvalidDescription
-	}
-	if b.obj == "" {
-		return budgeterrors.ErrInvalidObj
-	}
-	if b.grp == "" {
-		return budgeterrors.ErrInvalidGrp
 	}
 	return nil
 }
@@ -315,46 +286,18 @@ func (b *BudgetItem) IsActive() bool {
 	return b.deletedAt == nil
 }
 
-// UpdateCodObj atualiza o código do objeto
-func (b *BudgetItem) UpdateCodObj(codObj string) error {
-	codObjVO, err := valueobject.NewBudgetCode(codObj)
-	if err != nil {
-		return budgeterrors.ErrInvalidCodObj
-	}
-	b.codObj = codObjVO
+// UpdateObject atualiza o objeto (UUID e nome)
+func (b *BudgetItem) UpdateObject(objectUUID *uuid.UUID, objectName string) {
+	b.objectUUID = objectUUID
+	b.objectName = objectName
 	b.updatedAt = time.Now()
-	return nil
 }
 
-// UpdateObj atualiza o nome do objeto
-func (b *BudgetItem) UpdateObj(obj string) error {
-	if obj == "" {
-		return budgeterrors.ErrInvalidObj
-	}
-	b.obj = obj
+// UpdateGroup atualiza o grupo (UUID e nome)
+func (b *BudgetItem) UpdateGroup(groupUUID *uuid.UUID, groupName string) {
+	b.groupUUID = groupUUID
+	b.groupName = groupName
 	b.updatedAt = time.Now()
-	return nil
-}
-
-// UpdateCodGrp atualiza o código do grupo
-func (b *BudgetItem) UpdateCodGrp(codGrp string) error {
-	codGrpVO, err := valueobject.NewBudgetCode(codGrp)
-	if err != nil {
-		return budgeterrors.ErrInvalidCodGrp
-	}
-	b.codGrp = codGrpVO
-	b.updatedAt = time.Now()
-	return nil
-}
-
-// UpdateGrp atualiza o nome do grupo
-func (b *BudgetItem) UpdateGrp(grp string) error {
-	if grp == "" {
-		return budgeterrors.ErrInvalidGrp
-	}
-	b.grp = grp
-	b.updatedAt = time.Now()
-	return nil
 }
 
 // UpdateCod atualiza o código do item

@@ -10,20 +10,20 @@ import (
 
 // Subtask representa uma subtarefa de uma tarefa
 type Subtask struct {
-	id         uuid.UUID
-	taskID     uuid.UUID
-	title      string
-	completed  bool
-	assigneeID *uuid.UUID
-	dueDate    *time.Time
-	createdAt  time.Time
-	updatedAt  time.Time
-	deletedAt  *time.Time
+	id           uuid.UUID
+	taskUUID     uuid.UUID
+	title        string
+	completed    bool
+	assigneeUUID *uuid.UUID
+	dueDate      *time.Time
+	createdAt    time.Time
+	updatedAt    time.Time
+	deletedAt    *time.Time
 }
 
 // NewSubtask cria uma nova subtarefa
 func NewSubtask(
-	taskID uuid.UUID,
+	taskUUID uuid.UUID,
 	title string,
 ) (*Subtask, error) {
 	if title == "" {
@@ -33,7 +33,7 @@ func NewSubtask(
 	now := time.Now()
 	return &Subtask{
 		id:        uuid.New(),
-		taskID:    taskID,
+		taskUUID:  taskUUID,
 		title:     title,
 		completed: false,
 		createdAt: now,
@@ -44,25 +44,25 @@ func NewSubtask(
 // ReconstructSubtask reconstrói uma subtarefa a partir de dados persistidos
 func ReconstructSubtask(
 	id uuid.UUID,
-	taskID uuid.UUID,
+	taskUUID uuid.UUID,
 	title string,
 	completed bool,
-	assigneeID *uuid.UUID,
+	assigneeUUID *uuid.UUID,
 	dueDate *time.Time,
 	createdAt time.Time,
 	updatedAt time.Time,
 	deletedAt *time.Time,
 ) *Subtask {
 	return &Subtask{
-		id:         id,
-		taskID:     taskID,
-		title:      title,
-		completed:  completed,
-		assigneeID: assigneeID,
-		dueDate:    dueDate,
-		createdAt:  createdAt,
-		updatedAt:  updatedAt,
-		deletedAt:  deletedAt,
+		id:           id,
+		taskUUID:     taskUUID,
+		title:        title,
+		completed:    completed,
+		assigneeUUID: assigneeUUID,
+		dueDate:      dueDate,
+		createdAt:    createdAt,
+		updatedAt:    updatedAt,
+		deletedAt:    deletedAt,
 	}
 }
 
@@ -72,8 +72,8 @@ func (s *Subtask) ID() uuid.UUID {
 	return s.id
 }
 
-func (s *Subtask) TaskID() uuid.UUID {
-	return s.taskID
+func (s *Subtask) TaskUUID() uuid.UUID {
+	return s.taskUUID
 }
 
 func (s *Subtask) Title() string {
@@ -84,8 +84,8 @@ func (s *Subtask) Completed() bool {
 	return s.completed
 }
 
-func (s *Subtask) AssigneeID() *uuid.UUID {
-	return s.assigneeID
+func (s *Subtask) AssigneeUUID() *uuid.UUID {
+	return s.assigneeUUID
 }
 
 func (s *Subtask) DueDate() *time.Time {
@@ -128,9 +128,9 @@ func (s *Subtask) SetCompleted(completed bool) {
 	s.updatedAt = time.Now()
 }
 
-// SetAssigneeID define o responsável pela subtarefa
-func (s *Subtask) SetAssigneeID(assigneeID *uuid.UUID) {
-	s.assigneeID = assigneeID
+// SetAssigneeUUID define o responsável pela subtarefa
+func (s *Subtask) SetAssigneeUUID(assigneeUUID *uuid.UUID) {
+	s.assigneeUUID = assigneeUUID
 	s.updatedAt = time.Now()
 }
 

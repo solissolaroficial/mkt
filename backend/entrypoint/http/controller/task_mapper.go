@@ -59,7 +59,7 @@ func (m *TaskMapper) ToTask(req *taskrequest.CreateTaskRequest) (*entity.Task, e
 		if err != nil {
 			return nil, err
 		}
-		task.SetAssigneeID(&parsedID)
+		task.SetAssigneeUUID(&parsedID)
 	}
 
 	// Set flows after creation
@@ -179,7 +179,7 @@ func (m *TaskMapper) ToTaskResponse(task *entity.Task) taskresponse.TaskResponse
 		Status:        task.Status(),
 		Flow:          "", // Task doesn't have Flow field, use Flows instead
 		DueDate:       formatTimePtr(formatTimeToPtr(task.DueDate())),
-		AssigneeID:    uuidPtrToString(task.AssigneeID()),
+		AssigneeID:    uuidPtrToString(task.AssigneeUUID()),
 		Flows:         flows,
 		Archived:      task.Archived(),
 		Subtasks:      []taskresponse.SubtaskResponse{},
@@ -280,13 +280,13 @@ func (m *TaskMapper) ToSubtaskResponse(subtask *entity.Subtask) taskresponse.Sub
 
 	return taskresponse.SubtaskResponse{
 		ID:          subtask.ID().String(),
-		TaskID:      subtask.TaskID().String(),
+		TaskID:      subtask.TaskUUID().String(),
 		Title:       subtask.Title(),
 		Description: "",                           // Subtask doesn't have Description field
 		Priority:    constants.TaskPriorityMedium, // Default priority
 		Status:      status,
 		DueDate:     formatTimePtr(subtask.DueDate()),
-		AssigneeID:  uuidPtrToString(subtask.AssigneeID()),
+		AssigneeID:  uuidPtrToString(subtask.AssigneeUUID()),
 		CreatedAt:   formatTime(subtask.CreatedAt()),
 		UpdatedAt:   formatTime(subtask.UpdatedAt()),
 	}
@@ -347,8 +347,8 @@ func (m *TaskMapper) ToCommentUpdate(id string, req *taskrequest.UpdateCommentRe
 func (m *TaskMapper) ToCommentResponse(comment *entity.Comment) taskresponse.CommentResponse {
 	return taskresponse.CommentResponse{
 		ID:        comment.ID().String(),
-		TaskID:    comment.TaskID().String(),
-		UserID:    comment.UserID().String(),
+		TaskID:    comment.TaskUUID().String(),
+		UserID:    comment.UserUUID().String(),
 		Text:      comment.Text(),
 		Timestamp: formatTime(comment.Timestamp()),
 	}
@@ -424,8 +424,8 @@ func (m *TaskMapper) ToNotificationUpdate(id string, req *taskrequest.UpdateNoti
 func (m *TaskMapper) ToNotificationResponse(notification *entity.Notification) taskresponse.NotificationResponse {
 	return taskresponse.NotificationResponse{
 		ID:               notification.ID().String(),
-		UserID:           notification.UserID().String(),
-		TaskID:           uuidPtrToString(notification.TaskID()),
+		UserID:           notification.UserUUID().String(),
+		TaskID:           uuidPtrToString(notification.TaskUUID()),
 		NotificationType: notification.Type(), // Using Type() getter
 		Title:            notification.Title(),
 		Message:          notification.Message(),

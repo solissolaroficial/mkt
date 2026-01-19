@@ -25,33 +25,33 @@ type ListGiftItemsQuery struct {
 
 // Gift Transaction Request DTOs
 type CreateGiftTransactionRequest struct {
-	ItemName        string   `json:"item_name" validate:"required,max=200"`
-	Quantity        int      `json:"quantity" validate:"required,min=1"`
-	TransactionType string   `json:"transaction_type" validate:"required,oneof=in out"`
-	Date            string   `json:"date" validate:"required,datetime=2006-01-02"`
-	Time            string   `json:"time" validate:"omitempty,datetime=15:04"`
-	Price           *float64 `json:"price" validate:"omitempty,min=0"`
-	Representative  *string  `json:"representative" validate:"omitempty,max=200"`
-	Unit            string   `json:"unit" validate:"omitempty,max=20"`
+	ItemName           string   `json:"item_name" validate:"required,max=200"`
+	Quantity           int      `json:"quantity" validate:"required,min=1"`
+	TransactionType    string   `json:"transaction_type" validate:"required,oneof=in out"`
+	Date               string   `json:"date" validate:"required,datetime=2006-01-02"`
+	Time               string   `json:"time" validate:"omitempty,datetime=15:04"`
+	Price              *float64 `json:"price" validate:"omitempty,min=0"`
+	RepresentativeUUID *string  `json:"representative_uuid" validate:"omitempty,uuid"`
+	Unit               string   `json:"unit" validate:"omitempty,max=20"`
 }
 
 type UpdateGiftTransactionRequest struct {
-	ItemName        *string  `json:"item_name" validate:"omitempty,max=200"`
-	Quantity        *int     `json:"quantity" validate:"omitempty,min=1"`
-	TransactionType *string  `json:"transaction_type" validate:"omitempty,oneof=in out"`
-	Date            *string  `json:"date" validate:"omitempty,datetime=2006-01-02"`
-	Time            *string  `json:"time" validate:"omitempty,datetime=15:04"`
-	Price           *float64 `json:"price" validate:"omitempty,min=0"`
-	Representative  *string  `json:"representative" validate:"omitempty,max=200"`
-	Unit            *string  `json:"unit" validate:"omitempty,max=20"`
+	ItemName           *string  `json:"item_name" validate:"omitempty,max=200"`
+	Quantity           *int     `json:"quantity" validate:"omitempty,min=1"`
+	TransactionType    *string  `json:"transaction_type" validate:"omitempty,oneof=in out"`
+	Date               *string  `json:"date" validate:"omitempty,datetime=2006-01-02"`
+	Time               *string  `json:"time" validate:"omitempty,datetime=15:04"`
+	Price              *float64 `json:"price" validate:"omitempty,min=0"`
+	RepresentativeUUID *string  `json:"representative_uuid" validate:"omitempty,uuid"`
+	Unit               *string  `json:"unit" validate:"omitempty,max=20"`
 }
 
 type ListGiftTransactionsQuery struct {
-	ItemName        *string `query:"item_name" validate:"omitempty,max=200"`
-	TransactionType *string `query:"transaction_type" validate:"omitempty,oneof=in out"`
-	Representative  *string `query:"representative" validate:"omitempty,max=200"`
-	StartDate       *string `query:"start_date" validate:"omitempty,datetime=2006-01-02"`
-	EndDate         *string `query:"end_date" validate:"omitempty,datetime=2006-01-02"`
-	Page            *int    `query:"page" validate:"omitempty,min=1"`
-	Limit           *int    `query:"limit" validate:"omitempty,min=1,max=100"`
+	ItemName           *string `query:"item_name" validate:"omitempty,max=200"`
+	TransactionType    *string `query:"transaction_type" validate:"omitempty,oneof=in out"`
+	RepresentativeUUID *string `query:"representative_uuid" validate:"omitempty,uuid"`
+	StartDate          *string `query:"start_date" validate:"omitempty,datetime=2006-01-02"`
+	EndDate            *string `query:"end_date" validate:"omitempty,datetime=2006-01-02"`
+	Page               *int    `query:"page" validate:"omitempty,min=1"`
+	Limit              *int    `query:"limit" validate:"omitempty,min=1,max=100"`
 }

@@ -17,10 +17,10 @@ func NewSubtaskMapper() *SubtaskMapper {
 func (m *SubtaskMapper) ToEntity(model *model.Subtask) *entity.Subtask {
 	return entity.ReconstructSubtask(
 		model.UUID,
-		model.TaskID,
+		model.TaskUUID,
 		model.Title,
 		model.Completed,
-		model.AssigneeID,
+		model.AssigneeUUID,
 		model.DueDate,
 		model.CreatedAt,
 		model.UpdatedAt,
@@ -31,14 +31,14 @@ func (m *SubtaskMapper) ToEntity(model *model.Subtask) *entity.Subtask {
 // ToModel converte uma Subtask entity para Subtask model
 func (m *SubtaskMapper) ToModel(entity *entity.Subtask) *model.Subtask {
 	return &model.Subtask{
-		UUID:       entity.ID(),
-		TaskID:     entity.TaskID(),
-		Title:      entity.Title(),
-		Completed:  entity.Completed(),
-		AssigneeID: entity.AssigneeID(),
-		DueDate:    entity.DueDate(),
-		CreatedAt:  entity.CreatedAt(),
-		UpdatedAt:  entity.UpdatedAt(),
+		UUID:         entity.ID(),
+		TaskUUID:     entity.TaskUUID(),
+		Title:        entity.Title(),
+		Completed:    entity.Completed(),
+		AssigneeUUID: entity.AssigneeUUID(),
+		DueDate:      entity.DueDate(),
+		CreatedAt:    entity.CreatedAt(),
+		UpdatedAt:    entity.UpdatedAt(),
 	}
 }
 

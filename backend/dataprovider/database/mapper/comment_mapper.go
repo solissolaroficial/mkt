@@ -17,8 +17,8 @@ func NewCommentMapper() *CommentMapper {
 func (m *CommentMapper) ToEntity(model *model.Comment) *entity.Comment {
 	return entity.ReconstructComment(
 		model.UUID,
-		model.TaskID,
-		model.UserID,
+		model.TaskUUID,
+		model.UserUUID,
 		model.Text,
 		model.Timestamp,
 	)
@@ -28,8 +28,8 @@ func (m *CommentMapper) ToEntity(model *model.Comment) *entity.Comment {
 func (m *CommentMapper) ToModel(entity *entity.Comment) *model.Comment {
 	return &model.Comment{
 		UUID:      entity.ID(),
-		TaskID:    entity.TaskID(),
-		UserID:    entity.UserID(),
+		TaskUUID:  entity.TaskUUID(),
+		UserUUID:  entity.UserUUID(),
 		Text:      entity.Text(),
 		Timestamp: entity.Timestamp(),
 	}

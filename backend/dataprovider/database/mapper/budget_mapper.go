@@ -14,6 +14,7 @@ import (
 
 // ToBudgetItemDomain converte Model para Entity
 // Realiza validações dos dados antes de criar a entidade
+// ObjectName e GroupName são populados via JOIN com BudgetObject e BudgetGroup
 func ToBudgetItemDomain(model *model.BudgetItemModel) (*entity.BudgetItem, error) {
 	if model == nil {
 		return nil, errors.New("model cannot be nil")
@@ -29,12 +30,23 @@ func ToBudgetItemDomain(model *model.BudgetItemModel) (*entity.BudgetItem, error
 		return nil, fmt.Errorf("failed to parse realizedVals: %w", err)
 	}
 
+	// Popula ObjectName e GroupName dos relacionamentos
+	var objectName string
+	if model.Object != nil {
+		objectName = model.Object.Name
+	}
+
+	var groupName string
+	if model.Group != nil {
+		groupName = model.Group.Name
+	}
+
 	return entity.ReconstructBudgetItem(
 		model.UUID,
-		model.CodObj,
-		model.Obj,
-		model.CodGrp,
-		model.Grp,
+		model.ObjectUUID,
+		objectName,
+		model.GroupUUID,
+		groupName,
 		model.Cod,
 		model.Desc,
 		vals,
@@ -64,10 +76,8 @@ func ToBudgetItemModel(entity *entity.BudgetItem) (*model.BudgetItemModel, error
 
 	return &model.BudgetItemModel{
 		UUID:         entity.ID(),
-		CodObj:       entity.CodObj(),
-		Obj:          entity.Obj(),
-		CodGrp:       entity.CodGrp(),
-		Grp:          entity.Grp(),
+		ObjectUUID:   entity.ObjectUUID(),
+		GroupUUID:    entity.GroupUUID(),
 		Cod:          entity.Cod(),
 		Desc:         entity.Desc(),
 		Vals:         vals,

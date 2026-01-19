@@ -43,8 +43,8 @@ func (uc *UpdateCommentUseCase) Execute(id, content string) error {
 	// Update content via Reconstruct
 	updatedComment := entity.ReconstructComment(
 		comment.ID(),
-		comment.TaskID(),
-		comment.UserID(),
+		comment.TaskUUID(),
+		comment.UserUUID(),
 		content,
 		time.Now(), // timestamp
 	)

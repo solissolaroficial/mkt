@@ -8,18 +8,19 @@ import (
 )
 
 type GiftTransactionModel struct {
-	UUID            uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	ItemName        string         `gorm:"not null;size:200;index:idx_item_name_deleted_at"`
-	Quantity        int            `gorm:"not null"`
-	TransactionType string         `gorm:"not null;size:10;index:idx_transaction_type_deleted_at"`
-	Date            time.Time      `gorm:"not null;index:idx_date_deleted_at"`
-	Time            string         `gorm:"not null;size:5"` // Formato HH:MM
-	Price           *float64       `gorm:"type:decimal(10,2)"`
-	Representative  *string        `gorm:"size:200"`
-	Unit            string         `gorm:"not null;size:20;default:'unid.'"`
-	CreatedAt       time.Time      `gorm:"not null;index:idx_created_at"`
-	UpdatedAt       time.Time      `gorm:"not null"`
-	DeletedAt       gorm.DeletedAt `gorm:"index:idx_deleted_at"`
+	UUID               uuid.UUID            `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	ItemName           string               `gorm:"not null;size:200;index:idx_item_name_deleted_at"`
+	Quantity           int                  `gorm:"not null"`
+	TransactionType    string               `gorm:"not null;size:10;index:idx_transaction_type_deleted_at"`
+	Date               time.Time            `gorm:"not null;index:idx_date_deleted_at"`
+	Time               string               `gorm:"not null;size:5"` // Formato HH:MM
+	Price              *float64             `gorm:"type:decimal(10,2)"`
+	RepresentativeUUID uuid.UUID            `gorm:"type:uuid;index:idx_representative_uuid;constraint:fk_gift_transactions_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	Representative     *RepresentativeModel `gorm:"foreignKey:RepresentativeUUID"`
+	Unit               string               `gorm:"not null;size:20;default:'unid.'"`
+	CreatedAt          time.Time            `gorm:"not null;index:idx_created_at"`
+	UpdatedAt          time.Time            `gorm:"not null"`
+	DeletedAt          gorm.DeletedAt       `gorm:"index:idx_deleted_at"`
 }
 
 // Índices compostos para performance:
