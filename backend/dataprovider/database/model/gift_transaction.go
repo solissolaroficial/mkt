@@ -15,7 +15,7 @@ type GiftTransactionModel struct {
 	Date               time.Time            `gorm:"not null;index:idx_date_deleted_at"`
 	Time               string               `gorm:"not null;size:5"` // Formato HH:MM
 	Price              *float64             `gorm:"type:decimal(10,2)"`
-	RepresentativeUUID uuid.UUID            `gorm:"type:uuid;index:idx_representative_uuid;constraint:fk_gift_transactions_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
+	RepresentativeUUID *uuid.UUID           `gorm:"type:uuid;index:idx_representative_uuid;constraint:fk_gift_transactions_representative,foreignKey:RepresentativeUUID,references:UUID,onDelete:RESTRICT,onUpdate:CASCADE"`
 	Representative     *RepresentativeModel `gorm:"foreignKey:RepresentativeUUID"`
 	Unit               string               `gorm:"not null;size:20;default:'unid.'"`
 	CreatedAt          time.Time            `gorm:"not null;index:idx_created_at"`

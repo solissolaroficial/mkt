@@ -73,23 +73,5 @@ func createAdditionalIndexes(db *gorm.DB) error {
 		log.Printf("⚠️  Warning: Failed to create index idx_kpi_categories_created_at: %v", err)
 	}
 
-	// Composite index for budget items (year + cod_obj + cod_grp)
-	// This speeds up queries like: "SELECT * FROM budget_items WHERE year = ? AND cod_obj = ? AND cod_grp = ?"
-	if err := db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_budget_items_year_obj_grp
-		ON budget_items(year, cod_obj, cod_grp)
-	`).Error; err != nil {
-		log.Printf("⚠️  Warning: Failed to create index idx_budget_items_year_obj_grp: %v", err)
-	}
-
-	// Composite index for budget items (year + cod_obj + cod_grp + cod)
-	// This speeds up queries like: "SELECT * FROM budget_items WHERE year = ? AND cod_obj = ? AND cod_grp = ? AND cod = ?"
-	if err := db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_budget_items_year_obj_grp_cod
-		ON budget_items(year, cod_obj, cod_grp, cod)
-	`).Error; err != nil {
-		log.Printf("⚠️  Warning: Failed to create index idx_budget_items_year_obj_grp_cod: %v", err)
-	}
-
 	return nil
 }

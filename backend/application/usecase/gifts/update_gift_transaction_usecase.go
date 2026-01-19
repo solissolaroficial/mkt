@@ -79,7 +79,7 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 				return nil, domainerrors.ErrInvalidFieldForTransactionType
 			}
 			// Transação "in" não deve ter representativeUUID
-			if newType == "in" && (input.RepresentativeUUID != nil || (transaction.RepresentativeUUID() != (uuid.UUID{}))) {
+			if newType == "in" && (input.RepresentativeUUID != nil || (transaction.RepresentativeUUID() != nil)) {
 				return nil, domainerrors.ErrInvalidFieldForTransactionType
 			}
 		}
@@ -98,7 +98,7 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 		if err != nil {
 			return nil, err
 		}
-		if err := transaction.UpdateRepresentativeUUID(parsedUUID); err != nil {
+		if err := transaction.UpdateRepresentativeUUID(&parsedUUID); err != nil {
 			return nil, err
 		}
 	}
@@ -127,7 +127,7 @@ func (uc *UpdateGiftTransactionUseCase) Execute(input UpdateGiftTransactionInput
 
 	// Converter UUID para string no output
 	var representativeUUIDStr *string
-	if transaction.RepresentativeUUID() != (uuid.UUID{}) {
+	if transaction.RepresentativeUUID() != nil {
 		uuidStr := transaction.RepresentativeUUID().String()
 		representativeUUIDStr = &uuidStr
 	}

@@ -109,7 +109,7 @@ func (uc *CreateGiftTransactionUseCase) Execute(input CreateGiftTransactionInput
 
 	// Converter UUID para string no output
 	var representativeUUIDStr *string
-	if transaction.RepresentativeUUID() != (uuid.UUID{}) {
+	if transaction.RepresentativeUUID() != nil {
 		uuidStr := transaction.RepresentativeUUID().String()
 		representativeUUIDStr = &uuidStr
 	}

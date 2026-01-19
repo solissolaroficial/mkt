@@ -17,7 +17,7 @@ type GiftTransaction struct {
 	date               time.Time
 	time               string
 	price              *valueobject.GiftPrice // Apenas para entradas
-	representativeUUID uuid.UUID              // Apenas para saídas
+	representativeUUID *uuid.UUID             // Apenas para saídas (opcional para entradas)
 	unit               string
 	createdAt          time.Time
 	updatedAt          time.Time
@@ -80,15 +80,15 @@ func NewGiftTransaction(
 	}
 
 	// Validar representativeUUID (obrigatório para saídas, opcional para entradas)
-	var repUUID uuid.UUID
+	var repUUID *uuid.UUID
 	if txType.IsExit() {
 		if representativeUUID == nil {
 			return nil, errors.New("representativeUUID is required for exit transactions")
 		}
-		repUUID = *representativeUUID
+		repUUID = representativeUUID
 	} else if representativeUUID != nil {
 		// Se fornecido para entrada, usar o UUID fornecido
-		repUUID = *representativeUUID
+		repUUID = representativeUUID
 	}
 
 	// Validar unit
@@ -127,7 +127,7 @@ func ReconstructGiftTransaction(
 	date time.Time,
 	timeStr string,
 	price *float64,
-	representativeUUID uuid.UUID,
+	representativeUUID *uuid.UUID,
 	unit string,
 	createdAt time.Time,
 	updatedAt time.Time,
@@ -165,7 +165,7 @@ func (g *GiftTransaction) TransactionType() *valueobject.TransactionType { retur
 func (g *GiftTransaction) Date() time.Time                               { return g.date }
 func (g *GiftTransaction) Time() string                                  { return g.time }
 func (g *GiftTransaction) Price() *valueobject.GiftPrice                 { return g.price }
-func (g *GiftTransaction) RepresentativeUUID() uuid.UUID                 { return g.representativeUUID }
+func (g *GiftTransaction) RepresentativeUUID() *uuid.UUID                { return g.representativeUUID }
 func (g *GiftTransaction) Unit() string                                  { return g.unit }
 func (g *GiftTransaction) CreatedAt() time.Time                          { return g.createdAt }
 func (g *GiftTransaction) UpdatedAt() time.Time                          { return g.updatedAt }
@@ -193,7 +193,7 @@ func (g *GiftTransaction) Validate() error {
 	}
 
 	// Para saídas, representanteUUID é obrigatório
-	if g.transactionType.IsExit() && g.representativeUUID == (uuid.UUID{}) {
+	if g.transactionType.IsExit() && g.representativeUUID == nil {
 		return errors.New("representativeUUID is required for exit transactions")
 	}
 
@@ -255,7 +255,7 @@ func (g *GiftTransaction) UpdatePrice(price *float64) error {
 }
 
 // UpdateRepresentativeUUID atualiza o representante
-func (g *GiftTransaction) UpdateRepresentativeUUID(representativeUUID uuid.UUID) error {
+func (g *GiftTransaction) UpdateRepresentativeUUID(representativeUUID *uuid.UUID) error {
 	g.representativeUUID = representativeUUID
 	g.updatedAt = time.Now()
 	return nil

@@ -11,7 +11,7 @@ import (
 type Subtask struct {
 	UUID         uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"uuid"`
 	TaskUUID     uuid.UUID      `gorm:"type:uuid;not null;index" json:"task_uuid"`
-	Task         *Task          `gorm:"foreignKey:TaskUUID;references:UUID;constraint:OnDelete:CASCADE" json:"task,omitempty"`
+	Task         *Task          `gorm:"foreignKey:TaskUUID;references:UUID;constraint:onDelete:CASCADE" json:"task,omitempty"`
 	Title        string         `gorm:"not null" json:"title"`
 	Completed    bool           `gorm:"not null;default:false;index" json:"completed"`
 	AssigneeUUID *uuid.UUID     `gorm:"type:uuid;index" json:"assignee_uuid,omitempty"`

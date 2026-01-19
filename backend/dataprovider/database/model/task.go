@@ -18,7 +18,7 @@ type Task struct {
 	Priority     string         `gorm:"not null;index" json:"priority"`
 	Category     string         `gorm:"not null;index" json:"category"`
 	AssigneeUUID *uuid.UUID     `gorm:"type:uuid;index:idx_assignee_status,priority:1" json:"assignee_uuid,omitempty"`
-	Assignee     *User          `gorm:"foreignKey:AssigneeUUID;references:UUID;constraint:OnDelete:SET NULL" json:"assignee,omitempty"`
+	Assignee     *User          `gorm:"foreignKey:AssigneeUUID;references:UUID;constraint:onDelete:SET NULL" json:"assignee,omitempty"`
 	Archived     bool           `gorm:"not null;default:false;index" json:"archived"`
 	SortOrder    int            `gorm:"not null;default:0;index" json:"sort_order"`
 	Flows        string         `gorm:"type:jsonb" json:"flows"`
@@ -27,8 +27,8 @@ type Task struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 
 	// Relacionamentos
-	Subtasks []*Subtask `gorm:"foreignKey:TaskID;references:UUID;constraint:OnDelete:CASCADE" json:"subtasks,omitempty"`
-	Comments []*Comment `gorm:"foreignKey:TaskID;references:UUID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
+	Subtasks []*Subtask `gorm:"foreignKey:TaskUUID;references:UUID;constraint:OnDelete:CASCADE" json:"subtasks,omitempty"`
+	Comments []*Comment `gorm:"foreignKey:TaskUUID;references:UUID;constraint:OnDelete:CASCADE" json:"comments,omitempty"`
 }
 
 // TableName define o nome da tabela

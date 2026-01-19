@@ -90,7 +90,7 @@ func (uc *ListGiftTransactionsUseCase) Execute(input ListGiftTransactionsInput) 
 
 		// Converter UUID para string no output
 		var representativeUUIDStr *string
-		if tx.RepresentativeUUID() != (uuid.UUID{}) {
+		if tx.RepresentativeUUID() != nil {
 			uuidStr := tx.RepresentativeUUID().String()
 			representativeUUIDStr = &uuidStr
 		}
