@@ -76,7 +76,9 @@ type UpdateSubtaskRequest struct {
 // CreateCommentRequest representa a requisição para criar um comentário
 type CreateCommentRequest struct {
 	TaskID  string `json:"task_id" validate:"required"`
+	UserID  string `json:"user_id"` // ID do usuário que está criando o comentário
 	Content string `json:"content" validate:"required"`
+	Text    string `json:"text"` // Campo adicional para compatibilidade com frontend
 }
 
 // UpdateCommentRequest representa a requisição para atualizar um comentário

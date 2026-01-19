@@ -320,10 +320,26 @@ func (m *TaskMapper) ToComment(req *taskrequest.CreateCommentRequest) (*entity.C
 		return nil, err
 	}
 
+	// Usar Text se Content estiver vazio (compatibilidade com frontend)
+	content := req.Content
+	if content == "" && req.Text != "" {
+		content = req.Text
+	}
+
+	// Parse userID da requisição
+	userID := uuid.Nil
+	if req.UserID != "" {
+		parsedID, err := uuid.Parse(req.UserID)
+		if err != nil {
+			return nil, err
+		}
+		userID = parsedID
+	}
+
 	return entity.NewComment(
 		taskID,
-		uuid.Nil, // userID (should come from auth context)
-		req.Content,
+		userID,
+		content,
 	)
 }
 
