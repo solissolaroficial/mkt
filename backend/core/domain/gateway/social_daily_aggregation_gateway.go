@@ -14,7 +14,7 @@ type SocialDailyAggregationGateway interface {
 	Update(aggregation *entity.SocialDailyAggregation) error
 	Delete(id uuid.UUID) error
 	GetByID(id uuid.UUID) (*entity.SocialDailyAggregation, error)
-	GetByBrandAndDate(brandName string, date time.Time) (*entity.SocialDailyAggregation, error)
+	GetByBrandAndDate(brandID uuid.UUID, date time.Time) (*entity.SocialDailyAggregation, error)
 	List(criteria *domain.SocialDailyAggregationCriteria, pagination *valueobject.Pagination) ([]*entity.SocialDailyAggregation, int64, error)
-	GetByBrand(brandName string) ([]*entity.SocialDailyAggregation, error)
+	GetByBrand(brandID uuid.UUID) ([]*entity.SocialDailyAggregation, error)
 }

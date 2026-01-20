@@ -2,7 +2,7 @@ package response
 
 type SocialBenchmarkingResponse struct {
 	ID             string  `json:"id"`
-	BrandName      string  `json:"brand_name"`
+	BrandID        string  `json:"brand_id"`
 	AvgLikes       float64 `json:"avg_likes"`
 	AvgComments    float64 `json:"avg_comments"`
 	Followers      *int    `json:"followers"`

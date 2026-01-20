@@ -29,6 +29,7 @@ type Controllers struct {
 	BudgetController                    *controller.BudgetController
 	RepresentativeController            *controller.RepresentativeController
 	RepresentativeMonthlyGoalController *controller.RepresentativeMonthlyGoalController
+	BrandController                     *controller.BrandController
 }
 
 // Middlewares agrupa todos os middlewares da aplicação
@@ -71,6 +72,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupBudgetRoutes(protected, controllers.BudgetController)
 	SetupRepresentativeRoutes(protected, controllers.RepresentativeController)
 	SetupRepresentativeMonthlyGoalRoutes(protected, controllers.RepresentativeMonthlyGoalController)
+	SetupBrandRoutes(protected, controllers.BrandController)
 
 	// 6. 404 handler
 	app.Use(func(c *fiber.Ctx) error {

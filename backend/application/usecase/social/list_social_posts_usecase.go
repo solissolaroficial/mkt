@@ -23,7 +23,7 @@ func NewListSocialPostsUseCase(postGateway gateway.SocialPostGateway) *ListSocia
 
 // ListSocialPostsInput represents the input for listing social posts
 type ListSocialPostsInput struct {
-	BrandName     *string  `query:"brand_name"`
+	BrandID       *string  `query:"brand_id"`
 	Platform      *string  `query:"platform"`
 	PostType      *string  `query:"post_type"`
 	StartDate     *string  `query:"start_date"`
@@ -97,8 +97,8 @@ func (uc *ListSocialPostsUseCase) Execute(ctx context.Context, input ListSocialP
 
 	// Create criteria
 	criteria := domain.NewSocialPostCriteria()
-	if input.BrandName != nil {
-		criteria = criteria.WithBrandName(*input.BrandName)
+	if input.BrandID != nil {
+		criteria = criteria.WithBrandID(*input.BrandID)
 	}
 	if input.Platform != nil {
 		platform, err := valueobject.NewSocialPlatform(*input.Platform)

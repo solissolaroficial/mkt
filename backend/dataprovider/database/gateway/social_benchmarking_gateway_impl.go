@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
@@ -78,8 +79,8 @@ func (g *socialBenchmarkingGatewayImpl) FindByCriteria(
 	query := g.db.WithContext(ctx).Model(&benchmarkingModels)
 
 	// Aplicar criteria usando getters (sem dependência de GORM no domínio)
-	if criteria.BrandName() != nil {
-		query = query.Where("brand_name = ?", criteria.BrandName().String())
+	if criteria.BrandID() != nil {
+		query = query.Where("brand_id = ?", criteria.BrandID())
 	}
 	if criteria.Active() != nil {
 		if *criteria.Active() {
@@ -132,8 +133,8 @@ func (g *socialBenchmarkingGatewayImpl) CountByCriteria(ctx context.Context, cri
 	query := g.db.WithContext(ctx).Model(&model.SocialBenchmarkingModel{})
 
 	// Aplicar criteria usando getters
-	if criteria.BrandName() != nil {
-		query = query.Where("brand_name = ?", criteria.BrandName().String())
+	if criteria.BrandID() != nil {
+		query = query.Where("brand_id = ?", criteria.BrandID())
 	}
 	if criteria.Active() != nil {
 		if *criteria.Active() {
@@ -173,9 +174,9 @@ func (g *socialBenchmarkingGatewayImpl) ExistsByID(ctx context.Context, id strin
 	return count > 0, nil
 }
 
-func (g *socialBenchmarkingGatewayImpl) GetByBrand(brandName string) (*entity.SocialBenchmarking, error) {
+func (g *socialBenchmarkingGatewayImpl) GetByBrandID(brandID uuid.UUID) (*entity.SocialBenchmarking, error) {
 	var benchmarkingModel model.SocialBenchmarkingModel
-	err := g.db.Where("brand_name = ? AND deleted_at IS NULL", brandName).First(&benchmarkingModel).Error
+	err := g.db.Where("brand_id = ? AND deleted_at IS NULL", brandID).First(&benchmarkingModel).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domainErrors.ErrSocialBenchmarkingNotFound

@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -14,7 +15,7 @@ type ListSocialBenchmarkingsUseCase struct {
 }
 
 type ListSocialBenchmarkingsInput struct {
-	BrandName *string
+	BrandID   *string
 	Active    *bool
 	StartDate *string
 	EndDate   *string
@@ -32,10 +33,10 @@ func (uc *ListSocialBenchmarkingsUseCase) Execute(ctx context.Context, input Lis
 	// Criar criteria
 	crit := domain.NewSocialBenchmarkingCriteria()
 
-	if input.BrandName != nil {
-		brand, err := valueobject.NewBrandName(*input.BrandName)
+	if input.BrandID != nil {
+		brandID, err := uuid.Parse(*input.BrandID)
 		if err == nil {
-			crit = crit.WithBrandName(brand)
+			crit = crit.WithBrandID(&brandID)
 		}
 	}
 

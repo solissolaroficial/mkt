@@ -2,10 +2,9 @@ package social
 
 import (
 	"context"
-	"errors"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
-	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
@@ -15,29 +14,30 @@ type UpdateSocialBenchmarkingUseCase struct {
 
 type UpdateSocialBenchmarkingInput struct {
 	ID          string
-	BrandName   *string
+	BrandID     *uuid.UUID
 	AvgLikes    *float64
 	AvgComments *float64
 	Followers   *int
 }
 
-func NewUpdateSocialBenchmarking(gateway gateway.SocialBenchmarkingGateway) *UpdateSocialBenchmarkingUseCase {
-	return &UpdateSocialBenchmarkingUseCase{gateway: gateway}
+func NewUpdateSocialBenchmarking(
+	gateway gateway.SocialBenchmarkingGateway,
+) *UpdateSocialBenchmarkingUseCase {
+	return &UpdateSocialBenchmarkingUseCase{
+		gateway: gateway,
+	}
 }
 
 func (uc *UpdateSocialBenchmarkingUseCase) Execute(ctx context.Context, input UpdateSocialBenchmarkingInput) (*entity.SocialBenchmarking, error) {
 	// Buscar benchmarking existente
 	benchmarking, err := uc.gateway.FindByID(ctx, input.ID)
 	if err != nil {
-		if errors.Is(err, domainErrors.ErrSocialBenchmarkingNotFound) {
-			return nil, domainErrors.ErrSocialBenchmarkingNotFound
-		}
 		return nil, err
 	}
 
 	// Atualizar campos se fornecidos
-	if input.BrandName != nil {
-		if err := benchmarking.UpdateBrandName(*input.BrandName); err != nil {
+	if input.BrandID != nil {
+		if err := benchmarking.UpdateBrandID(*input.BrandID); err != nil {
 			return nil, err
 		}
 	}
@@ -63,7 +63,7 @@ func (uc *UpdateSocialBenchmarkingUseCase) Execute(ctx context.Context, input Up
 		}
 	}
 
-	// Salvar via gateway
+	// Salvar no banco de dados
 	if err := uc.gateway.Update(ctx, benchmarking); err != nil {
 		return nil, err
 	}

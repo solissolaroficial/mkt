@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -26,5 +27,5 @@ type SocialBenchmarkingGateway interface {
 
 	// Utilities
 	ExistsByID(ctx context.Context, id string) (bool, error)
-	GetByBrand(brandName string) (*entity.SocialBenchmarking, error)
+	GetByBrandID(brandID uuid.UUID) (*entity.SocialBenchmarking, error)
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 
 	"github.com/seu-usuario/solis-backend/application/usecase/social"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
@@ -51,11 +52,44 @@ func (c *SocialPostController) CreateSocialPost(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// Parse BrandID UUID
+	brandID, err := uuid.Parse(req.BrandID)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid brand_id format",
+		})
+	}
+
+	// Parse PostDate
+	postDate, err := time.Parse("2006-01-02", req.PostDate)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid post_date format, expected YYYY-MM-DD",
+		})
+	}
+
+	// Parse PostTime (optional) - accepts both HH:MM and HH:MM:SS formats
+	var postTime *time.Time
+	if req.PostTime != nil {
+		// Try format with seconds first (HH:MM:SS)
+		parsedTime, err := time.Parse("15:04:05", *req.PostTime)
+		if err != nil {
+			// Try format without seconds (HH:MM)
+			parsedTime, err = time.Parse("15:04", *req.PostTime)
+			if err != nil {
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error": "Invalid post_time format, expected HH:MM or HH:MM:SS",
+				})
+			}
+		}
+		postTime = &parsedTime
+	}
+
 	input := social.CreateSocialPostInput{
-		BrandName:       req.BrandName,
+		BrandID:         brandID,
 		Platform:        req.Platform,
-		PostDate:        req.PostDate,
-		PostTime:        req.PostTime,
+		PostDate:        postDate,
+		PostTime:        postTime,
 		Likes:           req.Likes,
 		Comments:        req.Comments,
 		Shares:          req.Shares,
@@ -102,7 +136,7 @@ func (c *SocialPostController) ListSocialPosts(ctx *fiber.Ctx) error {
 	}
 
 	input := social.ListSocialPostsInput{
-		BrandName:     req.BrandName,
+		BrandID:       req.BrandID,
 		Platform:      req.Platform,
 		PostType:      req.PostType,
 		StartDate:     req.StartDate,
@@ -143,6 +177,7 @@ func (c *SocialPostController) UpdateSocialPost(ctx *fiber.Ctx) error {
 
 	input := social.UpdateSocialPostInput{
 		ID:              id,
+		BrandID:         req.BrandID,
 		Platform:        req.Platform,
 		PostDate:        req.PostDate,
 		PostTime:        req.PostTime,
@@ -189,7 +224,7 @@ func (c *SocialPostController) ListSocialDailyAggregations(ctx *fiber.Ctx) error
 	}
 
 	input := social.ListSocialDailyAggregationsInput{
-		BrandName: req.BrandName,
+		BrandID:   req.BrandID,
 		Platform:  req.Platform,
 		StartDate: req.StartDate,
 		EndDate:   req.EndDate,
@@ -213,8 +248,16 @@ func (c *SocialPostController) ListSocialDailyAggregations(ctx *fiber.Ctx) error
 
 // RecalculateDailyAggregations recalculates daily aggregations for a brand and date
 func (c *SocialPostController) RecalculateDailyAggregations(ctx *fiber.Ctx) error {
-	brandName := ctx.Params("brandName")
+	brandIDStr := ctx.Params("brandID")
 	dateStr := ctx.Params("date")
+
+	// Parse BrandID UUID
+	brandID, err := uuid.Parse(brandIDStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid brand_id format",
+		})
+	}
 
 	// Parse date from string
 	date, err := time.Parse("2006-01-02", dateStr)
@@ -224,7 +267,7 @@ func (c *SocialPostController) RecalculateDailyAggregations(ctx *fiber.Ctx) erro
 		})
 	}
 
-	aggregation, err := c.recalculateAggregationsUseCase.Execute(brandName, date)
+	aggregation, err := c.recalculateAggregationsUseCase.Execute(brandID, date)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),

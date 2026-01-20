@@ -3,6 +3,7 @@ import type { SocialPost } from '@/shared/types';
 import { ThumbsUp, MessageCircle, Share2, Calendar, Clock, Filter, Save, Edit2, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { SocialPlatform, SocialPostType } from '@/shared/types';
 import { useSocialMutations } from '../hooks/useSocialMutations';
+import { useBrands } from '../hooks/useBrands';
 import { useToast } from '@/shared/hooks/useToast';
 
 interface SocialPostsViewProps {
@@ -12,13 +13,19 @@ interface SocialPostsViewProps {
 
 const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) => {
   const { error: showError } = useToast();
-  
+
   // Filter States
   const [sortBy, setSortBy] = useState<'post_date' | 'likes' | 'comments' | 'shares' | 'created_at'>('post_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterBrand, setFilterBrand] = useState('');
   const [filterPlatform, setFilterPlatform] = useState<SocialPlatform | ''>('');
   const [filterPostType, setFilterPostType] = useState<SocialPostType | ''>('');
+
+  // Helper function to get brand name by brand_id
+  const getBrandName = (brandId: string): string => {
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.name || brandId;
+  };
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +34,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
   // Form States
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [brandName, setBrandName] = useState('');
+  const [brandId, setBrandId] = useState('');
   const [platform, setPlatform] = useState<SocialPlatform>('instagram');
   const [postDate, setPostDate] = useState('');
   const [postTime, setPostTime] = useState('');
@@ -37,6 +44,9 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
   const [postType, setPostType] = useState<SocialPostType>('image');
   const [caption, setCaption] = useState('');
   const [followersAtPost, setFollowersAtPost] = useState<number | undefined>(undefined);
+
+  // Brands Query
+  const { data: brands = [], isLoading: isLoadingBrands } = useBrands();
 
   // Mutations
   const { createPost, updatePost, deletePost, isCreatingPost, isUpdatingPost, isDeletingPost } = useSocialMutations();
@@ -61,7 +71,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
 
   // Reset form states
   const resetForm = () => {
-    setBrandName('');
+    setBrandId('');
     setPlatform('instagram');
     setPostDate('');
     setPostTime('');
@@ -78,7 +88,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
     if (editingId && data) {
       const item = data.find(item => item.id === editingId);
       if (item) {
-        setBrandName(item.brand_name);
+        setBrandId(item.brand_id || '');
         setPlatform(item.platform);
         setPostDate(item.post_date);
         setPostTime(item.post_time || '');
@@ -103,8 +113,8 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
     e.preventDefault();
 
     // Form validation
-    if (!brandName.trim()) {
-      showError('Nome da marca é obrigatório');
+    if (!brandId.trim()) {
+      showError('Marca é obrigatória');
       return;
     }
     if (!postDate) {
@@ -129,7 +139,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
     }
 
     createPost({
-      brand_name: brandName,
+      brand_id: brandId,
       platform,
       post_date: postDate,
       post_time: postTime || undefined,
@@ -158,8 +168,8 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
     if (!editingId) return;
 
     // Form validation
-    if (!brandName.trim()) {
-      showError('Nome da marca é obrigatório');
+    if (!brandId.trim()) {
+      showError('Marca é obrigatória');
       return;
     }
     if (!postDate) {
@@ -186,7 +196,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
     updatePost({
       id: editingId,
       data: {
-        brand_name: brandName,
+        brand_id: brandId,
         platform,
         post_date: postDate,
         post_time: postTime || undefined,
@@ -218,7 +228,8 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
 
   // Aplicar filtros localmente
   const filteredData = data ? data.filter(item => {
-    const matchBrand = filterBrand === '' || item.brand_name.toLowerCase().includes(filterBrand.toLowerCase());
+    const brandName = getBrandName(item.brand_id);
+    const matchBrand = filterBrand === '' || brandName.toLowerCase().includes(filterBrand.toLowerCase());
     const matchPlatform = filterPlatform === '' || item.platform === filterPlatform;
     const matchPostType = filterPostType === '' || item.post_type === filterPostType;
     return matchBrand && matchPlatform && matchPostType;
@@ -372,17 +383,27 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
           <form onSubmit={isAdding ? handleCreate : handleUpdate} className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Nome da Marca <span className="text-rose-500">*</span>
+                Marca <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-                placeholder="Ex: Solis Solar"
-                className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
-                required
-                maxLength={200}
-              />
+              {isLoadingBrands ? (
+                <div className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-500">
+                  Carregando marcas...
+                </div>
+              ) : (
+                <select
+                  value={brandId}
+                  onChange={(e) => setBrandId(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
+                  required
+                >
+                  <option value="">Selecione uma marca...</option>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -624,7 +645,7 @@ const SocialPostsView: React.FC<SocialPostsViewProps> = ({ data, onRefresh }) =>
                       className="hover:bg-[#20232b] transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <span className="font-medium text-gray-300">{item.brand_name}</span>
+                        <span className="font-medium text-gray-300">{getBrandName(item.brand_id)}</span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2 py-1 rounded text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">

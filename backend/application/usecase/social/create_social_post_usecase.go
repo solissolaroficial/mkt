@@ -1,6 +1,7 @@
 package social
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type CreateSocialPostInput struct {
-	BrandName       string
+	BrandID         uuid.UUID
 	Platform        string
 	PostDate        time.Time
 	PostTime        *time.Time
@@ -39,23 +40,32 @@ type CreateSocialPostOutput struct {
 
 type CreateSocialPostUseCase struct {
 	postGateway                    gateway.SocialPostGateway
+	brandGateway                   gateway.BrandGateway
 	recalculateAggregationsUseCase *RecalculateDailyAggregationsUseCase
 }
 
 func NewCreateSocialPostUseCase(
 	postGateway gateway.SocialPostGateway,
+	brandGateway gateway.BrandGateway,
 	recalculateAggregationsUseCase *RecalculateDailyAggregationsUseCase,
 ) *CreateSocialPostUseCase {
 	return &CreateSocialPostUseCase{
 		postGateway:                    postGateway,
+		brandGateway:                   brandGateway,
 		recalculateAggregationsUseCase: recalculateAggregationsUseCase,
 	}
 }
 
 func (uc *CreateSocialPostUseCase) Execute(input CreateSocialPostInput) (*CreateSocialPostOutput, error) {
-	// Criar entidade
+	// Validar se o brand existe
+	brand, err := uc.brandGateway.FindByID(context.Background(), input.BrandID)
+	if err != nil {
+		return nil, fmt.Errorf("brand not found")
+	}
+
+	// Criar entidade com o nome da marca
 	post, err := entity.NewSocialPost(
-		input.BrandName,
+		brand.Name(),
 		input.Platform,
 		input.PostDate,
 		input.PostTime,
@@ -70,13 +80,16 @@ func (uc *CreateSocialPostUseCase) Execute(input CreateSocialPostInput) (*Create
 		return nil, err
 	}
 
+	// Atualizar BrandID com o ID correto
+	post.UpdateBrandID(input.BrandID)
+
 	// Salvar no banco
 	if err := uc.postGateway.Create(post); err != nil {
 		return nil, err
 	}
 
 	// Recalcular agregações diárias
-	_, err = uc.recalculateAggregationsUseCase.Execute(input.BrandName, input.PostDate)
+	_, err = uc.recalculateAggregationsUseCase.Execute(input.BrandID, input.PostDate)
 	if err != nil {
 		// Log error mas não falhar a criação do post
 		// Em produção, isso deveria ser assíncrono

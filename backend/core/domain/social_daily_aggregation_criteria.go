@@ -10,7 +10,7 @@ import (
 // This follows the DDD pattern of keeping criteria in the domain layer
 type SocialDailyAggregationCriteria struct {
 	// Filter fields
-	BrandName *string
+	BrandID   *string
 	Platform  *valueobject.SocialPlatform
 	StartDate *time.Time
 	EndDate   *time.Time
@@ -35,9 +35,9 @@ func NewSocialDailyAggregationCriteria() *SocialDailyAggregationCriteria {
 	}
 }
 
-// WithBrandName sets the brand name filter
-func (c *SocialDailyAggregationCriteria) WithBrandName(brandName string) *SocialDailyAggregationCriteria {
-	c.BrandName = &brandName
+// WithBrandID sets the brand ID filter
+func (c *SocialDailyAggregationCriteria) WithBrandID(brandID string) *SocialDailyAggregationCriteria {
+	c.BrandID = &brandID
 	return c
 }
 
@@ -70,7 +70,7 @@ func (c *SocialDailyAggregationCriteria) WithSorting(sortBy string, sortOrder *v
 
 // HasFilters returns true if any filter is set
 func (c *SocialDailyAggregationCriteria) HasFilters() bool {
-	return c.BrandName != nil ||
+	return c.BrandID != nil ||
 		c.Platform != nil ||
 		c.StartDate != nil ||
 		c.EndDate != nil

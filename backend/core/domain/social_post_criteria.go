@@ -10,6 +10,7 @@ import (
 // This follows the DDD pattern of keeping criteria in the domain layer
 type SocialPostCriteria struct {
 	// Filter fields
+	BrandID       *string
 	BrandName     *string
 	Platform      *valueobject.SocialPlatform
 	PostType      *valueobject.SocialPostType
@@ -39,6 +40,12 @@ func NewSocialPostCriteria() *SocialPostCriteria {
 		SortBy:    "post_date",
 		SortOrder: sortOrder,
 	}
+}
+
+// WithBrandID sets the brand ID filter
+func (c *SocialPostCriteria) WithBrandID(brandID string) *SocialPostCriteria {
+	c.BrandID = &brandID
+	return c
 }
 
 // WithBrandName sets the brand name filter
@@ -102,7 +109,8 @@ func (c *SocialPostCriteria) WithSorting(sortBy string, sortOrder *valueobject.S
 
 // HasFilters returns true if any filter is set
 func (c *SocialPostCriteria) HasFilters() bool {
-	return c.BrandName != nil ||
+	return c.BrandID != nil ||
+		c.BrandName != nil ||
 		c.Platform != nil ||
 		c.PostType != nil ||
 		c.StartDate != nil ||

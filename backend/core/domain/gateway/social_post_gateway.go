@@ -16,4 +16,5 @@ type SocialPostGateway interface {
 	GetByID(id uuid.UUID) (*entity.SocialPost, error)
 	List(criteria *domain.SocialPostCriteria, pagination *valueobject.Pagination) ([]*entity.SocialPost, int64, error)
 	ListByBrandAndDate(brandName string, date time.Time) ([]*entity.SocialPost, error)
+	ListByBrandIDAndDate(brandID uuid.UUID, date time.Time) ([]*entity.SocialPost, error)
 }

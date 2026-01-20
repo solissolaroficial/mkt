@@ -24,7 +24,7 @@ func NewGetSocialDailyAggregationUseCase(aggregationGateway gateway.SocialDailyA
 // GetSocialDailyAggregationOutput represents the output of getting a social daily aggregation
 type GetSocialDailyAggregationOutput struct {
 	ID              string   `json:"id"`
-	BrandName       string   `json:"brand_name"`
+	BrandID         string   `json:"brand_id"`
 	AggregationDate string   `json:"aggregation_date"`
 	TotalPosts      int      `json:"total_posts"`
 	TotalLikes      int      `json:"total_likes"`
@@ -69,7 +69,7 @@ func (uc *GetSocialDailyAggregationUseCase) Execute(ctx context.Context, id stri
 
 	return &GetSocialDailyAggregationOutput{
 		ID:              aggregation.ID().String(),
-		BrandName:       aggregation.BrandName().Value(),
+		BrandID:         aggregation.BrandID().String(),
 		AggregationDate: aggregation.AggregationDate().Format("2006-01-02"),
 		TotalPosts:      aggregation.TotalPosts(),
 		TotalLikes:      aggregation.TotalLikes(),

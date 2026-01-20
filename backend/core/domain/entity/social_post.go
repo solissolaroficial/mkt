@@ -246,6 +246,12 @@ func (s *SocialPost) UpdateBrandID(brandID uuid.UUID) error {
 	return nil
 }
 
+// UpdateBrandName atualiza o nome da marca
+func (s *SocialPost) UpdateBrandName(brandName *valueobject.BrandName) {
+	s.brandName = brandName
+	s.updatedAt = time.Now()
+}
+
 // UpdatePlatform atualiza a plataforma
 func (s *SocialPost) UpdatePlatform(platform valueobject.SocialPlatform) error {
 	if !platform.IsValid() {

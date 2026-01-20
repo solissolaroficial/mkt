@@ -47,12 +47,13 @@ func (g *SocialDailyAggregationGatewayImpl) GetByID(id uuid.UUID) (*entity.Socia
 }
 
 func (g *SocialDailyAggregationGatewayImpl) GetByBrandAndDate(
-	brandName string,
+	brandID uuid.UUID,
 	date time.Time,
 ) (*entity.SocialDailyAggregation, error) {
 	var model model.SocialDailyAggregationModel
-	err := g.db.Where("brand_name = ?", brandName).
+	err := g.db.Where("brand_id = ?", brandID).
 		Where("aggregation_date = ?", date).
+		Preload("Brand").
 		First(&model).Error
 
 	if err != nil {
@@ -72,8 +73,8 @@ func (g *SocialDailyAggregationGatewayImpl) List(
 	query := g.db.Model(&model.SocialDailyAggregationModel{})
 
 	// Aplicar filtros
-	if criteria.BrandName != nil {
-		query = query.Where("brand_name = ?", *criteria.BrandName)
+	if criteria.BrandID != nil {
+		query = query.Where("brand_id = ?", *criteria.BrandID)
 	}
 
 	if criteria.StartDate != nil {
@@ -96,6 +97,9 @@ func (g *SocialDailyAggregationGatewayImpl) List(
 	// Ordenar por data desc
 	query = query.Order("aggregation_date DESC")
 
+	// Preload Brand relationship
+	query = query.Preload("Brand")
+
 	// Executar query
 	if err := query.Find(&models).Error; err != nil {
 		return nil, 0, err
@@ -111,10 +115,11 @@ func (g *SocialDailyAggregationGatewayImpl) List(
 }
 
 // GetByBrand busca todas as agregações de uma marca
-func (g *SocialDailyAggregationGatewayImpl) GetByBrand(brandName string) ([]*entity.SocialDailyAggregation, error) {
+func (g *SocialDailyAggregationGatewayImpl) GetByBrand(brandID uuid.UUID) ([]*entity.SocialDailyAggregation, error) {
 	var models []*model.SocialDailyAggregationModel
 
-	query := g.db.Where("brand_name = ?", brandName).
+	query := g.db.Where("brand_id = ?", brandID).
+		Preload("Brand").
 		Order("aggregation_date DESC")
 
 	if err := query.Find(&models).Error; err != nil {

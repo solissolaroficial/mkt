@@ -140,3 +140,22 @@ func (g *SocialPostGatewayImpl) ListByBrandAndDate(brandName string, date time.T
 
 	return entities, nil
 }
+
+func (g *SocialPostGatewayImpl) ListByBrandIDAndDate(brandID uuid.UUID, date time.Time) ([]*entity.SocialPost, error) {
+	var models []*model.SocialPostModel
+
+	query := g.db.Where("brand_id = ?", brandID).
+		Where("post_date = ?", date).
+		Order("post_time DESC, created_at DESC")
+
+	if err := query.Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	entities := make([]*entity.SocialPost, len(models))
+	for i, m := range models {
+		entities[i] = mapper.ModelToSocialPostEntity(m)
+	}
+
+	return entities, nil
+}

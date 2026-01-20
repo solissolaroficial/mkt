@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/seu-usuario/solis-backend/application/usecase/auth"
+	"github.com/seu-usuario/solis-backend/application/usecase/brand"
 	"github.com/seu-usuario/solis-backend/application/usecase/budget"
 	"github.com/seu-usuario/solis-backend/application/usecase/calendar"
 	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
@@ -68,6 +69,7 @@ type Container struct {
 	RepresentativeGateway            gateway.RepresentativeGateway
 	RepresentativeStatsGateway       gateway.RepresentativeStatsGateway
 	RepresentativeMonthlyGoalGateway gateway.RepresentativeMonthlyGoalGateway
+	BrandGateway                     gateway.BrandGateway
 
 	// Seeders
 	UserSeeder                      *seeders.UserSeeder
@@ -83,6 +85,11 @@ type Container struct {
 
 	// Use Cases - Users
 	ListUsersUseCase *users.ListUsersUseCase
+
+	// Use Cases - Brands
+	CreateBrandUseCase *brand.CreateBrandUseCase
+	ListBrandsUseCase  *brand.ListBrandsUseCase
+	DeleteBrandUseCase *brand.DeleteBrandUseCase
 
 	// Use Cases - Social Benchmarking
 	CreateSocialBenchmarkingUseCase *social.CreateSocialBenchmarkingUseCase
@@ -240,6 +247,7 @@ type Container struct {
 	BudgetController                    *controller.BudgetController
 	RepresentativeController            *controller.RepresentativeController
 	RepresentativeMonthlyGoalController *controller.RepresentativeMonthlyGoalController
+	BrandController                     *controller.BrandController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -288,6 +296,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	representativeGateway := dbgateway.NewRepresentativeGateway(db)
 	representativeStatsGateway := dbgateway.NewRepresentativeStatsGateway(db)
 	representativeMonthlyGoalGateway := dbgateway.NewRepresentativeMonthlyGoalGateway(db)
+	brandGateway := dbgateway.NewBrandGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -349,6 +358,11 @@ func NewContainer(cfg *Config) (*Container, error) {
 	// User Use Cases
 	listUsersUseCase := users.NewListUsersUseCase(userGateway)
 
+	// Brand Use Cases
+	createBrandUseCase := brand.NewCreateBrandUseCase(brandGateway)
+	listBrandsUseCase := brand.NewListBrandsUseCase(brandGateway)
+	deleteBrandUseCase := brand.NewDeleteBrandUseCase(brandGateway)
+
 	// Calendar Use Cases
 	createCalendarPostUseCase := calendar.NewCreateCalendarPost(calendarPostGateway)
 	getCalendarPostUseCase := calendar.NewGetCalendarPost(calendarPostGateway)
@@ -386,10 +400,10 @@ func NewContainer(cfg *Config) (*Container, error) {
 	getSocialDailyAggregationUseCase := social.NewGetSocialDailyAggregationUseCase(socialDailyAggregationGateway)
 
 	// Social Post Use Cases
-	createSocialPostUseCase := social.NewCreateSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
+	createSocialPostUseCase := social.NewCreateSocialPostUseCase(socialPostGateway, brandGateway, recalculateDailyAggregationsUseCase)
 	getSocialPostUseCase := social.NewGetSocialPostUseCase(socialPostGateway)
 	listSocialPostsUseCase := social.NewListSocialPostsUseCase(socialPostGateway)
-	updateSocialPostUseCase := social.NewUpdateSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
+	updateSocialPostUseCase := social.NewUpdateSocialPostUseCase(socialPostGateway, brandGateway, recalculateDailyAggregationsUseCase)
 	deleteSocialPostUseCase := social.NewDeleteSocialPostUseCase(socialPostGateway, recalculateDailyAggregationsUseCase)
 
 	// Cooperative Use Cases - Offline Actions
@@ -613,6 +627,13 @@ func NewContainer(cfg *Config) (*Container, error) {
 		representativeMonthlyGoalGateway,
 	)
 
+	// Brand Controller
+	brandController := controller.NewBrandController(
+		createBrandUseCase,
+		listBrandsUseCase,
+		deleteBrandUseCase,
+	)
+
 	// Gift Controllers
 	giftItemController := controller.NewGiftItemController(
 		createGiftItemUseCase,
@@ -670,6 +691,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		RepresentativeGateway:                  representativeGateway,
 		RepresentativeStatsGateway:             representativeStatsGateway,
 		RepresentativeMonthlyGoalGateway:       representativeMonthlyGoalGateway,
+		BrandGateway:                           brandGateway,
 		GiftSeeder:                             giftSeeder,
 		BudgetSeeder:                           budgetSeeder,
 		RepresentativeMonthlyGoalSeeder:        representativeMonthlyGoalSeeder,
@@ -798,6 +820,10 @@ func NewContainer(cfg *Config) (*Container, error) {
 		DeleteRepresentativeMonthlyGoalUseCase: deleteRepresentativeMonthlyGoalUseCase,
 		ListRepresentativeMonthlyGoalsUseCase:  listRepresentativeMonthlyGoalsUseCase,
 		GetRepresentativeGoalsTableDataUseCase: getRepresentativeGoalsTableDataUseCase,
+		CreateBrandUseCase:                     createBrandUseCase,
+		ListBrandsUseCase:                      listBrandsUseCase,
+		DeleteBrandUseCase:                     deleteBrandUseCase,
+		BrandController:                        brandController,
 		AuthMiddleware:                         authMiddleware,
 		CorsMiddleware:                         corsMiddleware,
 	}, nil
@@ -874,6 +900,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		BudgetController:                    c.BudgetController,
 		RepresentativeController:            c.RepresentativeController,
 		RepresentativeMonthlyGoalController: c.RepresentativeMonthlyGoalController,
+		BrandController:                     c.BrandController,
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 
 	usecase "github.com/seu-usuario/solis-backend/application/usecase/social"
 	domainErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
+
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
@@ -48,9 +49,16 @@ func (c *SocialController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Executar use case (validação está no use case)
+	// Parse BrandID
+	brandID, err := uuid.Parse(req.BrandID)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid brand ID format",
+		})
+	}
+
 	input := usecase.CreateSocialBenchmarkingInput{
-		BrandName:   req.BrandName,
+		BrandID:     brandID,
 		AvgLikes:    req.AvgLikes,
 		AvgComments: req.AvgComments,
 		Followers:   req.Followers,
@@ -100,9 +108,7 @@ func (c *SocialController) List(ctx *fiber.Ctx) error {
 		}
 	}
 
-	// Executar use case
 	input := usecase.ListSocialBenchmarkingsInput{
-		BrandName: query.BrandName,
 		Active:    query.Active,
 		StartDate: query.StartDate,
 		EndDate:   query.EndDate,
@@ -148,6 +154,7 @@ func (c *SocialController) GetByID(ctx *fiber.Ctx) error {
 		})
 	}
 
+	log.Printf("Social benchmarking retrieved successfully: %s", benchmarking.ID())
 	return ctx.JSON(c.mapper.ToSocialBenchmarkingResponse(benchmarking))
 }
 
@@ -169,10 +176,22 @@ func (c *SocialController) Update(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Executar use case
+	// Parse BrandID (opcional)
+	var brandID *uuid.UUID
+	if req.BrandID != nil {
+		// Validar formato do BrandID
+		parsedBrandID, err := uuid.Parse(*req.BrandID)
+		if err != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+				Error: "Invalid brand ID format",
+			})
+		}
+		brandID = &parsedBrandID
+	}
+
 	input := usecase.UpdateSocialBenchmarkingInput{
 		ID:          id,
-		BrandName:   req.BrandName,
+		BrandID:     brandID,
 		AvgLikes:    req.AvgLikes,
 		AvgComments: req.AvgComments,
 		Followers:   req.Followers,

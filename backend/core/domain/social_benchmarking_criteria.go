@@ -1,13 +1,13 @@
 package domain
 
 import (
-	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
+	"github.com/google/uuid"
 )
 
 // SocialBenchmarkingCriteria representa filtros para busca de benchmarkings
 // NOTA: Este criteria NÃO depende de GORM, seguindo Clean Architecture
 type SocialBenchmarkingCriteria struct {
-	brandName *valueobject.BrandName
+	brandID   *uuid.UUID
 	active    *bool
 	startDate *string
 	endDate   *string
@@ -17,8 +17,8 @@ func NewSocialBenchmarkingCriteria() *SocialBenchmarkingCriteria {
 	return &SocialBenchmarkingCriteria{}
 }
 
-func (c *SocialBenchmarkingCriteria) WithBrandName(brandName *valueobject.BrandName) *SocialBenchmarkingCriteria {
-	c.brandName = brandName
+func (c *SocialBenchmarkingCriteria) WithBrandID(brandID *uuid.UUID) *SocialBenchmarkingCriteria {
+	c.brandID = brandID
 	return c
 }
 
@@ -38,7 +38,7 @@ func (c *SocialBenchmarkingCriteria) WithEndDate(endDate *string) *SocialBenchma
 }
 
 // Getters para o gateway aplicar os filtros
-func (c *SocialBenchmarkingCriteria) BrandName() *valueobject.BrandName { return c.brandName }
-func (c *SocialBenchmarkingCriteria) Active() *bool                     { return c.active }
-func (c *SocialBenchmarkingCriteria) StartDate() *string                { return c.startDate }
-func (c *SocialBenchmarkingCriteria) EndDate() *string                  { return c.endDate }
+func (c *SocialBenchmarkingCriteria) BrandID() *uuid.UUID { return c.brandID }
+func (c *SocialBenchmarkingCriteria) Active() *bool       { return c.active }
+func (c *SocialBenchmarkingCriteria) StartDate() *string  { return c.startDate }
+func (c *SocialBenchmarkingCriteria) EndDate() *string    { return c.endDate }

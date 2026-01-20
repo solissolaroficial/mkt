@@ -60,7 +60,7 @@ func (uc *DeleteSocialPostUseCase) Execute(ctx context.Context, id string) error
 	}
 
 	// Recalculate daily aggregations
-	_, err = uc.recalculateAggregationsUseCase.Execute(post.BrandName().Value(), post.PostDate())
+	_, err = uc.recalculateAggregationsUseCase.Execute(post.BrandID(), post.PostDate())
 	if err != nil {
 		// Log error but don't fail delete
 		// In production, this should be asynchronous

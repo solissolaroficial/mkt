@@ -12,7 +12,6 @@ import (
 type SocialBenchmarking struct {
 	id             uuid.UUID
 	brandID        uuid.UUID
-	brandName      *valueobject.BrandName
 	avgLikes       float64
 	avgComments    float64
 	followers      *int
@@ -24,17 +23,11 @@ type SocialBenchmarking struct {
 
 // NewSocialBenchmarking cria uma nova entidade SocialBenchmarking
 func NewSocialBenchmarking(
-	brandName string,
+	brandID uuid.UUID,
 	avgLikes float64,
 	avgComments float64,
 	followers *int,
 ) (*SocialBenchmarking, error) {
-	// Validar e criar value object para brand name
-	brand, err := valueobject.NewBrandName(brandName)
-	if err != nil {
-		return nil, err
-	}
-
 	// Validar valores numéricos
 	if avgLikes < 0 {
 		return nil, errors.New("avgLikes cannot be negative")
@@ -50,6 +43,7 @@ func NewSocialBenchmarking(
 
 	// Calcular engagement rate
 	var engagementRate *valueobject.EngagementRate
+	var err error
 	if followers != nil && *followers > 0 {
 		engagementRate, err = valueobject.CalculateEngagementRate(avgLikes, avgComments, *followers)
 		if err != nil {
@@ -61,8 +55,7 @@ func NewSocialBenchmarking(
 
 	benchmarking := &SocialBenchmarking{
 		id:             uuid.New(),
-		brandID:        uuid.New(), // Will be updated when brand is created/fetched
-		brandName:      brand,
+		brandID:        brandID,
 		avgLikes:       avgLikes,
 		avgComments:    avgComments,
 		followers:      followers,
@@ -82,7 +75,6 @@ func NewSocialBenchmarking(
 func ReconstructSocialBenchmarking(
 	id uuid.UUID,
 	brandID uuid.UUID,
-	brandName string,
 	avgLikes float64,
 	avgComments float64,
 	followers *int,
@@ -91,13 +83,11 @@ func ReconstructSocialBenchmarking(
 	updatedAt time.Time,
 	deletedAt *time.Time,
 ) *SocialBenchmarking {
-	brand := valueobject.ReconstructBrandName(brandName)
 	engRate := valueobject.ReconstructEngagementRate(engagementRate)
 
 	return &SocialBenchmarking{
 		id:             id,
 		brandID:        brandID,
-		brandName:      brand,
 		avgLikes:       avgLikes,
 		avgComments:    avgComments,
 		followers:      followers,
@@ -111,7 +101,6 @@ func ReconstructSocialBenchmarking(
 // Getters
 func (s *SocialBenchmarking) ID() uuid.UUID                               { return s.id }
 func (s *SocialBenchmarking) BrandID() uuid.UUID                          { return s.brandID }
-func (s *SocialBenchmarking) BrandName() *valueobject.BrandName           { return s.brandName }
 func (s *SocialBenchmarking) AvgLikes() float64                           { return s.avgLikes }
 func (s *SocialBenchmarking) AvgComments() float64                        { return s.avgComments }
 func (s *SocialBenchmarking) Followers() *int                             { return s.followers }
@@ -128,10 +117,6 @@ func (s *SocialBenchmarking) Validate() error {
 		return errors.New("brandID is required")
 	}
 
-	if s.brandName == nil {
-		return errors.New("brandName is required")
-	}
-
 	if s.avgLikes < 0 {
 		return errors.New("avgLikes cannot be negative")
 	}
@@ -144,18 +129,6 @@ func (s *SocialBenchmarking) Validate() error {
 		return errors.New("followers cannot be negative")
 	}
 
-	return nil
-}
-
-// UpdateBrandName atualiza o nome da marca
-func (s *SocialBenchmarking) UpdateBrandName(brandName string) error {
-	brand, err := valueobject.NewBrandName(brandName)
-	if err != nil {
-		return err
-	}
-
-	s.brandName = brand
-	s.updatedAt = time.Now()
 	return nil
 }
 

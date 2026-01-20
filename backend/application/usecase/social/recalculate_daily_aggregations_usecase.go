@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -28,9 +29,9 @@ func NewRecalculateDailyAggregationsUseCase(
 	}
 }
 
-func (uc *RecalculateDailyAggregationsUseCase) Execute(brandName string, date time.Time) (*entity.SocialDailyAggregation, error) {
+func (uc *RecalculateDailyAggregationsUseCase) Execute(brandID uuid.UUID, date time.Time) (*entity.SocialDailyAggregation, error) {
 	// Buscar todos os posts da marca na data
-	posts, err := uc.postGateway.ListByBrandAndDate(brandName, date)
+	posts, err := uc.postGateway.ListByBrandIDAndDate(brandID, date)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func (uc *RecalculateDailyAggregationsUseCase) Execute(brandName string, date ti
 	// Se não houver posts, deletar agregação existente (se houver)
 	if len(posts) == 0 {
 		// Buscar agregação existente
-		existingAggregation, err := uc.dailyAggregationGateway.GetByBrandAndDate(brandName, date)
+		existingAggregation, err := uc.dailyAggregationGateway.GetByBrandAndDate(brandID, date)
 		if err == nil && existingAggregation != nil {
 			// Deletar agregação
 			if err := uc.dailyAggregationGateway.Delete(existingAggregation.ID()); err != nil {
@@ -71,7 +72,7 @@ func (uc *RecalculateDailyAggregationsUseCase) Execute(brandName string, date ti
 	avgShares := float64(totalShares) / float64(totalPosts)
 
 	// Buscar agregação existente
-	existingAggregation, err := uc.dailyAggregationGateway.GetByBrandAndDate(brandName, date)
+	existingAggregation, err := uc.dailyAggregationGateway.GetByBrandAndDate(brandID, date)
 
 	var aggregation *entity.SocialDailyAggregation
 
@@ -99,7 +100,6 @@ func (uc *RecalculateDailyAggregationsUseCase) Execute(brandName string, date ti
 	} else {
 		// Criar nova agregação
 		aggregation, err = entity.NewSocialDailyAggregation(
-			brandName,
 			date,
 			totalPosts,
 			totalLikes,
@@ -114,22 +114,27 @@ func (uc *RecalculateDailyAggregationsUseCase) Execute(brandName string, date ti
 			return nil, err
 		}
 
+		// Set brandID
+		if err := aggregation.UpdateBrandID(brandID); err != nil {
+			return nil, err
+		}
+
 		if err := uc.dailyAggregationGateway.Create(aggregation); err != nil {
 			return nil, err
 		}
 	}
 
 	// Recalcular benchmarking global (média de todos os dias)
-	uc.recalculateGlobalBenchmarking(brandName)
+	uc.recalculateGlobalBenchmarking(brandID)
 
 	return aggregation, nil
 }
 
-func (uc *RecalculateDailyAggregationsUseCase) recalculateGlobalBenchmarking(brandName string) error {
+func (uc *RecalculateDailyAggregationsUseCase) recalculateGlobalBenchmarking(brandID uuid.UUID) error {
 	ctx := context.Background()
 
 	// Buscar todas as agregações da marca
-	criteria := domain.NewSocialDailyAggregationCriteria().WithBrandName(brandName)
+	criteria := domain.NewSocialDailyAggregationCriteria().WithBrandID(brandID.String())
 
 	// Buscar todas as agregações em lotes (sempre usar paginação)
 	allAggregations := make([]*entity.SocialDailyAggregation, 0)
@@ -174,7 +179,7 @@ func (uc *RecalculateDailyAggregationsUseCase) recalculateGlobalBenchmarking(bra
 	avgComments := float64(totalComments) / float64(len(allAggregations))
 
 	// Buscar benchmarking existente
-	existingBenchmarking, err := uc.benchmarkingGateway.GetByBrand(brandName)
+	existingBenchmarking, err := uc.benchmarkingGateway.GetByBrandID(brandID)
 
 	var benchmarking *entity.SocialBenchmarking
 
@@ -193,7 +198,7 @@ func (uc *RecalculateDailyAggregationsUseCase) recalculateGlobalBenchmarking(bra
 	} else {
 		// Criar novo benchmarking
 		benchmarking, err = entity.NewSocialBenchmarking(
-			brandName,
+			brandID,
 			avgLikes,
 			avgComments,
 			&followers,

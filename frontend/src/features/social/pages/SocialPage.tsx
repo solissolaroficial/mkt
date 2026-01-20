@@ -3,13 +3,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import SocialBenchmarkingView from '../ui/SocialBenchmarkingView';
 import SocialPostsView from '../ui/SocialPostsView';
 import SocialDailyAggregationsView from '../ui/SocialDailyAggregationsView';
+import BrandsView from '../ui/BrandsView';
 import { useSocialBenchmarkings, useSocialPosts, useSocialDailyAggregations } from '../hooks/useSocial';
-import { Loader2, BarChart2, Image, Calendar } from 'lucide-react';
+import { Loader2, BarChart2, Image, Calendar, Tag } from 'lucide-react';
  
-type TabType = 'benchmarking' | 'posts' | 'aggregations';
+type TabType = 'brands' | 'benchmarking' | 'posts' | 'aggregations';
 
 const SocialPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('benchmarking');
+  const [activeTab, setActiveTab] = useState<TabType>('brands');
   const queryClient = useQueryClient();
   
   const { data: benchmarkingData, isLoading: isLoadingBenchmarking, error: benchmarkingError } = useSocialBenchmarkings();
@@ -39,6 +40,7 @@ const SocialPage: React.FC = () => {
   }
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: 'brands', label: 'Marcas', icon: <Tag size={16} /> },
     { id: 'benchmarking', label: 'Benchmarking', icon: <BarChart2 size={16} /> },
     { id: 'posts', label: 'Posts', icon: <Image size={16} /> },
     { id: 'aggregations', label: 'Agregações', icon: <Calendar size={16} /> },
@@ -68,6 +70,14 @@ const SocialPage: React.FC = () => {
 
       {/* Content */}
       <div className="flex-grow">
+        {activeTab === 'brands' && (
+          <BrandsView
+            onRefresh={() => {
+              // Trigger refetch by invalidating queries
+              queryClient.invalidateQueries({ queryKey: ['brands'] });
+            }}
+          />
+        )}
         {activeTab === 'benchmarking' && (
           <SocialBenchmarkingView data={benchmarkingData?.benchmarkings || []} />
         )}

@@ -3,6 +3,8 @@ import type { SocialBenchmarking } from '@/shared/types';
 import { ThumbsUp, MessageCircle, BarChart2, TrendingUp, Users, ArrowLeft, Plus, Filter, Save, Edit2, Trash2 } from 'lucide-react';
 import type { SocialBenchmarkingViewProps } from '../types';
 import { useSocialMutations } from '../hooks/useSocialMutations';
+import { useBrands } from '../hooks/useBrands';
+import type { Brand } from '@/shared/types/legacy.types';
 
 const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, onBack }) => {
   // Filter States
@@ -13,7 +15,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
   // Form States
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [brandName, setBrandName] = useState('');
+  const [brandId, setBrandId] = useState('');
   const [avgLikes, setAvgLikes] = useState(0);
   const [avgComments, setAvgComments] = useState(0);
   const [followers, setFollowers] = useState<number | undefined>(undefined);
@@ -21,9 +23,18 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
   // Mutations
   const { create, update, delete: deleteBenchmarking, isCreating, isUpdating, isDeleting } = useSocialMutations();
 
+  // Brands Query
+  const { data: brands = [], isLoading: isLoadingBrands } = useBrands();
+
+  // Helper function to get brand name by brand_id
+  const getBrandName = (brandId: string): string => {
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.name || brandId;
+  };
+
   // Reset form states
   const resetForm = () => {
-    setBrandName('');
+    setBrandId('');
     setAvgLikes(0);
     setAvgComments(0);
     setFollowers(undefined);
@@ -34,7 +45,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
     if (editingId && data) {
       const item = data.find(item => item.id === editingId);
       if (item) {
-        setBrandName(item.brand_name);
+        setBrandId(item.brand_id);
         setAvgLikes(item.avg_likes);
         setAvgComments(item.avg_comments);
         setFollowers(item.followers);
@@ -53,7 +64,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
     e.preventDefault();
 
     create({
-      brand_name: brandName,
+      brand_id: brandId,
       avg_likes: avgLikes,
       avg_comments: avgComments,
       ...(followers !== undefined && { followers }),
@@ -77,7 +88,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
     update({
       id: editingId,
       data: {
-        brand_name: brandName,
+        brand_id: brandId,
         avg_likes: avgLikes,
         avg_comments: avgComments,
         ...(followers !== undefined && { followers }),
@@ -107,7 +118,8 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
 
   // Aplicar filtros localmente
   const filteredData = data ? data.filter(item => {
-    const matchBrand = searchBrand === '' || item.brand_name.toLowerCase().includes(searchBrand.toLowerCase());
+    const brandName = getBrandName(item.brand_id);
+    const matchBrand = searchBrand === '' || brandName.toLowerCase().includes(searchBrand.toLowerCase());
     return matchBrand;
   }) : [];
 
@@ -139,7 +151,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
   const hasData = sortedData && sortedData.length > 0;
 
   // Encontrar dados da Solis Solar
-  const solisData = hasData ? (sortedData.find(item => item.brand_name === 'Solis Solar') || sortedData[0]) : { avg_likes: 0, avg_comments: 0, followers: 0 };
+  const solisData = hasData ? (sortedData.find(item => getBrandName(item.brand_id) === 'Solis Solar') || sortedData[0]) : { avg_likes: 0, avg_comments: 0, followers: 0 };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col text-gray-200">
@@ -229,17 +241,27 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
           <form onSubmit={isAdding ? handleCreate : handleUpdate} className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                Nome da Marca <span className="text-rose-500">*</span>
+                Marca <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-                placeholder="Ex: Solis Solar"
-                className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
-                required
-                maxLength={200}
-              />
+              {isLoadingBrands ? (
+                <div className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-500">
+                  Carregando marcas...
+                </div>
+              ) : (
+                <select
+                  value={brandId}
+                  onChange={(e) => setBrandId(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
+                  required
+                >
+                  <option value="">Selecione uma marca...</option>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,7 +419,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
                         </tr>
                     ) : (
                         sortedData.map((item, index) => {
-                            const isSolis = item.brand_name === 'Solis Solar';
+                            const isSolis = getBrandName(item.brand_id) === 'Solis Solar';
 
                             // Calculate engagement rate once
                             const totalInteractions = item.avg_likes + item.avg_comments;
@@ -432,7 +454,7 @@ const SocialBenchmarkingView: React.FC<SocialBenchmarkingViewProps> = ({ data, o
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <span className={`font-bold text-lg ${isSolis ? 'text-emerald-400' : 'text-gray-300'}`}>
-                                                {item.brand_name}
+                                                {getBrandName(item.brand_id)}
                                             </span>
                                             {isSolis && <span className="px-2 py-0.5 rounded text-[10px] bg-[#1e5144] text-white font-bold uppercase shadow-lg shadow-[#1e5144]/20">Você</span>}
                                         </div>

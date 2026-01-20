@@ -23,7 +23,7 @@ func NewListSocialDailyAggregationsUseCase(aggregationGateway gateway.SocialDail
 
 // ListSocialDailyAggregationsInput represents input for listing social daily aggregations
 type ListSocialDailyAggregationsInput struct {
-	BrandName *string `query:"brand_name"`
+	BrandID   *string `query:"brand_id"`
 	Platform  *string `query:"platform"`
 	StartDate *string `query:"start_date"`
 	EndDate   *string `query:"end_date"`
@@ -45,7 +45,7 @@ type ListSocialDailyAggregationsOutput struct {
 // SocialDailyAggregationItem represents a daily aggregation in list
 type SocialDailyAggregationItem struct {
 	ID              string   `json:"id"`
-	BrandName       string   `json:"brand_name"`
+	BrandID         string   `json:"brand_id"`
 	AggregationDate string   `json:"aggregation_date"`
 	TotalPosts      int      `json:"total_posts"`
 	TotalLikes      int      `json:"total_likes"`
@@ -91,8 +91,8 @@ func (uc *ListSocialDailyAggregationsUseCase) Execute(ctx context.Context, input
 
 	// Create criteria
 	criteria := domain.NewSocialDailyAggregationCriteria()
-	if input.BrandName != nil {
-		criteria = criteria.WithBrandName(*input.BrandName)
+	if input.BrandID != nil {
+		criteria = criteria.WithBrandID(*input.BrandID)
 	}
 	if input.Platform != nil {
 		platform, err := valueobject.NewSocialPlatform(*input.Platform)
@@ -132,7 +132,7 @@ func (uc *ListSocialDailyAggregationsUseCase) Execute(ctx context.Context, input
 	for i, agg := range aggregations {
 		items[i] = SocialDailyAggregationItem{
 			ID:              agg.ID().String(),
-			BrandName:       agg.BrandName().Value(),
+			BrandID:         agg.BrandID().String(),
 			AggregationDate: agg.AggregationDate().Format("2006-01-02"),
 			TotalPosts:      agg.TotalPosts(),
 			TotalLikes:      agg.TotalLikes(),

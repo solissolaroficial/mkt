@@ -361,7 +361,7 @@ export interface PublicUser {
 // Interface principal (ATUALIZADA - compatível com backend)
 export interface SocialBenchmarking {
   id: string;
-  brand_name: string;
+  brand_id: string;
   avg_likes: number;
   avg_comments: number;
   followers?: number;
@@ -385,7 +385,7 @@ export interface SocialBenchmarkingListResponse {
 
 // Interface para filtros
 export interface SocialBenchmarkingFilters {
-  brand_name?: string;
+  brand_id?: string;
   start_date?: string; // YYYY-MM-DD
   end_date?: string;   // YYYY-MM-DD
   active?: boolean;     // true = ativos, false = deletados
@@ -397,7 +397,7 @@ export interface SocialBenchmarkingFilters {
 
 // Interface para request de criação
 export interface CreateSocialBenchmarkingRequest {
-  brand_name: string;
+  brand_id: string;
   avg_likes: number;
   avg_comments: number;
   followers?: number;
@@ -405,7 +405,7 @@ export interface CreateSocialBenchmarkingRequest {
 
 // Interface para request de atualização (partial update)
 export interface UpdateSocialBenchmarkingRequest {
-  brand_name?: string;
+  brand_id?: string;
   avg_likes?: number;
   avg_comments?: number;
   followers?: number;
@@ -504,7 +504,7 @@ export type SocialPostType = 'image' | 'video' | 'carousel' | 'reel' | 'story';
 // Interface principal para SocialPost
 export interface SocialPost {
   id: string;
-  brand_name: string;
+  brand_id: string;
   platform: SocialPlatform;
   post_date: string; // YYYY-MM-DD
   post_time?: string; // HH:MM:SS (opcional)
@@ -531,7 +531,7 @@ export interface SocialPostListResponse {
 
 // Interface para filtros de SocialPosts
 export interface SocialPostFilters {
-  brand_name?: string;
+  brand_id?: string;
   platform?: SocialPlatform;
   post_type?: SocialPostType;
   start_date?: string; // YYYY-MM-DD
@@ -549,7 +549,7 @@ export interface SocialPostFilters {
 
 // Interface para request de criação de SocialPost
 export interface CreateSocialPostRequest {
-  brand_name: string;
+  brand_id: string;
   platform: SocialPlatform;
   post_date: string; // YYYY-MM-DD
   post_time?: string; // HH:MM:SS (opcional)
@@ -563,7 +563,7 @@ export interface CreateSocialPostRequest {
 
 // Interface para request de atualização de SocialPost (partial update)
 export interface UpdateSocialPostRequest {
-  brand_name?: string;
+  brand_id?: string;
   platform?: SocialPlatform;
   post_date?: string; // YYYY-MM-DD
   post_time?: string; // HH:MM:SS (opcional)
@@ -582,6 +582,7 @@ export interface UpdateSocialPostRequest {
 // Interface principal para SocialDailyAggregation
 export interface SocialDailyAggregation {
   id: string;
+  brand_id: string;
   brand_name: string;
   aggregation_date: string; // YYYY-MM-DD
   total_posts: number;
@@ -610,7 +611,7 @@ export interface SocialDailyAggregationListResponse {
 
 // Interface para filtros de SocialDailyAggregations
 export interface SocialDailyAggregationFilters {
-  brand_name?: string;
+  brand_id?: string;
   platform?: SocialPlatform;
   start_date?: string; // YYYY-MM-DD
   end_date?: string; // YYYY-MM-DD
@@ -619,4 +620,33 @@ export interface SocialDailyAggregationFilters {
   limit?: number;
   sort_by?: 'aggregation_date' | 'total_posts' | 'total_likes' | 'total_comments' | 'engagement_rate' | 'created_at';
   sort_order?: 'asc' | 'desc';
+}
+
+// ============================================
+// Brand Types (Backend Integration)
+// ============================================
+
+export interface Brand {
+  id: string;
+  name: string;
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
+}
+
+export interface BrandListResponse {
+  brands: Brand[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+export interface CreateBrandRequest {
+  name: string;
+}
+
+export interface DeleteBrandRequest {
+  id: string;
 }

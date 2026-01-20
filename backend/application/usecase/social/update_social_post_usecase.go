@@ -14,23 +14,27 @@ import (
 // UpdateSocialPostUseCase handles updating a social post
 type UpdateSocialPostUseCase struct {
 	postGateway                    gateway.SocialPostGateway
+	brandGateway                   gateway.BrandGateway
 	recalculateAggregationsUseCase *RecalculateDailyAggregationsUseCase
 }
 
 // NewUpdateSocialPostUseCase creates a new update social post use case
 func NewUpdateSocialPostUseCase(
 	postGateway gateway.SocialPostGateway,
+	brandGateway gateway.BrandGateway,
 	recalculateAggregationsUseCase *RecalculateDailyAggregationsUseCase,
 ) *UpdateSocialPostUseCase {
 	return &UpdateSocialPostUseCase{
 		postGateway:                    postGateway,
+		brandGateway:                   brandGateway,
 		recalculateAggregationsUseCase: recalculateAggregationsUseCase,
 	}
 }
 
-// UpdateSocialPostInput represents the input for updating a social post
+// UpdateSocialPostInput represents input for updating a social post
 type UpdateSocialPostInput struct {
 	ID              string  `json:"id"`
+	BrandID         *string `json:"brand_id,omitempty"`
 	Platform        *string `json:"platform,omitempty"`
 	PostDate        *string `json:"post_date,omitempty"`
 	PostTime        *string `json:"post_time,omitempty"`
@@ -42,7 +46,7 @@ type UpdateSocialPostInput struct {
 	FollowersAtPost *int    `json:"followers_at_post,omitempty"`
 }
 
-// UpdateSocialPostOutput represents the output of updating a social post
+// UpdateSocialPostOutput represents output of updating a social post
 type UpdateSocialPostOutput struct {
 	ID              string  `json:"id"`
 	BrandName       string  `json:"brand_name"`
@@ -71,13 +75,36 @@ func (uc *UpdateSocialPostUseCase) Execute(ctx context.Context, input UpdateSoci
 		return nil, socialerrors.ErrSocialPostNotFound
 	}
 
-	// Get the existing post
+	// Get existing post
 	post, err := uc.postGateway.GetByID(id)
 	if err != nil {
 		if stderrors.Is(err, socialerrors.ErrSocialPostNotFound) {
 			return nil, err
 		}
 		return nil, err
+	}
+
+	// Update brand if provided
+	if input.BrandID != nil {
+		brandID, err := uuid.Parse(*input.BrandID)
+		if err != nil {
+			return nil, stderrors.New("invalid brand_id format")
+		}
+
+		// Validate if brand exists
+		brand, err := uc.brandGateway.FindByID(ctx, brandID)
+		if err != nil {
+			return nil, stderrors.New("brand not found")
+		}
+
+		// Update brand
+		if err := post.UpdateBrandID(brandID); err != nil {
+			return nil, err
+		}
+
+		// Update brand name value object
+		brandName := valueobject.ReconstructBrandName(brand.Name())
+		post.UpdateBrandName(brandName)
 	}
 
 	// Update fields if provided
@@ -143,7 +170,7 @@ func (uc *UpdateSocialPostUseCase) Execute(ctx context.Context, input UpdateSoci
 		post.SetFollowersAtPost(input.FollowersAtPost)
 	}
 
-	// Validate the updated post
+	// Validate updated post
 	if err := post.Validate(); err != nil {
 		return nil, err
 	}
@@ -154,11 +181,11 @@ func (uc *UpdateSocialPostUseCase) Execute(ctx context.Context, input UpdateSoci
 	}
 
 	// Recalculate daily aggregations
-	_, err = uc.recalculateAggregationsUseCase.Execute(post.BrandName().Value(), post.PostDate())
+	_, err = uc.recalculateAggregationsUseCase.Execute(post.BrandID(), post.PostDate())
 	if err != nil {
-		// Log error but don't fail the update
+		// Log error but don't fail update
 		// In production, this should be asynchronous
-		// We still return the updated post even if recalculation fails
+		// We still return updated post even if recalculation fails
 	}
 
 	// Format post time for output

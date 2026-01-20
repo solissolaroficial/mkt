@@ -11,7 +11,6 @@ import (
 type SocialDailyAggregation struct {
 	id              uuid.UUID
 	brandID         uuid.UUID
-	brandName       *valueobject.BrandName
 	aggregationDate time.Time
 	totalPosts      int
 	totalLikes      int
@@ -29,7 +28,6 @@ type SocialDailyAggregation struct {
 
 // NewSocialDailyAggregation cria uma nova entidade SocialDailyAggregation
 func NewSocialDailyAggregation(
-	brandName string,
 	aggregationDate time.Time,
 	totalPosts int,
 	totalLikes int,
@@ -40,11 +38,6 @@ func NewSocialDailyAggregation(
 	avgShares *float64,
 	followersAtDate *int,
 ) (*SocialDailyAggregation, error) {
-	brand, err := valueobject.NewBrandName(brandName)
-	if err != nil {
-		return nil, err
-	}
-
 	if totalPosts < 0 {
 		return nil, errors.New("totalPosts cannot be negative")
 	}
@@ -92,7 +85,6 @@ func NewSocialDailyAggregation(
 	aggregation := &SocialDailyAggregation{
 		id:              uuid.New(),
 		brandID:         uuid.New(), // Will be updated when brand is created/fetched
-		brandName:       brand,
 		aggregationDate: aggregationDate,
 		totalPosts:      totalPosts,
 		totalLikes:      totalLikes,
@@ -119,7 +111,6 @@ func NewSocialDailyAggregation(
 func ReconstructSocialDailyAggregation(
 	id uuid.UUID,
 	brandID uuid.UUID,
-	brandName string,
 	aggregationDate time.Time,
 	totalPosts int,
 	totalLikes int,
@@ -134,13 +125,11 @@ func ReconstructSocialDailyAggregation(
 	updatedAt time.Time,
 	deletedAt *time.Time,
 ) *SocialDailyAggregation {
-	brand := valueobject.ReconstructBrandName(brandName)
 	engRate := valueobject.ReconstructEngagementRate(engagementRate)
 
 	return &SocialDailyAggregation{
 		id:              id,
 		brandID:         brandID,
-		brandName:       brand,
 		aggregationDate: aggregationDate,
 		totalPosts:      totalPosts,
 		totalLikes:      totalLikes,
@@ -158,18 +147,17 @@ func ReconstructSocialDailyAggregation(
 }
 
 // Getters
-func (s *SocialDailyAggregation) ID() uuid.UUID                     { return s.id }
-func (s *SocialDailyAggregation) BrandID() uuid.UUID                { return s.brandID }
-func (s *SocialDailyAggregation) BrandName() *valueobject.BrandName { return s.brandName }
-func (s *SocialDailyAggregation) AggregationDate() time.Time        { return s.aggregationDate }
-func (s *SocialDailyAggregation) TotalPosts() int                   { return s.totalPosts }
-func (s *SocialDailyAggregation) TotalLikes() int                   { return s.totalLikes }
-func (s *SocialDailyAggregation) TotalComments() int                { return s.totalComments }
-func (s *SocialDailyAggregation) TotalShares() *int                 { return s.totalShares }
-func (s *SocialDailyAggregation) AvgLikes() float64                 { return s.avgLikes }
-func (s *SocialDailyAggregation) AvgComments() float64              { return s.avgComments }
-func (s *SocialDailyAggregation) AvgShares() *float64               { return s.avgShares }
-func (s *SocialDailyAggregation) FollowersAtDate() *int             { return s.followersAtDate }
+func (s *SocialDailyAggregation) ID() uuid.UUID              { return s.id }
+func (s *SocialDailyAggregation) BrandID() uuid.UUID         { return s.brandID }
+func (s *SocialDailyAggregation) AggregationDate() time.Time { return s.aggregationDate }
+func (s *SocialDailyAggregation) TotalPosts() int            { return s.totalPosts }
+func (s *SocialDailyAggregation) TotalLikes() int            { return s.totalLikes }
+func (s *SocialDailyAggregation) TotalComments() int         { return s.totalComments }
+func (s *SocialDailyAggregation) TotalShares() *int          { return s.totalShares }
+func (s *SocialDailyAggregation) AvgLikes() float64          { return s.avgLikes }
+func (s *SocialDailyAggregation) AvgComments() float64       { return s.avgComments }
+func (s *SocialDailyAggregation) AvgShares() *float64        { return s.avgShares }
+func (s *SocialDailyAggregation) FollowersAtDate() *int      { return s.followersAtDate }
 func (s *SocialDailyAggregation) EngagementRate() *valueobject.EngagementRate {
 	return s.engagementRate
 }
@@ -183,10 +171,6 @@ func (s *SocialDailyAggregation) DeletedAt() *time.Time { return s.deletedAt }
 func (s *SocialDailyAggregation) Validate() error {
 	if s.brandID == uuid.Nil {
 		return errors.New("brandID is required")
-	}
-
-	if s.brandName == nil {
-		return errors.New("brandName is required")
 	}
 
 	if s.aggregationDate.IsZero() {

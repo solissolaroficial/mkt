@@ -110,4 +110,9 @@ export const ENDPOINTS = {
     PROFILE: (name: string) => `/api/v1/representatives/profile/${name}`,
     PROFILES: '/api/v1/representatives/profiles',
   } as const,
+  BRANDS: {
+    LIST: '/api/brands',
+    CREATE: '/api/brands',
+    DELETE: (id: string) => `/api/brands/${id}`,
+  } as const,
 } as const;

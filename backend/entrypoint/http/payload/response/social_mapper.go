@@ -16,7 +16,7 @@ func NewSocialPayloadMapper() *SocialPayloadMapper {
 func (m *SocialPayloadMapper) ToSocialBenchmarkingResponse(benchmarking *entity.SocialBenchmarking) SocialBenchmarkingResponse {
 	return SocialBenchmarkingResponse{
 		ID:             benchmarking.ID().String(),
-		BrandName:      benchmarking.BrandName().String(),
+		BrandID:        benchmarking.BrandID().String(),
 		AvgLikes:       benchmarking.AvgLikes(),
 		AvgComments:    benchmarking.AvgComments(),
 		Followers:      benchmarking.Followers(),

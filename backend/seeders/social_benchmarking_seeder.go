@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -27,37 +28,38 @@ func (s *SocialBenchmarkingSeeder) Seed(ctx context.Context) error {
 		return nil
 	}
 
-	// Criar benchmarkings iniciais (mesmos dados do frontend mock)
+	// Criar benchmarkings iniciais (usando UUIDs aleatórios para brandID)
+	// NOTA: Em produção, estes brandIDs devem corresponder a marcas reais no banco
 	benchmarkings := []struct {
-		BrandName   string
+		BrandID     uuid.UUID
 		AvgLikes    float64
 		AvgComments float64
 		Followers   int
 	}{
-		{"Solis Solar", 145.5, 12.3, 15400},
-		{"Competitor A", 120.2, 8.5, 12000},
-		{"Competitor B", 98.4, 5.2, 8500},
-		{"Competitor C", 210.8, 18.9, 25000},
+		{uuid.MustParse("00000000-0000-0000-0000-000000000001"), 145.5, 12.3, 15400},
+		{uuid.MustParse("00000000-0000-0000-0000-000000000002"), 120.2, 8.5, 12000},
+		{uuid.MustParse("00000000-0000-0000-0000-000000000003"), 98.4, 5.2, 8500},
+		{uuid.MustParse("00000000-0000-0000-0000-000000000004"), 210.8, 18.9, 25000},
 	}
 
 	for _, b := range benchmarkings {
 		benchmarking, err := entity.NewSocialBenchmarking(
-			b.BrandName,
+			b.BrandID,
 			b.AvgLikes,
 			b.AvgComments,
 			&b.Followers,
 		)
 		if err != nil {
-			log.Printf("Error creating benchmarking %s: %v", b.BrandName, err)
+			log.Printf("Error creating benchmarking %s: %v", b.BrandID, err)
 			continue
 		}
 
 		if err := s.benchmarkingGateway.Save(ctx, benchmarking); err != nil {
-			log.Printf("Error saving benchmarking %s: %v", b.BrandName, err)
+			log.Printf("Error saving benchmarking %s: %v", b.BrandID, err)
 			continue
 		}
 
-		log.Printf("Created benchmarking: %s", b.BrandName)
+		log.Printf("Created benchmarking: %s", b.BrandID)
 	}
 
 	log.Println("Social benchmarkings seeded successfully")

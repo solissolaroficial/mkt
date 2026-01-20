@@ -2,8 +2,18 @@ import React from 'react';
 import type { SocialBenchmarking } from '@/shared/types';
 import { X, ThumbsUp, MessageCircle, BarChart2 } from 'lucide-react';
 import type { SocialRankingModalProps } from '../types';
+import { useBrands } from '../hooks/useBrands';
 
 const SocialRankingModal: React.FC<SocialRankingModalProps> = ({ isOpen, onClose, data }) => {
+  // Brands Query
+  const { data: brands = [] } = useBrands();
+
+  // Helper function to get brand name by brand_id
+  const getBrandName = (brandId: string): string => {
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.name || brandId;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -43,7 +53,7 @@ const SocialRankingModal: React.FC<SocialRankingModalProps> = ({ isOpen, onClose
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                         {data.map((item, index) => {
-                            const isSolis = item.brand_name === 'Solis Solar';
+                            const isSolis = getBrandName(item.brand_id) === 'Solis Solar';
                             return (
                                 <tr 
                                     key={index} 
@@ -55,7 +65,7 @@ const SocialRankingModal: React.FC<SocialRankingModalProps> = ({ isOpen, onClose
                                     <td className="px-6 py-4 text-gray-500 font-mono">#{index + 1}</td>
                                     <td className="px-6 py-4">
                                         <span className={`font-semibold ${isSolis ? 'text-purple-400' : 'text-gray-300'}`}>
-                                            {item.brand_name}
+                                            {getBrandName(item.brand_id)}
                                         </span>
                                         {isSolis && <span className="ml-2 px-2 py-0.5 rounded text-[10px] bg-purple-500 text-white font-bold uppercase">Você</span>}
                                     </td>

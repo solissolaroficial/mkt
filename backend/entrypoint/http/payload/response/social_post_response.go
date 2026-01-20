@@ -67,7 +67,7 @@ type SocialPostsListResponse struct {
 
 type SocialDailyAggregationResponse struct {
 	ID              string   `json:"id"`
-	BrandName       string   `json:"brand_name"`
+	BrandID         string   `json:"brand_id"`
 	AggregationDate string   `json:"aggregation_date"`
 	TotalPosts      int      `json:"total_posts"`
 	TotalLikes      int      `json:"total_likes"`
@@ -86,7 +86,7 @@ type SocialDailyAggregationResponse struct {
 func SocialDailyAggregationToResponse(agg *entity.SocialDailyAggregation) SocialDailyAggregationResponse {
 	return SocialDailyAggregationResponse{
 		ID:              agg.ID().String(),
-		BrandName:       agg.BrandName().Value(),
+		BrandID:         agg.BrandID().String(),
 		AggregationDate: agg.AggregationDate().Format("2006-01-02"),
 		TotalPosts:      agg.TotalPosts(),
 		TotalLikes:      agg.TotalLikes(),
