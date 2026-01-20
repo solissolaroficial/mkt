@@ -115,4 +115,14 @@ export const ENDPOINTS = {
     CREATE: '/api/brands',
     DELETE: (id: string) => `/api/brands/${id}`,
   } as const,
+  NOTIFICATIONS: {
+    LIST: '/api/notifications',
+    GET: (id: string) => `/api/notifications/${id}`,
+    CREATE: '/api/notifications',
+    UPDATE: (id: string) => `/api/notifications/${id}`,
+    DELETE: (id: string) => `/api/notifications/${id}`,
+    MARK_AS_READ: (id: string) => `/api/notifications/${id}/mark-as-read`,
+    MARK_ALL_AS_READ: '/api/notifications/mark-all-as-read',
+    DELETE_BY_TASK: (taskId: string) => `/api/notifications/by-task/${taskId}`,
+  } as const,
 } as const;

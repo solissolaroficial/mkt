@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import { useUIStore } from '@/shared/store/uiStore';
 import { useAuth } from '@/features/auth';
+import { useNotifications } from '@/features/notifications/hooks/useNotifications';
+import NotificationPanel from '@/shared/ui/notifications/NotificationPanel';
+import type { Notification } from '@/shared/types/legacy.types';
 import { MONTHS } from '@/shared/utils/constants';
 
 const Header: React.FC = () => {
@@ -27,9 +30,26 @@ const Header: React.FC = () => {
     setSelectedYear,
   } = useUIStore();
 
+  // Hook de notificações
+  const {
+    activeNotifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    archiveNotification,
+  } = useNotifications();
+
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification.id);
+    // Adicionar lógica para navegar para a tarefa relacionada, se existir
+    if (notification.task_id) {
+      // Navegar para a tarefa
+    }
   };
 
   return (
@@ -83,19 +103,21 @@ const Header: React.FC = () => {
             className="p-2 hover:bg-gray-800 rounded-lg transition-colors relative"
           >
             <Bell size={20} className="text-gray-400" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></span>
+            {/* CORREÇÃO: Indicador verde condicional */}
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></span>
+            )}
           </button>
 
-          {/* Notifications Dropdown (será implementado depois) */}
+          {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-[#1a1d24] border border-gray-800 rounded-xl shadow-2xl py-2">
-              <div className="px-4 py-2 border-b border-gray-800">
-                <h3 className="font-semibold text-white text-sm">Notificações</h3>
-              </div>
-              <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                Nenhuma notificação
-              </div>
-            </div>
+            <NotificationPanel
+              notifications={activeNotifications}
+              onMarkAsRead={markAsRead}
+              onArchive={archiveNotification}
+              onClearAll={markAllAsRead}
+              onNotificationClick={handleNotificationClick}
+            />
           )}
         </div>
 

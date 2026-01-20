@@ -6,6 +6,9 @@ interface NotificationState {
   addNotification: (notification: Omit<Notification, 'id'>) => void;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
+  // Novos métodos
+  setNotifications: (notifications: Notification[]) => void;
+  updateNotification: (id: string, updates: Partial<Notification>) => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set) => ({
@@ -28,4 +31,14 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     })),
 
   clearNotifications: () => set({ notifications: [] }),
+
+  // Novos métodos
+  setNotifications: (notifications) => set({ notifications }),
+
+  updateNotification: (id, updates) =>
+    set((state) => ({
+      notifications: state.notifications.map((n) =>
+        n.id === id ? { ...n, ...updates } : n
+      ),
+    })),
 }));

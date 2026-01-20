@@ -54,7 +54,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
                     >
                         <div className="flex gap-3">
                             <div className={`mt-1 w-8 h-8 rounded-full flex items-center justify-center border border-gray-700 bg-gray-800 flex-shrink-0`}>
-                                {getIcon(notification.type)}
+                                {getIcon(notification.notification_type)}
                             </div>
                             <div className="flex-grow min-w-0">
                                 <div className="flex justify-between items-start mb-1">
