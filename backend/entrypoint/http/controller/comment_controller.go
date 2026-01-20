@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
 	taskrequest "github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
@@ -157,6 +159,8 @@ func (c *CommentController) Get(ctx *fiber.Ctx) error {
 // @Tags comments
 // @Produce json
 // @Param task_id query string true "ID da tarefa"
+// @Param page query int false "Número da página (padrão: 1)"
+// @Param limit query int false "Itens por página (padrão: 10)"
 // @Success 200 {object} taskresponse.CommentsListResponse
 // @Router /comments [get]
 func (c *CommentController) List(ctx *fiber.Ctx) error {
@@ -167,12 +171,28 @@ func (c *CommentController) List(ctx *fiber.Ctx) error {
 		})
 	}
 
-	comments, listErr := c.listCommentsUseCase.Execute(taskID)
+	// Extrair parâmetros de paginação da query com valores padrão
+	page := 1
+	limit := 10
+
+	if pageStr := ctx.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	if limitStr := ctx.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	comments, total, listErr := c.listCommentsUseCase.ExecuteWithPagination(taskID, page, limit)
 	if listErr != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(taskresponse.ErrorResponse{
 			Error: listErr.Error(),
 		})
 	}
 
-	return ctx.JSON(c.mapper.ToCommentsListResponse(comments, int64(len(comments)), 1, len(comments)))
+	return ctx.JSON(c.mapper.ToCommentsListResponse(comments, total, page, limit))
 }

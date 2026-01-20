@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 
 	"github.com/seu-usuario/solis-backend/core/domain/constants"
@@ -14,6 +15,7 @@ type CreateCommentUseCase struct {
 	commentGateway      gateway.CommentGateway
 	notificationGateway gateway.NotificationGateway
 	userGateway         gateway.UserGateway
+	taskGateway         gateway.TaskGateway
 }
 
 // NewCreateCommentUseCase cria um novo CreateCommentUseCase
@@ -21,11 +23,13 @@ func NewCreateCommentUseCase(
 	commentGateway gateway.CommentGateway,
 	notificationGateway gateway.NotificationGateway,
 	userGateway gateway.UserGateway,
+	taskGateway gateway.TaskGateway,
 ) *CreateCommentUseCase {
 	return &CreateCommentUseCase{
 		commentGateway:      commentGateway,
 		notificationGateway: notificationGateway,
 		userGateway:         userGateway,
+		taskGateway:         taskGateway,
 	}
 }
 
@@ -39,6 +43,13 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, comment *entity.Com
 	if err := uc.commentGateway.Create(comment); err != nil {
 		return err
 	}
+
+	// Criar notificação para o assignee da tarefa (assíncrono)
+	go func() {
+		if err := uc.createTaskCommentNotification(ctx, comment); err != nil {
+			fmt.Printf("Erro ao criar notificação: %v\n", err)
+		}
+	}()
 
 	// Check for mentions and create notifications
 	uc.createMentionNotifications(ctx, comment)
@@ -88,4 +99,37 @@ func (uc *CreateCommentUseCase) createMentionNotifications(ctx context.Context, 
 			_ = uc.notificationGateway.Create(notification)
 		}
 	}
+}
+
+// createTaskCommentNotification cria uma notificação quando um comentário é adicionado a uma tarefa
+func (uc *CreateCommentUseCase) createTaskCommentNotification(ctx context.Context, comment *entity.Comment) error {
+	// Buscar a tarefa
+	task, err := uc.taskGateway.FindByID(comment.TaskUUID())
+	if err != nil {
+		return err
+	}
+
+	// Verificar se a tarefa tem assignee
+	if task.AssigneeUUID() == nil {
+		return nil // Sem assignee, sem notificação
+	}
+
+	// Não notificar se o comentador é o mesmo do assignee
+	if comment.UserUUID() == *task.AssigneeUUID() {
+		return nil
+	}
+
+	taskID := task.ID()
+	notification, err := entity.NewNotification(
+		*task.AssigneeUUID(),
+		&taskID,
+		constants.NotificationTypeCommentAdded,
+		"Novo comentário na sua tarefa",
+		fmt.Sprintf("Alguém comentou na tarefa: %s", task.Title()),
+	)
+	if err != nil {
+		return err
+	}
+
+	return uc.notificationGateway.Create(notification)
 }

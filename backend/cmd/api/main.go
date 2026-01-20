@@ -77,7 +77,19 @@ func main() {
 	app.Use(recover.New(recover.Config{
 		EnableStackTrace: true,
 		StackTraceHandler: func(c *fiber.Ctx, e interface{}) {
-			log.Printf("❌ PANIC recovered: %v\nStack: %s", e, string(c.Locals("stacktrace").([]byte)))
+			// Verificar se stacktrace existe antes de converter para evitar segundo panic
+			stack := ""
+			if st, ok := c.Locals("stacktrace").([]byte); ok {
+				stack = string(st)
+			}
+
+			log.Printf("❌ PANIC recovered: %v\nStack: %s", e, stack)
+
+			// Retornar resposta de erro em vez de deixar o panic propagar
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error":   "Internal Server Error",
+				"message": "An unexpected error occurred",
+			})
 		},
 	}))
 

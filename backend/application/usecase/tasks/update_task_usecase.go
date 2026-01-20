@@ -11,12 +11,17 @@ import (
 )
 
 type UpdateTaskUseCase struct {
-	taskGateway gateway.TaskGateway
+	taskGateway         gateway.TaskGateway
+	notificationGateway gateway.NotificationGateway
 }
 
-func NewUpdateTaskUseCase(taskGateway gateway.TaskGateway) *UpdateTaskUseCase {
+func NewUpdateTaskUseCase(
+	taskGateway gateway.TaskGateway,
+	notificationGateway gateway.NotificationGateway,
+) *UpdateTaskUseCase {
 	return &UpdateTaskUseCase{
-		taskGateway: taskGateway,
+		taskGateway:         taskGateway,
+		notificationGateway: notificationGateway,
 	}
 }
 
@@ -32,6 +37,10 @@ func (uc *UpdateTaskUseCase) Execute(id string, title string, description *strin
 	if err != nil {
 		return nil, err
 	}
+
+	// Guardar valores anteriores
+	oldAssigneeID := task.AssigneeUUID()
+	oldStatus := task.Status()
 
 	// Update task fields using setters
 	if title != "" {
@@ -108,5 +117,69 @@ func (uc *UpdateTaskUseCase) Execute(id string, title string, description *strin
 		return nil, err
 	}
 
+	// Verificar se assignee foi alterado e criar notificação (assíncrono)
+	if assigneeID != nil && oldAssigneeID != nil {
+		newAssigneeUUID, err := uuid.Parse(*assigneeID)
+		if err == nil && *oldAssigneeID != newAssigneeUUID {
+			go func() {
+				if err := uc.createTaskAssignedNotification(task); err != nil {
+					fmt.Printf("Erro ao criar notificação: %v\n", err)
+				}
+			}()
+		}
+	}
+
+	// Verificar se status mudou para completed e criar notificação (assíncrono)
+	if status != nil && oldStatus != constants.TaskStatusCompleted &&
+		constants.TaskStatus(*status) == constants.TaskStatusCompleted {
+		go func() {
+			if err := uc.createTaskCompletedNotification(task); err != nil {
+				fmt.Printf("Erro ao criar notificação: %v\n", err)
+			}
+		}()
+	}
+
 	return task, nil
+}
+
+// createTaskAssignedNotification cria uma notificação quando uma tarefa é atribuída a um usuário
+func (uc *UpdateTaskUseCase) createTaskAssignedNotification(task *entity.Task) error {
+	if task.AssigneeUUID() == nil {
+		return nil
+	}
+
+	taskID := task.ID()
+	notification, err := entity.NewNotification(
+		*task.AssigneeUUID(),
+		&taskID,
+		constants.NotificationTypeTaskAssigned,
+		"Tarefa atribuída a você",
+		fmt.Sprintf("Você foi atribuído à tarefa: %s", task.Title()),
+	)
+	if err != nil {
+		return err
+	}
+
+	return uc.notificationGateway.Create(notification)
+}
+
+// createTaskCompletedNotification cria uma notificação quando uma tarefa é concluída
+func (uc *UpdateTaskUseCase) createTaskCompletedNotification(task *entity.Task) error {
+	if task.AssigneeUUID() == nil {
+		return nil
+	}
+
+	taskID := task.ID()
+	notification, err := entity.NewNotification(
+		*task.AssigneeUUID(),
+		&taskID,
+		constants.NotificationTypeTaskCompleted,
+		"Tarefa concluída",
+		fmt.Sprintf("A tarefa foi concluída: %s", task.Title()),
+	)
+	if err != nil {
+		return err
+	}
+
+	return uc.notificationGateway.Create(notification)
 }

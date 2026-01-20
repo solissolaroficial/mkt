@@ -13,8 +13,8 @@ func NewUseCases(
 	userGateway gateway.UserGateway,
 ) *UseCases {
 	return &UseCases{
-		CreateTask: NewCreateTaskUseCase(taskGateway, subtaskGateway),
-		UpdateTask: NewUpdateTaskUseCase(taskGateway),
+		CreateTask: NewCreateTaskUseCase(taskGateway, subtaskGateway, notificationGateway),
+		UpdateTask: NewUpdateTaskUseCase(taskGateway, notificationGateway),
 		DeleteTask: NewDeleteTaskUseCase(taskGateway),
 		GetTask:    NewGetTaskUseCase(taskGateway),
 		ListTasks:  NewListTasksUseCase(taskGateway),
@@ -26,7 +26,7 @@ func NewUseCases(
 			List:   NewListSubtasksUseCase(subtaskGateway),
 		},
 		Comment: CommentUseCases{
-			Create: NewCreateCommentUseCase(commentGateway, notificationGateway, userGateway),
+			Create: NewCreateCommentUseCase(commentGateway, notificationGateway, userGateway, taskGateway),
 			Update: NewUpdateCommentUseCase(commentGateway),
 			Delete: NewDeleteCommentUseCase(commentGateway),
 			Get:    NewGetCommentUseCase(commentGateway),

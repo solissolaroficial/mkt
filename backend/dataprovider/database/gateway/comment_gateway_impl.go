@@ -154,14 +154,22 @@ func (g *commentGatewayImpl) FindByTaskID(taskID uuid.UUID, pagination *valueobj
 		query = query.Order(sortOrder.ToSQLString())
 	}
 
-	// Get paginated results
-	err := query.
-		Offset(pagination.Offset()).
-		Limit(pagination.Limit()).
-		Find(&commentModels).Error
+	// Validar limit antes de aplicar
+	limit := pagination.Limit()
+	offset := pagination.Offset()
 
-	if err != nil {
-		return nil, 0, err
+	if limit <= 0 {
+		// Se limit for 0 ou negativo, não aplicar limit (retornar todos)
+		err := query.Offset(offset).Find(&commentModels).Error
+		if err != nil {
+			return nil, 0, err
+		}
+	} else {
+		// Aplicar paginação normal
+		err := query.Offset(offset).Limit(limit).Find(&commentModels).Error
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	// Convert slice of models to slice of pointers

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Notification } from '../../../shared/types/legacy.types';
-import { Bell, Check, Clock, AtSign, Settings, Archive } from 'lucide-react';
+import { Bell, Check, Clock, AtSign, Settings, Archive, UserPlus, CheckCircle, MessageSquare, AlertTriangle } from 'lucide-react';
 
 interface NotificationPanelProps {
   notifications: Notification[];
@@ -17,9 +17,20 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
  
   const getIcon = (type: string) => {
     switch (type) {
-        case 'mention': return <AtSign size={16} className="text-blue-400" />;
-        case 'deadline': return <Clock size={16} className="text-amber-400" />;
-        default: return <Settings size={16} className="text-gray-400" />;
+        case 'mention':
+            return <AtSign size={16} className="text-blue-400" />;
+        case 'task_assigned':
+            return <UserPlus size={16} className="text-emerald-400" />;
+        case 'task_completed':
+            return <CheckCircle size={16} className="text-green-400" />;
+        case 'comment_added':
+            return <MessageSquare size={16} className="text-purple-400" />;
+        case 'task_overdue':
+            return <AlertTriangle size={16} className="text-amber-400" />;
+        case 'deadline':
+            return <Clock size={16} className="text-amber-400" />;
+        default:
+            return <Settings size={16} className="text-gray-400" />;
     }
   };
 

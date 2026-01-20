@@ -326,8 +326,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 	)
 
 	// Task Use Cases
-	createTaskUseCase := tasks.NewCreateTaskUseCase(taskGateway, subtaskGateway)
-	updateTaskUseCase := tasks.NewUpdateTaskUseCase(taskGateway)
+	createTaskUseCase := tasks.NewCreateTaskUseCase(taskGateway, subtaskGateway, notificationGateway)
+	updateTaskUseCase := tasks.NewUpdateTaskUseCase(taskGateway, notificationGateway)
 	deleteTaskUseCase := tasks.NewDeleteTaskUseCase(taskGateway)
 	getTaskUseCase := tasks.NewGetTaskUseCase(taskGateway)
 	listTasksUseCase := tasks.NewListTasksUseCase(taskGateway)
@@ -341,6 +341,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		commentGateway,
 		notificationGateway,
 		userGateway,
+		taskGateway,
 	)
 	updateCommentUseCase := tasks.NewUpdateCommentUseCase(commentGateway)
 	deleteCommentUseCase := tasks.NewDeleteCommentUseCase(commentGateway)

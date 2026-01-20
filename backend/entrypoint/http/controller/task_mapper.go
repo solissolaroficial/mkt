@@ -197,9 +197,20 @@ func (m *TaskMapper) ToTasksListResponse(tasks []*entity.Task, total int64, page
 		data[i] = m.ToTaskResponse(task)
 	}
 
-	totalPages := int(total) / limit
-	if totalPages == 0 && total > 0 {
-		totalPages = 1
+	// Prevenir divisão por zero
+	var totalPages int
+	if limit > 0 {
+		totalPages = int(total) / limit
+		if totalPages == 0 && total > 0 {
+			totalPages = 1
+		}
+	} else {
+		// Se limit for 0 ou negativo, usar total como totalPages
+		if total > 0 {
+			totalPages = 1
+		} else {
+			totalPages = 0
+		}
 	}
 
 	return &taskresponse.TasksListResponse{
@@ -299,9 +310,20 @@ func (m *TaskMapper) ToSubtasksListResponse(subtasks []*entity.Subtask, total in
 		data[i] = m.ToSubtaskResponse(subtask)
 	}
 
-	totalPages := int(total) / limit
-	if totalPages == 0 && total > 0 {
-		totalPages = 1
+	// Prevenir divisão por zero
+	var totalPages int
+	if limit > 0 {
+		totalPages = int(total) / limit
+		if totalPages == 0 && total > 0 {
+			totalPages = 1
+		}
+	} else {
+		// Se limit for 0 ou negativo, usar total como totalPages
+		if total > 0 {
+			totalPages = 1
+		} else {
+			totalPages = 0
+		}
 	}
 
 	return &taskresponse.SubtasksListResponse{
@@ -377,9 +399,20 @@ func (m *TaskMapper) ToCommentsListResponse(comments []*entity.Comment, total in
 		data[i] = m.ToCommentResponse(comment)
 	}
 
-	totalPages := int(total) / limit
-	if totalPages == 0 && total > 0 {
-		totalPages = 1
+	// Prevenir divisão por zero
+	var totalPages int
+	if limit > 0 {
+		totalPages = int(total) / limit
+		if totalPages == 0 && total > 0 {
+			totalPages = 1
+		}
+	} else {
+		// Se limit for 0 ou negativo, usar total como totalPages
+		if total > 0 {
+			totalPages = 1
+		} else {
+			totalPages = 0
+		}
 	}
 
 	return &taskresponse.CommentsListResponse{
@@ -458,9 +491,20 @@ func (m *TaskMapper) ToNotificationsListResponse(notifications []*entity.Notific
 		data[i] = m.ToNotificationResponse(notification)
 	}
 
-	totalPages := int(total) / limit
-	if totalPages == 0 && total > 0 {
-		totalPages = 1
+	// Prevenir divisão por zero
+	var totalPages int
+	if limit > 0 {
+		totalPages = int(total) / limit
+		if totalPages == 0 && total > 0 {
+			totalPages = 1
+		}
+	} else {
+		// Se limit for 0 ou negativo, usar total como totalPages
+		if total > 0 {
+			totalPages = 1
+		} else {
+			totalPages = 0
+		}
 	}
 
 	return &taskresponse.NotificationsListResponse{
