@@ -52,8 +52,8 @@ export const ENDPOINTS = {
     // Social Daily Aggregations
     LIST_AGGREGATIONS: '/api/social/daily-aggregations',
     GET_AGGREGATION: (id: string) => `/api/social/daily-aggregations/${id}`,
-    RECALCULATE_AGGREGATIONS: (brandName: string, date: string) =>
-      `/api/social/daily-aggregations/recalculate/${brandName}/${date}`,
+    RECALCULATE_AGGREGATIONS: (brandID: string, date: string) =>
+      `/api/social/daily-aggregations/recalculate/${brandID}/${date}`,
   } as const,
   COOPERATIVE: {
     // Offline Actions

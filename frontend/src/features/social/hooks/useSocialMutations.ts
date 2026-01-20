@@ -125,8 +125,8 @@ export const useSocialMutations = (setError?: any) => {
 
   // Recalculate aggregations mutation
   const recalculateAggregationsMutation = useMutation({
-    mutationFn: ({ brandName, date }: { brandName: string; date: string }) =>
-      socialService.recalculateAggregations(brandName, date),
+    mutationFn: ({ brandID, date }: { brandID: string; date: string }) =>
+      socialService.recalculateAggregations(brandID, date),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
       queryClient.invalidateQueries({ queryKey: ['social-benchmarkings'] });
@@ -181,8 +181,8 @@ export const useSocialMutations = (setError?: any) => {
     deletePost: (id: string) => deletePostMutation.mutate(id),
 
     // Social Daily Aggregations
-    recalculateAggregations: (brandName: string, date: string, options?: { onSuccess?: (result: SocialDailyAggregation) => void; onError?: (error: any) => void }) =>
-      recalculateAggregationsMutation.mutate({ brandName, date }, {
+    recalculateAggregations: (brandID: string, date: string, options?: { onSuccess?: (result: SocialDailyAggregation) => void; onError?: (error: any) => void }) =>
+      recalculateAggregationsMutation.mutate({ brandID, date }, {
         onSuccess: (result) => {
           options?.onSuccess?.(result);
         },

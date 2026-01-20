@@ -39,7 +39,7 @@ func (g *SocialPostGatewayImpl) Delete(id uuid.UUID) error {
 
 func (g *SocialPostGatewayImpl) GetByID(id uuid.UUID) (*entity.SocialPost, error) {
 	var model model.SocialPostModel
-	err := g.db.Where("id = ?", id).First(&model).Error
+	err := g.db.Where("id = ?", id).Preload("Brand").First(&model).Error
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (g *SocialPostGatewayImpl) List(
 	var models []*model.SocialPostModel
 	var total int64
 
-	query := g.db.Model(&model.SocialPostModel{})
+	query := g.db.Model(&model.SocialPostModel{}).Preload("Brand")
 
 	// Aplicar filtros
 	if criteria.BrandName != nil {
@@ -146,7 +146,8 @@ func (g *SocialPostGatewayImpl) ListByBrandIDAndDate(brandID uuid.UUID, date tim
 
 	query := g.db.Where("brand_id = ?", brandID).
 		Where("post_date = ?", date).
-		Order("post_time DESC, created_at DESC")
+		Order("post_time DESC, created_at DESC").
+		Preload("Brand")
 
 	if err := query.Find(&models).Error; err != nil {
 		return nil, err

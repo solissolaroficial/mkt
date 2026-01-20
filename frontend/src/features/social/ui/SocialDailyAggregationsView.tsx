@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { SocialDailyAggregation } from '@/shared/types';
+import type { Brand } from '@/shared/types/legacy.types';
 import { TrendingUp, ThumbsUp, MessageCircle, Share2, Calendar, Users, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { SocialPlatform } from '@/shared/types';
 import { useSocialMutations } from '../hooks/useSocialMutations';
+import { useBrands } from '../hooks/useBrands';
 import { useToast } from '@/shared/hooks/useToast';
 
 interface SocialDailyAggregationsViewProps {
@@ -12,12 +14,12 @@ interface SocialDailyAggregationsViewProps {
 
 const SocialDailyAggregationsView: React.FC<SocialDailyAggregationsViewProps> = ({ data, onRefresh }) => {
   const { error: showError } = useToast();
-  
+
   // Filter States
   const [sortBy, setSortBy] = useState<'aggregation_date' | 'total_posts' | 'total_likes' | 'total_comments' | 'engagement_rate' | 'created_at'>('aggregation_date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterBrand, setFilterBrand] = useState('');
-  
+
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -25,9 +27,19 @@ const SocialDailyAggregationsView: React.FC<SocialDailyAggregationsViewProps> = 
   // Mutations
   const { recalculateAggregations, isRecalculatingAggregations } = useSocialMutations();
 
+  // Brands Query
+  const { data: brands = [] } = useBrands();
+
+  // Helper function to get brand name by ID
+  const getBrandName = (brandId: string): string => {
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.name || brandId;
+  };
+
   // Aplicar filtros localmente
   const filteredData = data ? data.filter(item => {
-    const matchBrand = filterBrand === '' || item.brand_name.toLowerCase().includes(filterBrand.toLowerCase());
+    const brandName = getBrandName(item.brand_id);
+    const matchBrand = filterBrand === '' || brandName.toLowerCase().includes(filterBrand.toLowerCase());
     return matchBrand;
   }) : [];
 
@@ -86,10 +98,11 @@ const SocialDailyAggregationsView: React.FC<SocialDailyAggregationsViewProps> = 
     avgEngagementRate: 0,
   };
 
-  const handleRecalculate = (brandName: string, date: string) => {
+  const handleRecalculate = (brandID: string, date: string) => {
+    const brandName = getBrandName(brandID);
     if (!confirm(`Deseja recalcular as agregações para ${brandName} em ${date}?`)) return;
 
-    recalculateAggregations(brandName, date, {
+    recalculateAggregations(brandID, date, {
       onSuccess: () => {
         onRefresh?.();
       },
@@ -241,7 +254,7 @@ const SocialDailyAggregationsView: React.FC<SocialDailyAggregationsViewProps> = 
                     className="hover:bg-[#20232b] transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <span className="font-medium text-gray-300">{item.brand_name}</span>
+                      <span className="font-medium text-gray-300">{getBrandName(item.brand_id)}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-gray-400">
@@ -285,7 +298,7 @@ const SocialDailyAggregationsView: React.FC<SocialDailyAggregationsViewProps> = 
                     </td>
                     <td className="px-6 py-4 text-center">
                       <button
-                        onClick={() => handleRecalculate(item.brand_name, item.aggregation_date)}
+                        onClick={() => handleRecalculate(item.brand_id, item.aggregation_date)}
                         disabled={isRecalculatingAggregations}
                         className="p-1.5 hover:bg-emerald-500/10 rounded-lg transition-colors text-gray-400 hover:text-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Recalcular Agregações"

@@ -151,12 +151,12 @@ export const socialService = {
   },
 
   /**
-   * POST /api/social/daily-aggregations/recalculate/:brandName/:date
+   * POST /api/social/daily-aggregations/recalculate/:brandID/:date
    */
-  recalculateAggregations: async (brandName: string, date: string): Promise<SocialDailyAggregation> => {
-    console.log('[SOCIAL SERVICE] recalculateAggregations called with brandName:', brandName, 'date:', date);
+  recalculateAggregations: async (brandID: string, date: string): Promise<SocialDailyAggregation> => {
+    console.log('[SOCIAL SERVICE] recalculateAggregations called with brandID:', brandID, 'date:', date);
     const response = await apiClient.post<SocialDailyAggregation>(
-      ENDPOINTS.SOCIAL.RECALCULATE_AGGREGATIONS(brandName, date)
+      ENDPOINTS.SOCIAL.RECALCULATE_AGGREGATIONS(brandID, date)
     );
     console.log('[SOCIAL SERVICE] recalculateAggregations response.data:', response.data);
     return response.data;

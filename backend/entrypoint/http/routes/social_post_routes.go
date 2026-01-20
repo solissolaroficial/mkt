@@ -16,7 +16,7 @@ func RegisterSocialPostRoutes(router fiber.Router, socialPostController *control
 	router.Delete("/social/posts/:id", socialPostController.DeleteSocialPost)
 
 	// Social Daily Aggregations routes
-	router.Post("/social/daily-aggregations/recalculate/:brandName/:date", socialPostController.RecalculateDailyAggregations)
+	router.Post("/social/daily-aggregations/recalculate/:brandID/:date", socialPostController.RecalculateDailyAggregations)
 	router.Get("/social/daily-aggregations/:id", socialPostController.GetSocialDailyAggregation)
 	router.Get("/social/daily-aggregations", socialPostController.ListSocialDailyAggregations)
 }

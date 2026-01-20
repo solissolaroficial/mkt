@@ -520,11 +520,11 @@ export interface SocialPost {
 
 // Interface para resposta paginada de SocialPosts
 export interface SocialPostListResponse {
-  posts: SocialPost[];
-  meta: {
+  data: {
+    posts: SocialPost[];
     total: number;
     page: number;
-    limit: number;
+    page_size: number;
     total_pages: number;
   };
 }
@@ -583,7 +583,6 @@ export interface UpdateSocialPostRequest {
 export interface SocialDailyAggregation {
   id: string;
   brand_id: string;
-  brand_name: string;
   aggregation_date: string; // YYYY-MM-DD
   total_posts: number;
   total_likes: number;
@@ -600,11 +599,11 @@ export interface SocialDailyAggregation {
 
 // Interface para resposta paginada de SocialDailyAggregations
 export interface SocialDailyAggregationListResponse {
-  aggregations: SocialDailyAggregation[];
-  meta: {
+  data: {
+    aggregations: SocialDailyAggregation[];
     total: number;
     page: number;
-    limit: number;
+    page_size: number;
     total_pages: number;
   };
 }

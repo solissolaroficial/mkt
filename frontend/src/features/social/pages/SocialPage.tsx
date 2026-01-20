@@ -83,7 +83,7 @@ const SocialPage: React.FC = () => {
         )}
         {activeTab === 'posts' && (
           <SocialPostsView
-            data={postsData?.posts || []}
+            data={postsData?.data?.posts || []}
             onRefresh={() => {
               // Trigger refetch by invalidating queries
               queryClient.invalidateQueries({ queryKey: ['social-posts'] });
@@ -92,7 +92,7 @@ const SocialPage: React.FC = () => {
         )}
         {activeTab === 'aggregations' && (
           <SocialDailyAggregationsView
-            data={aggregationsData?.aggregations || []}
+            data={aggregationsData?.data?.aggregations || []}
             onRefresh={() => {
               // Trigger refetch by invalidating queries
               queryClient.invalidateQueries({ queryKey: ['social-daily-aggregations'] });
