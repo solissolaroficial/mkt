@@ -15,3 +15,11 @@ func SetupUserRoutes(router fiber.Router, userController *controller.UserControl
 	// List all active users without pagination (protected by auth middleware)
 	users.Get("/all", userController.ListAllUsers)
 }
+
+// SetupSettingsRoutes configura as rotas de configurações do usuário
+func SetupSettingsRoutes(router fiber.Router, userController *controller.UserController) {
+	settings := router.Group("/settings")
+
+	// Change user password (protected by auth middleware)
+	settings.Put("/password", userController.ChangePassword)
+}

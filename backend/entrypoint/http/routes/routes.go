@@ -60,6 +60,7 @@ func SetupRoutes(app *fiber.App, controllers *Controllers, middlewares *Middlewa
 	SetupCommentRoutes(protected, controllers.CommentController)
 	SetupNotificationRoutes(protected, controllers.NotificationController)
 	SetupUserRoutes(protected, controllers.UserController)
+	SetupSettingsRoutes(protected, controllers.UserController)
 	SetupCalendarPostRoutes(protected, controllers.CalendarPostController)
 	SetupPdvRoutes(protected, controllers.PdvController)
 	SetupSocialRoutes(protected, controllers.SocialController)

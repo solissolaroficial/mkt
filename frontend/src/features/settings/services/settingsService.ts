@@ -1,5 +1,5 @@
 import { apiClient } from '@/infrastructure/api/client';
-import type { ProgramCredential, InternalContact } from '../types';
+import type { ProgramCredential, InternalContact, ChangePasswordRequest, ChangePasswordResponse } from '../types';
 
 export const settingsService = {
   /**
@@ -29,7 +29,7 @@ export const settingsService = {
   /**
    * Update user password
    */
-  updatePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+  updatePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
     const response = await apiClient.put('/api/settings/password', data);
     return response.data;
   },

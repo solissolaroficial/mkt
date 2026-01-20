@@ -1,22 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  User, 
-  Mail, 
-  Lock, 
-  Camera, 
-  Save, 
-  LogOut, 
-  Shield, 
+  User,
+  Mail,
+  Lock,
+  Camera,
+  Save,
+  LogOut,
+  Shield,
   BellRing,
   CheckCircle2,
   Archive,
   History,
   RefreshCcw,
   Clock,
-  Target
+  Target,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import type { Notification, KpiCategory } from '@/shared/types';
 import type { SettingsViewProps, SettingsSection, UserFormData } from '../types';
+import { useChangePassword } from '../hooks/useChangePassword';
+import { validatePassword, getPasswordStrengthColor, getPasswordStrengthLabel } from '../utils/passwordValidation';
 
 const SettingsView: React.FC<SettingsViewProps> = ({
     onLogout,
@@ -28,6 +32,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState<string>('');
+  const [passwordSuccess, setPasswordSuccess] = useState<string>('');
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+  
+  // Password change hook
+  const { changePassword, isLoading: isChangingPassword, error: changePasswordError, isSuccess: changePasswordSuccess, reset: resetPasswordMutation } = useChangePassword();
 
   // Goal Editing State
   const [selectedGoalKpi, setSelectedGoalKpi] = useState<string>('');
@@ -74,13 +84,66 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     e.preventDefault();
     setIsSaving(true);
     
-    // Simulate API call
+    // Simulate API call for profile section
     setTimeout(() => {
       setIsSaving(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     }, 1500);
   };
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+    
+    // Validate passwords match
+    if (formData.newPassword !== formData.confirmPassword) {
+      setPasswordError('As senhas não coincidem');
+      return;
+    }
+    
+    // Validate password strength
+    const validation = validatePassword(formData.newPassword);
+    if (!validation.isValid) {
+      setPasswordError(validation.errors[0]);
+      return;
+    }
+    
+    // Call API
+    changePassword({
+      currentPassword: formData.currentPassword,
+      newPassword: formData.newPassword
+    });
+  };
+
+  // Handle password change success/error
+  useEffect(() => {
+    if (changePasswordSuccess) {
+      setPasswordSuccess('Senha alterada com sucesso!');
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      }));
+      setTimeout(() => {
+        setPasswordSuccess('');
+        resetPasswordMutation();
+      }, 3000);
+    }
+  }, [changePasswordSuccess, resetPasswordMutation]);
+
+  useEffect(() => {
+    if (changePasswordError) {
+      // Extrair mensagem de erro específica do backend ou usar mensagem genérica
+      const errorMessage = (changePasswordError as any).response?.data?.error ||
+                         changePasswordError.message ||
+                         'Erro ao alterar senha. Verifique sua senha atual e tente novamente.';
+      setPasswordError(errorMessage);
+      resetPasswordMutation();
+    }
+  }, [changePasswordError, resetPasswordMutation]);
 
   const handleUnarchive = (id: string) => {
     if (onUpdateNotification) {
@@ -233,7 +296,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             )}
 
             {activeSection === 'security' && (
-                <form onSubmit={handleSave} className="bg-[#1a1d24] rounded-2xl border border-white/5 shadow-xl overflow-hidden">
+                <form onSubmit={handlePasswordChange} className="bg-[#1a1d24] rounded-2xl border border-white/5 shadow-xl overflow-hidden">
                         <div className="p-8 space-y-8">
                             <div className="pb-6 border-b border-gray-800">
                                 <h3 className="text-lg font-bold text-gray-100">Alterar Senha</h3>
@@ -241,12 +304,46 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                             </div>
 
                             <div className="space-y-4 max-w-md">
+                                {/* Error Message */}
+                                {passwordError && (
+                                    <div className="flex items-start gap-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                        <AlertCircle size={18} className="text-rose-400 flex-shrink-0 mt-0.5" />
+                                        <div className="flex-grow">
+                                            <p className="text-sm text-rose-300">{passwordError}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setPasswordError('')}
+                                            className="text-rose-400 hover:text-rose-300"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                {/* Success Message */}
+                                {passwordSuccess && (
+                                    <div className="flex items-start gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                        <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
+                                        <div className="flex-grow">
+                                            <p className="text-sm text-emerald-300">{passwordSuccess}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setPasswordSuccess('')}
+                                            className="text-emerald-400 hover:text-emerald-300"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                )}
+                                
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Senha Atual</label>
                                     <div className="relative">
                                         <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input 
-                                            type="password" 
+                                        <input
+                                            type="password"
+                                            value={formData.currentPassword}
+                                            onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
                                             className="w-full pl-10 pr-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
                                             placeholder="••••••••"
                                         />
@@ -256,32 +353,93 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nova Senha</label>
                                     <div className="relative">
                                         <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input 
-                                            type="password" 
+                                        <input
+                                            type="password"
+                                            value={formData.newPassword}
+                                            onChange={(e) => {
+                                                setFormData({...formData, newPassword: e.target.value});
+                                                setShowPasswordStrength(e.target.value.length > 0);
+                                            }}
                                             className="w-full pl-10 pr-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
                                             placeholder="••••••••"
                                         />
                                     </div>
+                                    {/* Password Strength Indicator */}
+                                    {showPasswordStrength && formData.newPassword.length > 0 && (
+                                        <div className="mt-2">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex-grow h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full transition-all duration-300"
+                                                        style={{
+                                                            width: formData.newPassword.length >= 8 ? '100%' : '50%',
+                                                            backgroundColor: getPasswordStrengthColor(validatePassword(formData.newPassword).strength)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span
+                                                    className="text-xs font-semibold"
+                                                    style={{ color: getPasswordStrengthColor(validatePassword(formData.newPassword).strength) }}
+                                                >
+                                                    {getPasswordStrengthLabel(validatePassword(formData.newPassword).strength)}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-gray-500">
+                                                Mínimo 8 caracteres, incluindo 3 dos 4 tipos: maiúsculas, minúsculas, números ou caracteres especiais
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Confirmar Nova Senha</label>
                                     <div className="relative">
                                         <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input 
-                                            type="password" 
+                                        <input
+                                            type="password"
+                                            value={formData.confirmPassword}
+                                            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                                             className="w-full pl-10 pr-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
                                             placeholder="••••••••"
                                         />
                                     </div>
+                                    {/* Password Match Indicator */}
+                                    {formData.confirmPassword.length > 0 && (
+                                        <div className="mt-1 flex items-center gap-1.5">
+                                            {formData.newPassword === formData.confirmPassword ? (
+                                                <>
+                                                    <CheckCircle2 size={14} className="text-emerald-400" />
+                                                    <span className="text-[10px] text-emerald-400">As senhas coincidem</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <AlertCircle size={14} className="text-rose-400" />
+                                                    <span className="text-[10px] text-rose-400">As senhas não coincidem</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 bg-[#20232b] border-t border-gray-800 flex justify-end">
-                            <button 
+                        <div className="p-6 bg-[#20232b] border-t border-gray-800 flex justify-between items-center">
+                            <div>
+                                {passwordSuccess && (
+                                    <span className="flex items-center gap-2 text-emerald-400 text-sm font-medium animate-in fade-in slide-in-from-left-2">
+                                        <CheckCircle2 size={16} /> {passwordSuccess}
+                                    </span>
+                                )}
+                            </div>
+                            <button
                                 type="submit"
-                                className="px-6 py-2.5 bg-[#1e5144] hover:bg-[#163c32] text-white font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-[#1e5144]/20 transition-all"
+                                disabled={isChangingPassword || !formData.currentPassword || !formData.newPassword || !formData.confirmPassword}
+                                className="px-6 py-2.5 bg-[#1e5144] hover:bg-[#163c32] text-white font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-[#1e5144]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <Save size={18} /> Salvar Senha
+                                {isChangingPassword ? (
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <Save size={18} />
+                                )}
+                                Salvar Senha
                             </button>
                         </div>
                 </form>

@@ -84,7 +84,8 @@ type Container struct {
 	LoginUseCase *auth.LoginUseCase
 
 	// Use Cases - Users
-	ListUsersUseCase *users.ListUsersUseCase
+	ListUsersUseCase      *users.ListUsersUseCase
+	ChangePasswordUseCase *users.ChangePasswordUseCase
 
 	// Use Cases - Brands
 	CreateBrandUseCase *brand.CreateBrandUseCase
@@ -358,6 +359,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	// User Use Cases
 	listUsersUseCase := users.NewListUsersUseCase(userGateway)
+	changePasswordUseCase := users.NewChangePasswordUseCase(userGateway, hasherService)
 
 	// Brand Use Cases
 	createBrandUseCase := brand.NewCreateBrandUseCase(brandGateway)
@@ -525,7 +527,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteNotificationsByTaskIDUseCase,
 	)
 
-	userController := controller.NewUserController(listUsersUseCase)
+	userController := controller.NewUserController(listUsersUseCase, changePasswordUseCase)
 
 	calendarPostController := controller.NewCalendarPostController(
 		createCalendarPostUseCase,
@@ -728,6 +730,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		MarkAllAsReadNotificationsUseCase:      markAllAsReadNotificationsUseCase,
 		DeleteNotificationsByTaskIDUseCase:     deleteNotificationsByTaskIDUseCase,
 		ListUsersUseCase:                       listUsersUseCase,
+		ChangePasswordUseCase:                  changePasswordUseCase,
 		CreateCalendarPostUseCase:              createCalendarPostUseCase,
 		GetCalendarPostUseCase:                 getCalendarPostUseCase,
 		UpdateCalendarPostUseCase:              updateCalendarPostUseCase,

@@ -1,22 +1,32 @@
 package controller
 
 import (
+	stderrors "errors"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/application/usecase/users"
+	"github.com/seu-usuario/solis-backend/core/domain/errors"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
 
 // UserController handles HTTP requests for users
 type UserController struct {
-	listUsersUseCase *users.ListUsersUseCase
-	mapper           *UserMapper
+	listUsersUseCase      *users.ListUsersUseCase
+	changePasswordUseCase *users.ChangePasswordUseCase
+	mapper                *UserMapper
 }
 
 // NewUserController creates a new UserController instance
-func NewUserController(listUsersUseCase *users.ListUsersUseCase) *UserController {
+func NewUserController(
+	listUsersUseCase *users.ListUsersUseCase,
+	changePasswordUseCase *users.ChangePasswordUseCase,
+) *UserController {
 	return &UserController{
-		listUsersUseCase: listUsersUseCase,
-		mapper:           &UserMapper{},
+		listUsersUseCase:      listUsersUseCase,
+		changePasswordUseCase: changePasswordUseCase,
+		mapper:                &UserMapper{},
 	}
 }
 
@@ -86,4 +96,75 @@ func (c *UserController) ListAllUsers(ctx *fiber.Ctx) error {
 
 	userResponses := c.mapper.ToPublicResponseList(users)
 	return ctx.JSON(userResponses)
+}
+
+// ChangePassword altera a senha do usuário autenticado
+// PUT /api/settings/password
+func (c *UserController) ChangePassword(ctx *fiber.Ctx) error {
+	// 1. Obter ID do usuário do contexto (injetado pelo middleware de autenticação)
+	userIDValue := ctx.Locals("userID")
+	if userIDValue == nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// O middleware armazena userID como string, então precisamos converter para UUID
+	userIDStr, ok := userIDValue.(string)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID in context",
+		})
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID format",
+		})
+	}
+
+	// 2. Parse request body
+	var req request.ChangePasswordRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// 3. Executar use case
+	input := users.ChangePasswordInput{
+		UserID:          userID,
+		CurrentPassword: req.CurrentPassword,
+		NewPassword:     req.NewPassword,
+	}
+
+	if err := c.changePasswordUseCase.Execute(ctx.Context(), input); err != nil {
+		// Tratar erros de domínio específicos usando errors.Is
+		switch {
+		case stderrors.Is(err, errors.ErrUserNotFound):
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "User not found",
+			})
+		case stderrors.Is(err, errors.ErrCurrentPasswordMismatch):
+			return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+				Error: "Current password is incorrect",
+			})
+		case stderrors.Is(err, errors.ErrPasswordTooWeak):
+			return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+				Error: "Password does not meet strength requirements",
+			})
+		case stderrors.Is(err, errors.ErrPasswordSameAsCurrent):
+			return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+				Error: "New password must be different from current password",
+			})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+				Error: "Failed to change password",
+			})
+		}
+	}
+
+	// 4. Retornar resposta de sucesso
+	return ctx.Status(fiber.StatusOK).JSON(response.SuccessChangePasswordResponse())
 }
