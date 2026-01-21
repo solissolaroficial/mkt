@@ -2,12 +2,12 @@ package controller
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	"github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
+	"github.com/seu-usuario/solis-backend/dataprovider/database/helper"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
@@ -119,26 +119,39 @@ func (c *KpiController) GetByID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(kpiResponse)
 }
 
-// List handles KPI listing with pagination
+// List handles KPI listing with pagination and filters
 // @Summary List KPIs
-// @Description Retrieve a paginated list of KPI categories
+// @Description Retrieve a paginated list of KPI categories with optional month/year filters
 // @Tags kpis
 // @Accept json
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param pageSize query int false "Page size" default(10)
+// @Param month query string false "Month filter (JAN, FEV, MAR, etc.)"
+// @Param year query int false "Year filter"
 // @Success 200 {object} response.KpiListResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /kpis [get]
 func (c *KpiController) List(ctx *fiber.Ctx) error {
-	// Extract query params
-	page, _ := strconv.Atoi(ctx.Query("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.Query("pageSize", "10"))
+	// Parse query params using BaseQueryParams
+	var queryParams request.BaseQueryParams
+	if err := ctx.QueryParser(&queryParams); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid query parameters",
+		})
+	}
+
+	// Validate query params
+	if err := queryParams.Validate(); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
 
 	// Create pagination value object
-	pagination := valueobject.NewPagination(page, pageSize)
+	pagination := valueobject.NewPagination(queryParams.GetPage(), queryParams.GetLimit())
 
-	// Execute use case
+	// Execute use case with filters (month/year not used in usecase, filtering done in response)
 	output, err := c.listKpisUseCase.Execute(context.Background(), pagination)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
@@ -149,12 +162,14 @@ func (c *KpiController) List(ctx *fiber.Ctx) error {
 	// Convert entities to responses with monthly data
 	kpiResponses := make([]response.KpiResponse, len(output.Kpis))
 	for i, kpi := range output.Kpis {
-		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+		// Filter monthly data based on month/year if provided
+		filteredMonthlyData := helper.FilterMonthlyData(kpi.MonthlyDatas(), queryParams.GetMonth(), queryParams.GetYear())
+		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, filteredMonthlyData)
 	}
 
 	// Calculate pagination info
-	totalPages := int(output.Total) / pageSize
-	if int(output.Total)%pageSize > 0 {
+	totalPages := int(output.Total) / queryParams.GetLimit()
+	if int(output.Total)%queryParams.GetLimit() > 0 {
 		totalPages++
 	}
 
@@ -162,8 +177,8 @@ func (c *KpiController) List(ctx *fiber.Ctx) error {
 	listResponse := response.KpiListResponse{
 		Data: kpiResponses,
 		Pagination: response.PaginationResponse{
-			Page:       page,
-			PageSize:   pageSize,
+			Page:       queryParams.GetPage(),
+			PageSize:   queryParams.GetLimit(),
 			Total:      int64(output.Total),
 			TotalPages: totalPages,
 		},
@@ -174,11 +189,15 @@ func (c *KpiController) List(ctx *fiber.Ctx) error {
 
 // GetBySlugs handles KPI retrieval by a list of slugs
 // @Summary Get KPIs by slugs
-// @Description Retrieve KPI categories by a list of slugs
+// @Description Retrieve KPI categories by a list of slugs with optional month/year filters.
+// Note: Pagination is always set to Page=1, PageSize=len(results), Total=len(results), TotalPages=1
+// since this endpoint returns a filtered result set from a specific list of slugs.
 // @Tags kpis
 // @Accept json
 // @Produce json
 // @Param slugs body request.GetKpisBySlugsRequest true "List of slugs"
+// @Param month query string false "Month filter (JAN, FEV, MAR, etc.)"
+// @Param year query int false "Year filter"
 // @Success 200 {object} response.KpiListResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
@@ -189,6 +208,21 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
 			Error: "Invalid request body",
+		})
+	}
+
+	// Parse query params for month/year filters
+	var queryParams request.BaseQueryParams
+	if err := ctx.QueryParser(&queryParams); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid query parameters",
+		})
+	}
+
+	// Validate query params
+	if err := queryParams.Validate(); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
 		})
 	}
 
@@ -204,10 +238,12 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Convert entities to responses with monthly data
+	// Convert entities to responses with monthly data, applying filters
 	kpiResponses := make([]response.KpiResponse, len(output.Kpis))
 	for i, kpi := range output.Kpis {
-		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
+		// Filter monthly data based on month/year if provided
+		filteredMonthlyData := helper.FilterMonthlyData(kpi.MonthlyDatas(), queryParams.GetMonth(), queryParams.GetYear())
+		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, filteredMonthlyData)
 	}
 
 	// Create list response

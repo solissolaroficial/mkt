@@ -3,6 +3,7 @@ import { marketingService } from '../services/marketingService';
 import { MARKETING_CHANNELS_DATA, ANNUAL_CHANNEL_DATA } from '@/shared/utils/legacy.constants';
 import { kpiService } from '@/features/kpis/services/kpiService';
 import { MARKETING_KPIS_SLUGS, QUERY_KEYS } from '@/shared/utils/constants';
+import { useUIStore } from '@/shared/store/uiStore';
 
 /**
  * Hook to get channel data for a specific month or annual data
@@ -40,9 +41,11 @@ export const useAllChannelData = () => {
  * Hook to get Marketing KPIs
  */
 export const useMarketingKpis = () => {
+  const { selectedMonth, selectedYear } = useUIStore();
+
   const { data, isLoading, error } = useQuery({
-    queryKey: QUERY_KEYS.KPIS.BY_SLUGS(MARKETING_KPIS_SLUGS),
-    queryFn: () => kpiService.getBySlugs(MARKETING_KPIS_SLUGS),
+    queryKey: QUERY_KEYS.KPIS.BY_SLUGS([...MARKETING_KPIS_SLUGS, selectedMonth, selectedYear]),
+    queryFn: () => kpiService.getBySlugs(MARKETING_KPIS_SLUGS, selectedMonth, selectedYear ? parseInt(selectedYear) : undefined),
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 

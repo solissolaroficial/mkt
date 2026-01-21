@@ -42,6 +42,12 @@ export const KPI_DETAIL_DEPENDENCIES_SLUGS = [
   'taxa_de_oportunidades', // Necessário para cálculos de Ad Spend (CPL)
 ];
 
+// Interface para filtros de listagem de KPIs
+export interface KpiListFilters {
+  month?: string;
+  year?: string;
+}
+
 // Query keys para React Query
 export const QUERY_KEYS = {
   AUTH: {
@@ -49,7 +55,7 @@ export const QUERY_KEYS = {
   },
   KPIS: {
     ALL: ['kpis'],
-    LIST: (filters?: unknown) => ['kpis', 'list', filters],
+    LIST: (filters?: KpiListFilters) => ['kpis', 'list', filters],
     DETAIL: (id: string) => ['kpis', 'detail', id],
     BY_SLUGS: (slugs: string[]) => ['kpis', 'by-slugs', slugs],
   },

@@ -1,14 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { kpiService } from '../services/kpiService';
+import { useUIStore } from '@/shared/store/uiStore';
 import { QUERY_KEYS } from '@/shared/utils/constants';
 
 /**
- * Hook para buscar lista de KPIs
+ * Hook para buscar lista de KPIs com filtros globais
  */
 export const useKpis = () => {
+  const { selectedMonth, selectedYear } = useUIStore();
+
   return useQuery({
-    queryKey: QUERY_KEYS.KPIS.LIST(),
-    queryFn: () => kpiService.list(),
+    queryKey: QUERY_KEYS.KPIS.LIST({ month: selectedMonth, year: selectedYear }),
+    queryFn: () => kpiService.list(selectedMonth, selectedYear ? parseInt(selectedYear) : undefined),
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 };

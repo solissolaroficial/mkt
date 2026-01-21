@@ -20,20 +20,18 @@ type GetRepresentativeMonthlyGoalRequest struct {
 }
 
 // ListRepresentativeMonthlyGoalsRequest represents a request to list monthly goals
+// Incorpora BaseQueryParams para month, year, page, limit
 type ListRepresentativeMonthlyGoalsRequest struct {
-	Page             int     `query:"page" validate:"omitempty,min=1"`
-	PageSize         int     `query:"pageSize" validate:"omitempty,min=1,max=100"`
+	BaseQueryParams
 	RepresentativeID *string `query:"representativeId" validate:"omitempty,uuid"`
-	Month            *int    `query:"month" validate:"omitempty,min=1,max=12"`
-	Year             *int    `query:"year" validate:"omitempty,min=2000,max=2100"`
-	SortBy           string  `query:"sortBy" validate:"omitempty,oneof=month year target realized createdAt updatedAt"`
-	SortOrder        string  `query:"sortOrder" validate:"omitempty,oneof=asc desc ASC DESC"`
+	SortBy           *string `query:"sortBy" validate:"omitempty,oneof=month year target realized createdAt updatedAt"`
+	SortOrder        *string `query:"sortOrder" validate:"omitempty,oneof=asc desc"`
 }
 
 // GetRepresentativeGoalsTableDataRequest represents a request to get table data
+// Incorpora BaseQueryParams para month, year
 type GetRepresentativeGoalsTableDataRequest struct {
-	Year  int  `query:"year" validate:"required,min=2000,max=2100"`
-	Month *int `query:"month" validate:"omitempty,min=1,max=12"`
+	BaseQueryParams
 }
 
 // DeleteRepresentativeMonthlyGoalRequest represents a request to delete a monthly goal

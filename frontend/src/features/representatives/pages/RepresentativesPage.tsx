@@ -4,6 +4,7 @@ import RepresentativeList from '../components/RepresentativeList';
 import { MonthlyGoalsTable } from '../components/MonthlyGoalsTable';
 import RepProfileModal from '../ui/RepProfileModal';
 import { representativesService } from '../services/representativesService';
+import { useUIStore } from '@/shared/store/uiStore';
 import type { ListRepresentativesRequest, RepresentativeProfile } from '../types';
 
 const RepresentativesPage: React.FC = () => {
@@ -16,6 +17,7 @@ const RepresentativesPage: React.FC = () => {
   });
   const [selectedProfile, setSelectedProfile] = useState<RepresentativeProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const { selectedYear } = useUIStore();
 
   const { data, isLoading, error, refetch } = useRepTableData(filters);
 
@@ -107,18 +109,7 @@ const RepresentativesPage: React.FC = () => {
       {/* Table View - Monthly Goals */}
       {viewMode === 'table' && (
         <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <label className="text-sm font-medium text-gray-700">Ano:</label>
-            <select
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-              defaultValue={new Date().getFullYear()}
-            >
-              <option value={2024}>2024</option>
-              <option value={2025}>2025</option>
-              <option value={2026}>2026</option>
-            </select>
-          </div>
-          <MonthlyGoalsTable year={new Date().getFullYear()} onRepClick={handleRepClick} />
+          <MonthlyGoalsTable year={selectedYear ? parseInt(selectedYear) : new Date().getFullYear()} onRepClick={handleRepClick} />
         </div>
       )}
 

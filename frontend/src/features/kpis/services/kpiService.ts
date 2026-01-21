@@ -10,10 +10,15 @@ import type {
 
 export const kpiService = {
   /**
-   * Lista todos os KPIs
+   * Lista todos os KPIs com filtros opcionais de mês e ano
    */
-  list: async (): Promise<KpiListResponse> => {
-    const response = await apiClient.get<KpiListResponse>(ENDPOINTS.KPIS.LIST);
+  list: async (month?: string, year?: number): Promise<KpiListResponse> => {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', year.toString());
+
+    const url = `${ENDPOINTS.KPIS.LIST}?${params.toString()}`;
+    const response = await apiClient.get<KpiListResponse>(url);
     return response.data;
   },
 
@@ -79,11 +84,16 @@ export const kpiService = {
   },
 
   /**
-   * Busca KPIs por uma lista de slugs
+   * Busca KPIs por uma lista de slugs com filtros opcionais de mês e ano
    */
-  getBySlugs: async (slugs: string[]): Promise<KpiCategory[]> => {
+  getBySlugs: async (slugs: string[], month?: string, year?: number): Promise<KpiCategory[]> => {
+    const params = new URLSearchParams();
+    if (month) params.append('month', month);
+    if (year) params.append('year', year.toString());
+
+    const url = `${ENDPOINTS.KPIS.GET_BY_SLUGS}?${params.toString()}`;
     const response = await apiClient.post<{ data: KpiCategory[] }>(
-      ENDPOINTS.KPIS.GET_BY_SLUGS,
+      url,
       { slugs }
     );
     return response.data.data;

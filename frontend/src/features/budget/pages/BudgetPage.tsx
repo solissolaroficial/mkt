@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useBudgetItems, useBudgetYears } from '../hooks/useBudget';
+import { useUIStore } from '@/shared/store/uiStore';
 import BudgetView from '../ui/BudgetView';
 
 const BudgetPage: React.FC = () => {
   // Chamar hooks para carregar dados
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  const { selectedYear, setSelectedYear } = useUIStore();
   const { data: years = [] } = useBudgetYears();
   const { data: budgetItems = [], isLoading, error, refetch } = useBudgetItems({
-    year: selectedYear,
+    year: selectedYear ? parseInt(selectedYear) : undefined,
   });
 
   const handleBack = () => {
     // TODO: Navigate back
     console.log('Navigate back');
+  };
+
+  // Converter tipos para BudgetView
+  const selectedYearNumber = selectedYear ? parseInt(selectedYear) : undefined;
+  const handleYearChange = (year: number | undefined) => {
+    setSelectedYear(year ? year.toString() : '');
   };
 
   // Passar dados para BudgetView
@@ -24,8 +31,8 @@ const BudgetPage: React.FC = () => {
       error={error}
       onRefetch={refetch}
       years={years}
-      selectedYear={selectedYear}
-      onYearChange={setSelectedYear}
+      selectedYear={selectedYearNumber}
+      onYearChange={handleYearChange}
     />
   );
 };

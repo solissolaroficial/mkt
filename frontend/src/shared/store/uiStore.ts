@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 
+// Helper function to get current month in the correct format (JAN, FEV, MAR, etc.)
+const getCurrentMonth = (): string => {
+  const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+  const currentMonthIndex = new Date().getMonth();
+  return months[currentMonthIndex];
+};
+
+// Helper function to get current year
+const getCurrentYear = (): string => {
+  return new Date().getFullYear().toString();
+};
+
 interface UIState {
   // Sidebar
   isSidebarOpen: boolean;
@@ -39,9 +51,9 @@ export const useUIStore = create<UIState>((set) => ({
   toggleUserMenu: () => set((state) => ({ showUserMenu: !state.showUserMenu })),
   setShowUserMenu: (show) => set({ showUserMenu: show }),
 
-  // Filtros globais (mês/ano)
-  selectedMonth: 'NOV',
+  // Filtros globais (mês/ano) - Usa mês e ano atual dinamicamente
+  selectedMonth: getCurrentMonth(),
   setSelectedMonth: (month) => set({ selectedMonth: month }),
-  selectedYear: '2025',
+  selectedYear: getCurrentYear(),
   setSelectedYear: (year) => set({ selectedYear: year }),
 }));

@@ -114,14 +114,32 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) ListRequestToInput(req *represe
 		representativeUUID = &id
 	}
 
+	// Converter mês de string (BaseQueryParams) para int, se necessário
+	var month *int
+	if req.GetMonth() != nil && *req.GetMonth() != "---" {
+		monthVal := monthStringToInt(*req.GetMonth())
+		month = &monthVal
+	}
+
+	// Desreferenciar SortBy e SortOrder se não forem nil
+	var sortBy string
+	if req.SortBy != nil {
+		sortBy = *req.SortBy
+	}
+
+	var sortOrder string
+	if req.SortOrder != nil {
+		sortOrder = *req.SortOrder
+	}
+
 	return &representativemonthlygoal.ListRepresentativeMonthlyGoalsInput{
 		RepresentativeUUID: representativeUUID,
-		Month:              req.Month,
-		Year:               req.Year,
-		Page:               req.Page,
-		PageSize:           req.PageSize,
-		SortBy:             req.SortBy,
-		SortOrder:          req.SortOrder,
+		Month:              month,
+		Year:               req.GetYear(),
+		Page:               req.GetPage(),
+		PageSize:           req.GetLimit(),
+		SortBy:             sortBy,
+		SortOrder:          sortOrder,
 	}
 }
 
@@ -155,9 +173,22 @@ func (m *RepresentativeMonthlyGoalPayloadMapper) ListOutputToResponse(output *re
 
 // GetTableDataRequestToInput converts request to use case input
 func (m *RepresentativeMonthlyGoalPayloadMapper) GetTableDataRequestToInput(req *representativemonthlygoalrequest.GetRepresentativeGoalsTableDataRequest) *representativemonthlygoal.GetRepresentativeGoalsTableDataInput {
+	// Converter mês de string (BaseQueryParams) para int, se necessário
+	var month *int
+	if req.GetMonth() != nil && *req.GetMonth() != "---" {
+		monthVal := monthStringToInt(*req.GetMonth())
+		month = &monthVal
+	}
+
+	// Desreferenciar Year pois GetRepresentativeGoalsTableDataInput.Year é int (não ponteiro)
+	year := 0
+	if req.GetYear() != nil {
+		year = *req.GetYear()
+	}
+
 	return &representativemonthlygoal.GetRepresentativeGoalsTableDataInput{
-		Year:  req.Year,
-		Month: req.Month,
+		Year:  year,
+		Month: month,
 	}
 }
 
@@ -221,4 +252,26 @@ func getMonthName(month int) string {
 		return months[month-1]
 	}
 	return ""
+}
+
+// monthStringToInt converte mês em formato string (JAN, FEV, etc.) para int (1-12)
+func monthStringToInt(month string) int {
+	monthMap := map[string]int{
+		"JAN": 1,
+		"FEV": 2,
+		"MAR": 3,
+		"ABR": 4,
+		"MAI": 5,
+		"JUN": 6,
+		"JUL": 7,
+		"AGO": 8,
+		"SET": 9,
+		"OUT": 10,
+		"NOV": 11,
+		"DEZ": 12,
+	}
+	if val, ok := monthMap[month]; ok {
+		return val
+	}
+	return 0
 }

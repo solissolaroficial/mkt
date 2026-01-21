@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { usePdvPosts, useRecurrentPdvs, usePdvMutations, useRepresentatives } from '../hooks';
 import type { PdvTab, PdvPlatform } from '../types';
+import { useUIStore } from '@/shared/store/uiStore';
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ size = 14, className = "" }: { size?: number, className?: string }) => (
@@ -41,10 +42,10 @@ const PdvTrackingView: React.FC = () => {
   const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingPdv, setIsAddingPdv] = useState(false);
-  
+
   // Filter States
+  const { selectedMonth } = useUIStore();
   const [selectedRep, setSelectedRep] = useState('Todos');
-  const [selectedMonth, setSelectedMonth] = useState('Todos');
   const [missingMonth, setMissingMonth] = useState('NOV'); // Default for missing tab
   
   // Post Form States
@@ -156,9 +157,8 @@ const PdvTrackingView: React.FC = () => {
                         </div>
                         
                         <div className="relative">
-                            <select 
+                            <select
                                 value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
                                 className="appearance-none bg-[#1a1d24] border border-gray-700 text-gray-300 rounded-lg pl-10 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#1e5144]"
                             >
                                 <option value="Todos">Todos Meses</option>
