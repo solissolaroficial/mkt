@@ -442,7 +442,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const totalWidth = ganttTicks.length * currentConfig.tickWidth;
 
   return (
-    <div className="h-full flex overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="h-full flex overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 -ml-6 -mr-6">
       
       {/* --- FLOWS SIDEBAR --- */}
       <div 
@@ -519,7 +519,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       </div>
 
       {/* --- MAIN CONTENT --- */}
-      <div className="flex-grow flex flex-col min-w-0 p-6"> {/* Padding moved here from container */}
+      <div className="flex-grow flex flex-col min-w-0 p-6">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>

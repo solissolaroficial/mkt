@@ -23,7 +23,7 @@ const MainLayout: React.FC = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0f1115] p-6">
-          <div className="h-full flex flex-col max-w-7xl mx-auto">
+          <div className="h-full flex flex-col">
             <Outlet />
           </div>
         </main>
