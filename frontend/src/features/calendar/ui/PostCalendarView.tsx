@@ -134,7 +134,7 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 
 const PostCalendarView: React.FC<PostCalendarViewProps> = ({ posts, mutations, selectedCategory = 'all', setSelectedCategory, selectedType = 'all', setSelectedType, selectedAssignee = 'all', setSelectedAssignee }) => {
   const queryClient = useQueryClient();
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 1)); // Dec 2025 default
+  const [currentDate, setCurrentDate] = useState(new Date()); // Current date
   const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
   const [adjustComment, setAdjustComment] = useState('');
   const [viewMode, setViewMode] = useState<'calendar' | 'feed'>('calendar');
