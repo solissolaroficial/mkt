@@ -15,6 +15,8 @@ import (
 type UserController struct {
 	listUsersUseCase      *users.ListUsersUseCase
 	changePasswordUseCase *users.ChangePasswordUseCase
+	updateProfileUseCase  *users.UpdateProfile
+	getProfileUseCase     *users.GetProfile
 	mapper                *UserMapper
 }
 
@@ -22,10 +24,14 @@ type UserController struct {
 func NewUserController(
 	listUsersUseCase *users.ListUsersUseCase,
 	changePasswordUseCase *users.ChangePasswordUseCase,
+	updateProfileUseCase *users.UpdateProfile,
+	getProfileUseCase *users.GetProfile,
 ) *UserController {
 	return &UserController{
 		listUsersUseCase:      listUsersUseCase,
 		changePasswordUseCase: changePasswordUseCase,
+		updateProfileUseCase:  updateProfileUseCase,
+		getProfileUseCase:     getProfileUseCase,
 		mapper:                &UserMapper{},
 	}
 }
@@ -167,4 +173,129 @@ func (c *UserController) ChangePassword(ctx *fiber.Ctx) error {
 
 	// 4. Retornar resposta de sucesso
 	return ctx.Status(fiber.StatusOK).JSON(response.SuccessChangePasswordResponse())
+}
+
+// UpdateProfile atualiza os dados do perfil do usuário autenticado
+// PUT /api/settings/profile
+func (c *UserController) UpdateProfile(ctx *fiber.Ctx) error {
+	// 1. Obter ID do usuário do contexto (injetado pelo middleware de autenticação)
+	userIDValue := ctx.Locals("userID")
+	if userIDValue == nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// O middleware armazena userID como string, então precisamos converter para UUID
+	userIDStr, ok := userIDValue.(string)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID in context",
+		})
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID format",
+		})
+	}
+
+	// 2. Parse request body
+	var req request.UpdateProfileRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// 3. Executar use case
+	input := users.UpdateProfileInput{
+		UserID: userID,
+		Name:   req.Name,
+		Email:  req.Email,
+		Role:   req.Role,
+	}
+
+	user, err := c.updateProfileUseCase.Execute(ctx.Context(), input)
+	if err != nil {
+		// Tratar erros de domínio específicos usando errors.Is
+		switch {
+		case stderrors.Is(err, errors.ErrUserNotFound):
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "User not found",
+			})
+		case stderrors.Is(err, errors.ErrUserEmailExists):
+			return ctx.Status(fiber.StatusConflict).JSON(response.ErrorResponse{
+				Error: "Email already exists",
+			})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+				Error: "Failed to update profile",
+			})
+		}
+	}
+
+	// 4. Converter para response
+	userResponse := response.UserResponse{
+		ID:        user.ID().String(),
+		Name:      user.Name(),
+		Email:     user.Email(),
+		Role:      user.Role(),
+		Active:    user.IsActive(),
+		CreatedAt: user.CreatedAt(),
+		UpdatedAt: user.UpdatedAt(),
+	}
+
+	// 5. Retornar resposta de sucesso
+	return ctx.Status(fiber.StatusOK).JSON(response.SuccessUpdateProfileResponse(userResponse))
+}
+
+// GetProfile retorna os dados do perfil do usuário autenticado
+// GET /api/settings/profile
+func (c *UserController) GetProfile(ctx *fiber.Ctx) error {
+	// 1. Obter ID do usuário do contexto (injetado pelo middleware de autenticação)
+	userIDValue := ctx.Locals("userID")
+	if userIDValue == nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// O middleware armazena userID como string, então precisamos converter para UUID
+	userIDStr, ok := userIDValue.(string)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID in context",
+		})
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "Invalid user ID format",
+		})
+	}
+
+	// 2. Buscar usuário usando o use case
+	user, err := c.getProfileUseCase.Execute(ctx.Context(), userID)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+			Error: "User not found",
+		})
+	}
+
+	// 3. Converter para response
+	userResponse := response.UserResponse{
+		ID:        user.ID().String(),
+		Name:      user.Name(),
+		Email:     user.Email(),
+		Role:      user.Role(),
+		Active:    user.IsActive(),
+		CreatedAt: user.CreatedAt(),
+		UpdatedAt: user.UpdatedAt(),
+	}
+
+	// 4. Retornar resposta
+	return ctx.Status(fiber.StatusOK).JSON(response.SuccessGetProfileResponse(userResponse))
 }

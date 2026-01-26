@@ -63,6 +63,16 @@ func (u *User) IsActive() bool       { return u.active }
 func (u *User) CreatedAt() time.Time { return u.createdAt }
 func (u *User) UpdatedAt() time.Time { return u.updatedAt }
 
+// Update updates the user's profile information
+func (u *User) Update(name, email, role string) error {
+	u.name = name
+	u.email = email
+	u.role = role
+	u.updatedAt = time.Now()
+
+	return u.Validate()
+}
+
 // Validate performs business validation
 func (u *User) Validate() error {
 	if u.email == "" {

@@ -20,6 +20,12 @@ func SetupUserRoutes(router fiber.Router, userController *controller.UserControl
 func SetupSettingsRoutes(router fiber.Router, userController *controller.UserController) {
 	settings := router.Group("/settings")
 
+	// Get user profile (protected by auth middleware)
+	settings.Get("/profile", userController.GetProfile)
+
 	// Change user password (protected by auth middleware)
 	settings.Put("/password", userController.ChangePassword)
+
+	// Update user profile (protected by auth middleware)
+	settings.Put("/profile", userController.UpdateProfile)
 }

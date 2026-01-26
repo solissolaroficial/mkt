@@ -20,6 +20,9 @@ import {
 import type { Notification, KpiCategory } from '@/shared/types';
 import type { SettingsViewProps, SettingsSection, UserFormData } from '../types';
 import { useChangePassword } from '../hooks/useChangePassword';
+import { useUpdateProfile } from '../hooks/useUpdateProfile';
+import { useGetProfile } from '../hooks/useGetProfile';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthLabel } from '../utils/passwordValidation';
 
 const SettingsView: React.FC<SettingsViewProps> = ({
@@ -30,14 +33,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     onUpdateKpiMeta
 }) => {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
-  const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState<string>('');
   const [passwordSuccess, setPasswordSuccess] = useState<string>('');
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
-  
+  const [profileError, setProfileError] = useState<string>('');
+
+  // Auth hooks
+  const { user, setUser } = useAuth();
+
   // Password change hook
   const { changePassword, isLoading: isChangingPassword, error: changePasswordError, isSuccess: changePasswordSuccess, reset: resetPasswordMutation } = useChangePassword();
+
+  // Update profile hook
+  const { mutate: updateProfile, isPending: isUpdatingProfile, error: updateProfileError, isSuccess: updateProfileSuccess, reset: resetUpdateProfileMutation } = useUpdateProfile();
+
+  // Get profile hook
+  const { data: profileData, isLoading: isLoadingProfile } = useGetProfile();
 
   // Goal Editing State
   const [selectedGoalKpi, setSelectedGoalKpi] = useState<string>('');
@@ -69,28 +81,66 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     };
   }, []);
 
-  // Mock User State
+  // User Form State - initialized with real user data
   const [formData, setFormData] = useState<UserFormData>({
-    name: 'Jackson',
-    role: 'Coordenador de Marketing',
-    email: 'jackson@solis.com.br',
-    phone: '(19) 99999-9999',
+    name: user?.name || '',
+    role: user?.role || '',
+    email: user?.email || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
+  // Update formData when user data changes
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      }));
+    }
+  }, [user]);
+
+  // Load user profile data if user is null (direct access to /settings)
+  useEffect(() => {
+    if (!user && !isLoadingProfile && profileData) {
+      setUser(profileData);
+    }
+  }, [user, isLoadingProfile, profileData, setUser]);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    
-    // Simulate API call for profile section
-    setTimeout(() => {
-      setIsSaving(false);
+    setProfileError('');
+
+    // Call API to update profile
+    updateProfile({
+      name: formData.name,
+      email: formData.email,
+      role: formData.role,
+    });
+  };
+
+  // Handle profile update success/error
+  useEffect(() => {
+    if (updateProfileSuccess) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    }, 1500);
-  };
+      resetUpdateProfileMutation();
+    }
+  }, [updateProfileSuccess, resetUpdateProfileMutation]);
+
+  useEffect(() => {
+    if (updateProfileError) {
+      // Extrair mensagem de erro específica do backend ou usar mensagem genérica
+      const errorMessage = (updateProfileError as any).response?.data?.error ||
+                         updateProfileError.message ||
+                         'Erro ao atualizar perfil. Tente novamente.';
+      setProfileError(errorMessage);
+      resetUpdateProfileMutation();
+    }
+  }, [updateProfileError, resetUpdateProfileMutation]);
 
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,6 +263,22 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             {activeSection === 'profile' && (
                 <form onSubmit={handleSave} className="bg-[#1a1d24] rounded-2xl border border-white/5 shadow-xl overflow-hidden">
                         <div className="p-8 space-y-8">
+                            {/* Error Message */}
+                            {profileError && (
+                                <div className="flex items-start gap-2 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                    <AlertCircle size={18} className="text-rose-400 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-grow">
+                                        <p className="text-sm text-rose-300">{profileError}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setProfileError('')}
+                                        className="text-rose-400 hover:text-rose-300"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Avatar Section */}
                             <div className="flex items-center gap-6 pb-8 border-b border-gray-800">
                                 <div className="relative group cursor-pointer">
@@ -239,8 +305,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nome Completo</label>
                                     <div className="relative">
                                         <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             value={formData.name}
                                             onChange={(e) => setFormData({...formData, name: e.target.value})}
                                             className="w-full pl-10 pr-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
@@ -249,19 +315,19 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Cargo</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={formData.role}
-                                        onChange={(e) => setFormData({...formData, role: e.target.value})}
-                                        className="w-full px-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
+                                        disabled
+                                        className="w-full px-4 py-2.5 bg-[#0f1115]/50 border border-gray-700/50 rounded-xl text-gray-500 cursor-not-allowed text-sm"
                                     />
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">E-mail</label>
                                     <div className="relative">
                                         <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                                        <input 
-                                            type="email" 
+                                        <input
+                                            type="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({...formData, email: e.target.value})}
                                             className="w-full pl-10 pr-4 py-2.5 bg-[#0f1115] border border-gray-700 rounded-xl text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1e5144] text-sm"
@@ -279,12 +345,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                     </span>
                                 )}
                             </div>
-                            <button 
+                            <button
                                 type="submit"
-                                disabled={isSaving}
+                                disabled={isUpdatingProfile}
                                 className="px-6 py-2.5 bg-[#1e5144] hover:bg-[#163c32] text-white font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-[#1e5144]/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {isSaving ? (
+                                {isUpdatingProfile ? (
                                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <Save size={18} />
@@ -469,9 +535,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                 {archivedNotifications.map(notification => (
                                     <div key={notification.id} className="p-4 hover:bg-[#20232b] transition-colors flex gap-4">
                                         <div className="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0 text-gray-400">
-                                            {notification.type === 'mention' && <User size={18} />}
-                                            {notification.type === 'deadline' && <Clock size={18} />}
-                                            {notification.type === 'system' && <BellRing size={18} />}
+                                            {notification.notification_type === 'mention' && <User size={18} />}
+                                            {notification.notification_type === 'deadline' && <Clock size={18} />}
+                                            {notification.notification_type === 'system' && <BellRing size={18} />}
                                         </div>
                                         <div className="flex-grow">
                                             <div className="flex justify-between items-start">

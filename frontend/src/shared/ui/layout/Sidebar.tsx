@@ -12,7 +12,6 @@ import {
   TrendingUp,
   Gift,
   DollarSign,
-  KeyRound,
   Phone,
   PieChart,
   ChevronRight,
@@ -39,7 +38,6 @@ const Sidebar: React.FC = () => {
     { id: 'financial', label: 'Financeiro', icon: DollarSign, path: '/financial' },
     { id: 'budget', label: 'Orçamento', icon: PieChart, path: '/budget' },
     { id: 'representatives', label: 'Representantes', icon: GraduationCap, path: '/representatives' },
-    { id: 'settings', label: 'Configurações', icon: KeyRound, path: '/settings' },
   ];
 
   return (

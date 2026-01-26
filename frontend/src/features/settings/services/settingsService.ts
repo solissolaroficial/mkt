@@ -19,9 +19,17 @@ export const settingsService = {
   },
 
   /**
+   * Get user profile
+   */
+  getProfile: async () => {
+    const response = await apiClient.get('/api/settings/profile');
+    return response.data;
+  },
+
+  /**
    * Update user profile
    */
-  updateProfile: async (data: { name: string; email: string; phone: string; role: string }): Promise<void> => {
+  updateProfile: async (data: { name: string; email: string; role: string }): Promise<void> => {
     const response = await apiClient.put('/api/settings/profile', data);
     return response.data;
   },

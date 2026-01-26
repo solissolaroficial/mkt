@@ -16,7 +16,6 @@ export interface UserFormData {
   name: string;
   role: string;
   email: string;
-  phone: string;
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;

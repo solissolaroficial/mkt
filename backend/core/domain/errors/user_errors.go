@@ -11,4 +11,7 @@ var (
 
 	// ErrPasswordSameAsCurrent é retornado quando a nova senha é igual à atual
 	ErrPasswordSameAsCurrent = errors.New("new password must be different from current password")
+
+	// ErrUserEmailExists é retornado quando o e-mail já está em uso por outro usuário
+	ErrUserEmailExists = errors.New("user email already exists")
 )
