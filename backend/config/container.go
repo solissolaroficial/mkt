@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -42,8 +43,9 @@ type Container struct {
 	DB *gorm.DB
 
 	// Infrastructure Services
-	HasherService service.HasherService
-	JwtService    service.JWTService
+	HasherService  service.HasherService
+	JwtService     service.JWTService
+	StorageGateway gateway.StorageGateway
 
 	// Gateways
 	UserGateway                      gateway.UserGateway
@@ -273,6 +275,34 @@ func NewContainer(cfg *Config) (*Container, error) {
 		time.Duration(cfg.JWT.AccessTokenExpiryHours)*time.Hour,
 		time.Duration(cfg.JWT.RefreshTokenExpiryHours)*time.Hour,
 	)
+
+	// 2.1 Storage Gateway (opcional)
+	var storageGateway gateway.StorageGateway
+	if cfg.S3.AccessKey != "" && cfg.S3.SecretKey != "" {
+		s3Storage, err := infrastructure.NewS3Storage(
+			cfg.S3.AccessKey,
+			cfg.S3.SecretKey,
+			cfg.S3.Region,
+			cfg.S3.Bucket,
+			cfg.S3.PublicURL,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize S3 storage: %w", err)
+		}
+
+		// Validar bucket (opcional, mas recomendado)
+		if err := s3Storage.ValidateBucket(context.TODO()); err != nil {
+			log.Printf("⚠️  S3 bucket validation failed: %v", err)
+			// Continuar mesmo com erro em desenvolvimento
+		} else {
+			log.Println("✅ S3 storage initialized and validated successfully")
+		}
+
+		storageGateway = s3Storage
+	} else {
+		log.Println("⚠️  S3 storage not configured - file upload disabled")
+	}
+
 	log.Println("✅ Services initialized")
 
 	// 3. Gateways (dependem do DB)
@@ -671,6 +701,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		DB:                                     db,
 		HasherService:                          hasherService,
 		JwtService:                             jwtService,
+		StorageGateway:                         storageGateway,
 		UserGateway:                            userGateway,
 		KpiGateway:                             kpiGateway,
 		MonthlyDataGateway:                     monthlyDataGateway,

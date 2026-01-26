@@ -34,11 +34,21 @@ type ServerConfig struct {
 	Environment string
 }
 
+// S3Config configurações do S3
+type S3Config struct {
+	AccessKey string
+	SecretKey string
+	Region    string
+	Bucket    string
+	PublicURL string
+}
+
 // Config holds all application configuration
 type Config struct {
 	Database DatabaseConfig
 	JWT      JWTConfig
 	Server   ServerConfig
+	S3       S3Config
 }
 
 // getEnv returns environment variable value or default value
@@ -88,6 +98,13 @@ func LoadConfig() (*Config, error) {
 		Server: ServerConfig{
 			Port:        getEnvAsInt("SERVER_PORT", 8500),
 			Environment: getEnv("SERVER_ENVIRONMENT", "development"),
+		},
+		S3: S3Config{
+			AccessKey: getEnv("S3_ACCESS_KEY", ""),
+			SecretKey: getEnv("S3_SECRET_KEY", ""),
+			Region:    getEnv("S3_REGION", ""),
+			Bucket:    getEnv("S3_BUCKET", ""),
+			PublicURL: getEnv("S3_PUBLIC_URL", ""),
 		},
 	}
 
