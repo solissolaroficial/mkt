@@ -2,9 +2,12 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/helper"
@@ -243,7 +246,46 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 	for i, kpi := range output.Kpis {
 		// Filter monthly data based on month/year if provided
 		filteredMonthlyData := helper.FilterMonthlyData(kpi.MonthlyDatas(), queryParams.GetMonth(), queryParams.GetYear())
-		kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, filteredMonthlyData)
+
+		// Check if it's full year (month = ---)
+		if queryParams.GetMonth() != nil && *queryParams.GetMonth() == "---" {
+			// Calculate annual sum
+			var totalRealized float64 = 0
+			var totalMeta float64 = 0
+
+			for _, data := range filteredMonthlyData {
+				if data.Realized() != nil {
+					totalRealized += *data.Realized()
+				}
+				if data.Meta() != nil {
+					totalMeta += *data.Meta()
+				}
+			}
+
+			// Create consolidated item with month = ---
+			consolidatedMonthlyData, err := entity.ReconstructMonthlyData(
+				uuid.New(),
+				kpi.ID(),
+				*queryParams.GetYear(), // Use filtered year (dereference pointer)
+				"---",                  // Consolidated month
+				&totalRealized,         // Annual sum
+				&totalMeta,             // Sum of all metas
+				nil,                    // Empty breakdown
+				time.Now(),
+				time.Now(),
+			)
+			if err != nil {
+				return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+					Error: "Failed to create consolidated monthly data",
+				})
+			}
+
+			consolidatedData := []*entity.MonthlyData{consolidatedMonthlyData}
+			kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, consolidatedData)
+		} else {
+			// Use current logic: use filtered monthly data
+			kpiResponses[i] = *c.mapper.ToKpiResponseWithMonthlyData(kpi, filteredMonthlyData)
+		}
 	}
 
 	// Create list response
