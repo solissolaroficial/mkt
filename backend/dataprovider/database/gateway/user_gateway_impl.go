@@ -142,3 +142,21 @@ func (g *userGatewayImpl) ListAll(ctx context.Context) ([]*entity.User, error) {
 
 	return users, nil
 }
+
+// UpdateProfilePhotoKey atualiza a key da foto de perfil do usuário
+func (g *userGatewayImpl) UpdateProfilePhotoKey(ctx context.Context, userID uuid.UUID, profilePhotoKey string) error {
+	result := g.db.WithContext(ctx).
+		Model(&model.User{}).
+		Where("uuid = ?", userID).
+		Update("profile_photo_key", profilePhotoKey)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}

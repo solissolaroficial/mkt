@@ -41,4 +41,27 @@ export const settingsService = {
     const response = await apiClient.put('/api/settings/password', data);
     return response.data;
   },
+
+  /**
+   * Upload profile photo
+   */
+  uploadProfilePhoto: async (file: File): Promise<{ key: string }> => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    
+    const response = await apiClient.post('/api/settings/profile-photo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Remove profile photo
+   */
+  removeProfilePhoto: async (): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete('/api/settings/profile-photo');
+    return response.data;
+  },
 };

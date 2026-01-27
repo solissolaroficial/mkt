@@ -14,4 +14,13 @@ var (
 
 	// ErrUserEmailExists é retornado quando o e-mail já está em uso por outro usuário
 	ErrUserEmailExists = errors.New("user email already exists")
+
+	// ErrStorageNotConfigured é retornado quando o storage S3 não está configurado
+	ErrStorageNotConfigured = errors.New("storage is not configured")
+
+	// ErrFileTooLarge é retornado quando o arquivo excede o tamanho máximo
+	ErrFileTooLarge = errors.New("file too large (max 5MB)")
+
+	// ErrInvalidFileType é retornado quando o tipo de arquivo não é permitido
+	ErrInvalidFileType = errors.New("invalid file type (only jpg, jpeg, png, gif allowed)")
 )

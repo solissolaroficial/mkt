@@ -73,6 +73,7 @@ func (uc *ChangePasswordUseCase) Execute(ctx context.Context, input ChangePasswo
 		user.Name(),
 		user.Role(),
 		user.IsActive(),
+		user.ProfilePhotoKey(),
 		user.CreatedAt(),
 		user.UpdatedAt(),
 	)

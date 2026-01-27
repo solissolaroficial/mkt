@@ -86,10 +86,12 @@ type Container struct {
 	LoginUseCase *auth.LoginUseCase
 
 	// Use Cases - Users
-	ListUsersUseCase      *users.ListUsersUseCase
-	ChangePasswordUseCase *users.ChangePasswordUseCase
-	UpdateProfileUseCase  *users.UpdateProfile
-	GetProfileUseCase     *users.GetProfile
+	ListUsersUseCase          *users.ListUsersUseCase
+	ChangePasswordUseCase     *users.ChangePasswordUseCase
+	UpdateProfileUseCase      *users.UpdateProfile
+	UpdateProfilePhotoUseCase *users.UpdateProfilePhoto
+	RemoveProfilePhotoUseCase *users.RemoveProfilePhoto
+	GetProfileUseCase         *users.GetProfile
 
 	// Use Cases - Brands
 	CreateBrandUseCase *brand.CreateBrandUseCase
@@ -393,6 +395,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 	listUsersUseCase := users.NewListUsersUseCase(userGateway)
 	changePasswordUseCase := users.NewChangePasswordUseCase(userGateway, hasherService)
 	updateProfileUseCase := users.NewUpdateProfile(userGateway)
+	updateProfilePhotoUseCase := users.NewUpdateProfilePhoto(userGateway, storageGateway)
+	removeProfilePhotoUseCase := users.NewRemoveProfilePhoto(userGateway, storageGateway)
 	getProfileUseCase := users.NewGetProfile(userGateway)
 
 	// Brand Use Cases
@@ -561,7 +565,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteNotificationsByTaskIDUseCase,
 	)
 
-	userController := controller.NewUserController(listUsersUseCase, changePasswordUseCase, updateProfileUseCase, getProfileUseCase)
+	userController := controller.NewUserController(listUsersUseCase, changePasswordUseCase, updateProfileUseCase, getProfileUseCase, updateProfilePhotoUseCase, removeProfilePhotoUseCase, storageGateway)
 
 	calendarPostController := controller.NewCalendarPostController(
 		createCalendarPostUseCase,
@@ -767,6 +771,8 @@ func NewContainer(cfg *Config) (*Container, error) {
 		ListUsersUseCase:                       listUsersUseCase,
 		ChangePasswordUseCase:                  changePasswordUseCase,
 		UpdateProfileUseCase:                   updateProfileUseCase,
+		UpdateProfilePhotoUseCase:              updateProfilePhotoUseCase,
+		RemoveProfilePhotoUseCase:              removeProfilePhotoUseCase,
 		GetProfileUseCase:                      getProfileUseCase,
 		CreateCalendarPostUseCase:              createCalendarPostUseCase,
 		GetCalendarPostUseCase:                 getCalendarPostUseCase,

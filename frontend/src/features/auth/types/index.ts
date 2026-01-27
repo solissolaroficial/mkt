@@ -11,6 +11,7 @@ export interface LoginResponse {
     email: string;
     name: string;
     role: string;
+    profile_photo_key?: string;
   };
 }
 
@@ -19,6 +20,8 @@ export interface AuthUser {
   email: string;
   name: string;
   role: string;
+  profilePhotoKey?: string;
+  profilePhotoURL?: string;
 }
 
 export interface AuthError {

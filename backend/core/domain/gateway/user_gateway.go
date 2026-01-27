@@ -29,4 +29,7 @@ type UserGateway interface {
 
 	// ListAll retrieves all active users
 	ListAll(ctx context.Context) ([]*entity.User, error)
+
+	// UpdateProfilePhotoKey atualiza a key da foto de perfil do usuário
+	UpdateProfilePhotoKey(ctx context.Context, userID uuid.UUID, profilePhotoKey string) error
 }

@@ -9,15 +9,18 @@ import (
 type UserMapper struct{}
 
 // ToResponse converts a User entity to a UserResponse
+// Nota: ProfilePhotoURL não é gerado aqui pois o StorageGateway não está disponível no mapper.
+// A URL deve ser gerada no controller usando getProfilePhotoURL().
 func (m *UserMapper) ToResponse(user *entity.User) response.UserResponse {
 	return response.UserResponse{
-		ID:        user.ID().String(),
-		Email:     user.Email(),
-		Name:      user.Name(),
-		Role:      user.Role(),
-		Active:    user.IsActive(),
-		CreatedAt: user.CreatedAt(),
-		UpdatedAt: user.UpdatedAt(),
+		ID:              user.ID().String(),
+		Email:           user.Email(),
+		Name:            user.Name(),
+		Role:            user.Role(),
+		Active:          user.IsActive(),
+		ProfilePhotoKey: user.ProfilePhotoKey(),
+		CreatedAt:       user.CreatedAt(),
+		UpdatedAt:       user.UpdatedAt(),
 	}
 }
 
@@ -33,12 +36,13 @@ func (m *UserMapper) ToResponseList(users []*entity.User) []response.UserRespons
 // ToPublicResponse converts a User entity to a PublicUserResponse (without email)
 func (m *UserMapper) ToPublicResponse(user *entity.User) response.PublicUserResponse {
 	return response.PublicUserResponse{
-		ID:        user.ID().String(),
-		Name:      user.Name(),
-		Role:      user.Role(),
-		Active:    user.IsActive(),
-		CreatedAt: user.CreatedAt(),
-		UpdatedAt: user.UpdatedAt(),
+		ID:              user.ID().String(),
+		Name:            user.Name(),
+		Role:            user.Role(),
+		Active:          user.IsActive(),
+		ProfilePhotoKey: user.ProfilePhotoKey(),
+		CreatedAt:       user.CreatedAt(),
+		UpdatedAt:       user.UpdatedAt(),
 	}
 }
 

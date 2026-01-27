@@ -16,6 +16,7 @@ func (m *UserMapper) ToDomain(userModel *model.User) *entity.User {
 		userModel.Name,
 		userModel.Role,
 		userModel.Active,
+		userModel.ProfilePhotoKey,
 		userModel.CreatedAt,
 		userModel.UpdatedAt,
 	)
@@ -24,13 +25,14 @@ func (m *UserMapper) ToDomain(userModel *model.User) *entity.User {
 // ToModel converte Entity (Domínio) para Model (GORM)
 func (m *UserMapper) ToModel(user *entity.User) *model.User {
 	return &model.User{
-		UUID:      user.ID(),
-		Email:     user.Email(),
-		Password:  user.Password(),
-		Name:      user.Name(),
-		Role:      user.Role(),
-		Active:    user.IsActive(),
-		CreatedAt: user.CreatedAt(),
-		UpdatedAt: user.UpdatedAt(),
+		UUID:            user.ID(),
+		Email:           user.Email(),
+		Password:        user.Password(),
+		Name:            user.Name(),
+		Role:            user.Role(),
+		Active:          user.IsActive(),
+		ProfilePhotoKey: user.ProfilePhotoKey(),
+		CreatedAt:       user.CreatedAt(),
+		UpdatedAt:       user.UpdatedAt(),
 	}
 }

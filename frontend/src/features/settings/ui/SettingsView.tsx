@@ -15,13 +15,19 @@ import {
   Clock,
   Target,
   AlertCircle,
-  X
+  X,
+  Upload,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import type { Notification, KpiCategory } from '@/shared/types';
 import type { SettingsViewProps, SettingsSection, UserFormData } from '../types';
 import { useChangePassword } from '../hooks/useChangePassword';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 import { useGetProfile } from '../hooks/useGetProfile';
+import { useUploadProfilePhoto } from '../hooks/useUploadProfilePhoto';
+import { useRemoveProfilePhoto } from '../hooks/useRemoveProfilePhoto';
+import { usePresignedURL } from '../hooks/usePresignedURL';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthLabel } from '../utils/passwordValidation';
 
@@ -38,6 +44,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   const [passwordSuccess, setPasswordSuccess] = useState<string>('');
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
   const [profileError, setProfileError] = useState<string>('');
+  const [photoError, setPhotoError] = useState<string>('');
+  const [photoSuccess, setPhotoSuccess] = useState<string>('');
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auth hooks
   const { user, setUser } = useAuth();
@@ -48,8 +59,17 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   // Update profile hook
   const { mutate: updateProfile, isPending: isUpdatingProfile, error: updateProfileError, isSuccess: updateProfileSuccess, reset: resetUpdateProfileMutation } = useUpdateProfile();
 
+  // Upload profile photo hook
+  const { mutate: uploadProfilePhoto, isPending: isUploadingPhoto, error: uploadPhotoError, isSuccess: uploadPhotoSuccess, reset: resetUploadPhotoMutation } = useUploadProfilePhoto();
+
+  // Remove profile photo hook
+  const { mutate: removeProfilePhoto, isPending: isRemovingPhoto, error: removePhotoError, isSuccess: removePhotoSuccess, reset: resetRemovePhotoMutation } = useRemoveProfilePhoto();
+
   // Get profile hook
   const { data: profileData, isLoading: isLoadingProfile } = useGetProfile();
+
+  // Get presigned URL hook
+  const { data: presignedURLData } = usePresignedURL();
 
   // Goal Editing State
   const [selectedGoalKpi, setSelectedGoalKpi] = useState<string>('');
@@ -195,6 +215,82 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     }
   }, [changePasswordError, resetPasswordMutation]);
 
+  // Handle photo upload success/error
+  useEffect(() => {
+    if (uploadPhotoSuccess) {
+      setPhotoSuccess('Foto de perfil atualizada com sucesso!');
+      setTimeout(() => setPhotoSuccess(''), 3000);
+      resetUploadPhotoMutation();
+      // Nota: A invalidação de queries no hook useUploadProfilePhoto
+      // irá recarregar os dados do usuário automaticamente
+    }
+  }, [uploadPhotoSuccess, resetUploadPhotoMutation]);
+
+  useEffect(() => {
+    if (uploadPhotoError) {
+      const errorMessage = (uploadPhotoError as any).response?.data?.error ||
+                         uploadPhotoError.message ||
+                         'Erro ao fazer upload da foto. Tente novamente.';
+      setPhotoError(errorMessage);
+      resetUploadPhotoMutation();
+    }
+  }, [uploadPhotoError, resetUploadPhotoMutation]);
+
+  // Handle photo remove success/error
+  useEffect(() => {
+    if (removePhotoSuccess) {
+      setPhotoSuccess('Foto de perfil removida com sucesso!');
+      setTimeout(() => setPhotoSuccess(''), 3000);
+      resetRemovePhotoMutation();
+    }
+  }, [removePhotoSuccess, resetRemovePhotoMutation]);
+
+  useEffect(() => {
+    if (removePhotoError) {
+      const errorMessage = (removePhotoError as any).response?.data?.error ||
+                         removePhotoError.message ||
+                         'Erro ao remover a foto. Tente novamente.';
+      setPhotoError(errorMessage);
+      resetRemovePhotoMutation();
+    }
+  }, [removePhotoError, resetRemovePhotoMutation]);
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Tipo de arquivo não suportado. Use JPG, PNG ou GIF.');
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setPhotoError('Arquivo muito grande. Tamanho máximo: 5MB.');
+      return;
+    }
+
+    setPhotoError('');
+    setSelectedPhotoFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload photo automatically after selection
+    uploadProfilePhoto(file);
+  };
+
+  const handlePhotoRemove = () => {
+    removeProfilePhoto();
+  };
+
   const handleUnarchive = (id: string) => {
     if (onUpdateNotification) {
         // Ao desarquivar, definimos read: false para que ela volte ao topo da lista e notifique o usuário
@@ -281,11 +377,25 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 
                             {/* Avatar Section */}
                             <div className="flex items-center gap-6 pb-8 border-b border-gray-800">
-                                <div className="relative group cursor-pointer">
+                                <div className="relative group">
                                     <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-gray-700 to-gray-600 border-4 border-[#1a1d24] flex items-center justify-center text-3xl font-bold text-white shadow-lg overflow-hidden">
-                                        {formData.name.substring(0, 2).toUpperCase()}
+                                        {photoPreview ? (
+                                            <img
+                                                src={photoPreview}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : presignedURLData?.url ? (
+                                            <img
+                                                src={presignedURLData.url}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            formData.name.substring(0, 2).toUpperCase()
+                                        )}
                                     </div>
-                                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                         <Camera size={24} className="text-white" />
                                     </div>
                                 </div>
@@ -293,9 +403,59 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                                     <h3 className="text-lg font-bold text-gray-100">Sua Foto</h3>
                                     <p className="text-sm text-gray-500 mb-3">Isso será exibido no seu perfil.</p>
                                     <div className="flex gap-3">
-                                        <button type="button" className="px-4 py-2 bg-[#1e5144] hover:bg-[#163c32] text-white text-xs font-semibold rounded-lg transition-colors">Alterar</button>
-                                        <button type="button" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-lg transition-colors">Remover</button>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/jpeg,image/jpg,image/png,image/gif"
+                                            onChange={handlePhotoSelect}
+                                            className="hidden"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="px-4 py-2 bg-[#1e5144] hover:bg-[#163c32] text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-2"
+                                        >
+                                            {isUploadingPhoto ? (
+                                                <>
+                                                    <Loader2 size={14} className="animate-spin" />
+                                                    Enviando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload size={14} />
+                                                    Alterar
+                                                </>
+                                            )}
+                                        </button>
+                                        {(photoPreview || presignedURLData?.url) && (
+                                            <button
+                                                type="button"
+                                                onClick={handlePhotoRemove}
+                                                disabled={isRemovingPhoto}
+                                                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isRemovingPhoto ? (
+                                                    <Loader2 size={14} className="animate-spin" />
+                                                ) : (
+                                                    <Trash2 size={14} />
+                                                )}
+                                                {isRemovingPhoto ? 'Removendo...' : 'Remover'}
+                                            </button>
+                                        )}
                                     </div>
+                                    {/* Photo Error/Success Messages */}
+                                    {photoError && (
+                                        <div className="mt-3 text-sm text-rose-400 flex items-center gap-1">
+                                            <AlertCircle size={14} />
+                                            {photoError}
+                                        </div>
+                                    )}
+                                    {photoSuccess && (
+                                        <div className="mt-3 text-sm text-emerald-400 flex items-center gap-1">
+                                            <CheckCircle2 size={14} />
+                                            {photoSuccess}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

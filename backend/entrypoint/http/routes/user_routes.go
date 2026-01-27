@@ -28,4 +28,13 @@ func SetupSettingsRoutes(router fiber.Router, userController *controller.UserCon
 
 	// Update user profile (protected by auth middleware)
 	settings.Put("/profile", userController.UpdateProfile)
+
+	// Upload profile photo (protected by auth middleware)
+	settings.Post("/profile-photo", userController.UploadProfilePhoto)
+
+	// Get profile photo presigned URL (protected by auth middleware)
+	settings.Get("/profile-photo/url", userController.GetProfilePhotoPresignedURL)
+
+	// Remove profile photo (protected by auth middleware)
+	settings.Delete("/profile-photo", userController.RemoveProfilePhoto)
 }
