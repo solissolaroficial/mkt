@@ -322,7 +322,7 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 				meta      *float64
 				breakdown interface{}
 			}{
-				{month: "JAN", realized: floatPtr(147), meta: floatPtr(100), breakdown: map[string]interface{}{
+				{month: "JAN", realized: floatPtr(147), meta: floatPtr(100), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 66.0,
 					"subItems": []map[string]interface{}{
@@ -331,8 +331,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 5.0},
 						{"label": "Espírito Santo", "value": 7.0},
 					},
-				}},
-				{month: "FEV", realized: floatPtr(69), meta: floatPtr(100), breakdown: map[string]interface{}{
+				}}},
+				{month: "FEV", realized: floatPtr(69), meta: floatPtr(100), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 31.0,
 					"subItems": []map[string]interface{}{
@@ -341,8 +341,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 2.0},
 						{"label": "Espírito Santo", "value": 3.0},
 					},
-				}},
-				{month: "MAR", realized: floatPtr(270), meta: floatPtr(170), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAR", realized: floatPtr(270), meta: floatPtr(170), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 121.0,
 					"subItems": []map[string]interface{}{
@@ -351,8 +351,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 9.0},
 						{"label": "Espírito Santo", "value": 13.0},
 					},
-				}},
-				{month: "ABR", realized: floatPtr(778), meta: floatPtr(200), breakdown: map[string]interface{}{
+				}}},
+				{month: "ABR", realized: floatPtr(778), meta: floatPtr(200), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 350.0,
 					"subItems": []map[string]interface{}{
@@ -361,8 +361,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 26.0},
 						{"label": "Espírito Santo", "value": 39.0},
 					},
-				}},
-				{month: "MAI", realized: floatPtr(160), meta: floatPtr(170), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAI", realized: floatPtr(160), meta: floatPtr(170), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 72.0,
 					"subItems": []map[string]interface{}{
@@ -371,8 +371,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 5.0},
 						{"label": "Espírito Santo", "value": 8.0},
 					},
-				}},
-				{month: "JUN", realized: floatPtr(152), meta: floatPtr(250), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUN", realized: floatPtr(152), meta: floatPtr(250), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 68.0,
 					"subItems": []map[string]interface{}{
@@ -381,8 +381,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 5.0},
 						{"label": "Espírito Santo", "value": 8.0},
 					},
-				}},
-				{month: "JUL", realized: floatPtr(224), meta: floatPtr(250), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUL", realized: floatPtr(224), meta: floatPtr(250), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 101.0,
 					"subItems": []map[string]interface{}{
@@ -391,8 +391,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 8.0},
 						{"label": "Espírito Santo", "value": 11.0},
 					},
-				}},
-				{month: "AGO", realized: floatPtr(278), meta: floatPtr(200), breakdown: map[string]interface{}{
+				}}},
+				{month: "AGO", realized: floatPtr(278), meta: floatPtr(200), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 125.0,
 					"subItems": []map[string]interface{}{
@@ -401,8 +401,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 9.0},
 						{"label": "Espírito Santo", "value": 14.0},
 					},
-				}},
-				{month: "SET", realized: floatPtr(324), meta: floatPtr(180), breakdown: map[string]interface{}{
+				}}},
+				{month: "SET", realized: floatPtr(324), meta: floatPtr(180), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 146.0,
 					"subItems": []map[string]interface{}{
@@ -411,8 +411,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 11.0},
 						{"label": "Espírito Santo", "value": 16.0},
 					},
-				}},
-				{month: "OUT", realized: floatPtr(392), meta: floatPtr(300), breakdown: map[string]interface{}{
+				}}},
+				{month: "OUT", realized: floatPtr(392), meta: floatPtr(300), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 176.0,
 					"subItems": []map[string]interface{}{
@@ -421,8 +421,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 13.0},
 						{"label": "Espírito Santo", "value": 20.0},
 					},
-				}},
-				{month: "NOV", realized: floatPtr(344), meta: floatPtr(200), breakdown: map[string]interface{}{
+				}}},
+				{month: "NOV", realized: floatPtr(344), meta: floatPtr(200), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 178.0,
 					"subItems": []map[string]interface{}{
@@ -431,7 +431,7 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 11.0},
 						{"label": "Espírito Santo", "value": 23.0},
 					},
-				}},
+				}}},
 				{month: "DEZ", realized: nil, meta: floatPtr(80), breakdown: nil},
 			},
 		},
@@ -465,7 +465,7 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 				meta      *float64
 				breakdown interface{}
 			}{
-				{month: "JAN", realized: floatPtr(12500), meta: floatPtr(12000), breakdown: map[string]interface{}{
+				{month: "JAN", realized: floatPtr(12500), meta: floatPtr(12000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 7500.0,
 					"subItems": []map[string]interface{}{
@@ -474,8 +474,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 750.0},
 						{"label": "Espírito Santo", "value": 1125.0},
 					},
-				}},
-				{month: "FEV", realized: floatPtr(13200), meta: floatPtr(13000), breakdown: map[string]interface{}{
+				}}},
+				{month: "FEV", realized: floatPtr(13200), meta: floatPtr(13000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 7920.0,
 					"subItems": []map[string]interface{}{
@@ -484,8 +484,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 792.0},
 						{"label": "Espírito Santo", "value": 1188.0},
 					},
-				}},
-				{month: "MAR", realized: floatPtr(15800), meta: floatPtr(15000), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAR", realized: floatPtr(15800), meta: floatPtr(15000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 9480.0,
 					"subItems": []map[string]interface{}{
@@ -494,8 +494,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 948.0},
 						{"label": "Espírito Santo", "value": 1422.0},
 					},
-				}},
-				{month: "ABR", realized: floatPtr(14900), meta: floatPtr(15000), breakdown: map[string]interface{}{
+				}}},
+				{month: "ABR", realized: floatPtr(14900), meta: floatPtr(15000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 8940.0,
 					"subItems": []map[string]interface{}{
@@ -504,8 +504,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 894.0},
 						{"label": "Espírito Santo", "value": 1341.0},
 					},
-				}},
-				{month: "MAI", realized: floatPtr(18500), meta: floatPtr(18000), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAI", realized: floatPtr(18500), meta: floatPtr(18000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 11100.0,
 					"subItems": []map[string]interface{}{
@@ -514,8 +514,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1110.0},
 						{"label": "Espírito Santo", "value": 1665.0},
 					},
-				}},
-				{month: "JUN", realized: floatPtr(19200), meta: floatPtr(20000), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUN", realized: floatPtr(19200), meta: floatPtr(20000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 11520.0,
 					"subItems": []map[string]interface{}{
@@ -524,8 +524,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1152.0},
 						{"label": "Espírito Santo", "value": 1728.0},
 					},
-				}},
-				{month: "JUL", realized: floatPtr(21500), meta: floatPtr(20000), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUL", realized: floatPtr(21500), meta: floatPtr(20000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 12900.0,
 					"subItems": []map[string]interface{}{
@@ -534,8 +534,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1290.0},
 						{"label": "Espírito Santo", "value": 1935.0},
 					},
-				}},
-				{month: "AGO", realized: floatPtr(22000), meta: floatPtr(20000), breakdown: map[string]interface{}{
+				}}},
+				{month: "AGO", realized: floatPtr(22000), meta: floatPtr(20000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 13200.0,
 					"subItems": []map[string]interface{}{
@@ -544,8 +544,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1320.0},
 						{"label": "Espírito Santo", "value": 1980.0},
 					},
-				}},
-				{month: "SET", realized: floatPtr(19800), meta: floatPtr(20000), breakdown: map[string]interface{}{
+				}}},
+				{month: "SET", realized: floatPtr(19800), meta: floatPtr(20000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 11880.0,
 					"subItems": []map[string]interface{}{
@@ -554,8 +554,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1188.0},
 						{"label": "Espírito Santo", "value": 1782.0},
 					},
-				}},
-				{month: "OUT", realized: floatPtr(23500), meta: floatPtr(22000), breakdown: map[string]interface{}{
+				}}},
+				{month: "OUT", realized: floatPtr(23500), meta: floatPtr(22000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 14100.0,
 					"subItems": []map[string]interface{}{
@@ -564,8 +564,8 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1410.0},
 						{"label": "Espírito Santo", "value": 2115.0},
 					},
-				}},
-				{month: "NOV", realized: floatPtr(18000), meta: floatPtr(20000), breakdown: map[string]interface{}{
+				}}},
+				{month: "NOV", realized: floatPtr(18000), meta: floatPtr(20000), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 12500.0,
 					"subItems": []map[string]interface{}{
@@ -574,7 +574,7 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 						{"label": "Sul de MG", "value": 1000.0},
 						{"label": "Espírito Santo", "value": 2000.0},
 					},
-				}},
+				}}},
 				{month: "DEZ", realized: nil, meta: floatPtr(15000), breakdown: nil},
 			},
 		},
@@ -630,50 +630,50 @@ func (s *KpiSeeder) getLegacyKpiData() []struct {
 				meta      *float64
 				breakdown interface{}
 			}{
-				{month: "JAN", realized: floatPtr(3.2), meta: floatPtr(4.0), breakdown: map[string]interface{}{
+				{month: "JAN", realized: floatPtr(3.2), meta: floatPtr(4.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 3.52,
-				}},
-				{month: "FEV", realized: floatPtr(3.5), meta: floatPtr(4.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "FEV", realized: floatPtr(3.5), meta: floatPtr(4.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 3.85,
-				}},
-				{month: "MAR", realized: floatPtr(4.2), meta: floatPtr(4.5), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAR", realized: floatPtr(4.2), meta: floatPtr(4.5), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 4.62,
-				}},
-				{month: "ABR", realized: floatPtr(4.8), meta: floatPtr(4.5), breakdown: map[string]interface{}{
+				}}},
+				{month: "ABR", realized: floatPtr(4.8), meta: floatPtr(4.5), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 5.28,
-				}},
-				{month: "MAI", realized: floatPtr(4.5), meta: floatPtr(5.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "MAI", realized: floatPtr(4.5), meta: floatPtr(5.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 4.95,
-				}},
-				{month: "JUN", realized: floatPtr(4.1), meta: floatPtr(5.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUN", realized: floatPtr(4.1), meta: floatPtr(5.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 4.51,
-				}},
-				{month: "JUL", realized: floatPtr(5.2), meta: floatPtr(5.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "JUL", realized: floatPtr(5.2), meta: floatPtr(5.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 5.72,
-				}},
-				{month: "AGO", realized: floatPtr(5.5), meta: floatPtr(5.5), breakdown: map[string]interface{}{
+				}}},
+				{month: "AGO", realized: floatPtr(5.5), meta: floatPtr(5.5), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 6.05,
-				}},
-				{month: "SET", realized: floatPtr(5.1), meta: floatPtr(5.5), breakdown: map[string]interface{}{
+				}}},
+				{month: "SET", realized: floatPtr(5.1), meta: floatPtr(5.5), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 5.61,
-				}},
-				{month: "OUT", realized: floatPtr(5.8), meta: floatPtr(6.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "OUT", realized: floatPtr(5.8), meta: floatPtr(6.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 6.38,
-				}},
-				{month: "NOV", realized: floatPtr(4.9), meta: floatPtr(6.0), breakdown: map[string]interface{}{
+				}}},
+				{month: "NOV", realized: floatPtr(4.9), meta: floatPtr(6.0), breakdown: []map[string]interface{}{{
 					"label": "Campanhas Ads Meta (Instagram/Facebook)",
 					"value": 5.2,
-				}},
+				}}},
 				{month: "DEZ", realized: nil, meta: floatPtr(5.0), breakdown: nil},
 			},
 		},
