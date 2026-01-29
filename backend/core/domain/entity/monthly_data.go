@@ -22,6 +22,7 @@ type MonthlyData struct {
 	logs          string // JSONB array of log entries
 	createdAt     time.Time
 	updatedAt     time.Time
+	deletedAt     *time.Time // Soft delete timestamp
 }
 
 // NewMonthlyData creates new monthly data with validation
@@ -46,7 +47,7 @@ func NewMonthlyData(kpiCategoryID uuid.UUID, year int, month string) (*MonthlyDa
 }
 
 // ReconstructMonthlyData reconstructs monthly data from database (without validation)
-func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, year int, month string, realized, meta *float64, breakdown []byte, createdAt, updatedAt time.Time) (*MonthlyData, error) {
+func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, year int, month string, realized, meta *float64, breakdown []byte, createdAt, updatedAt time.Time, deletedAt *time.Time) (*MonthlyData, error) {
 	return &MonthlyData{
 		id:            id,
 		kpiCategoryID: kpiCategoryID,
@@ -57,6 +58,7 @@ func ReconstructMonthlyData(id, kpiCategoryID uuid.UUID, year int, month string,
 		breakdown:     breakdown,
 		createdAt:     createdAt,
 		updatedAt:     updatedAt,
+		deletedAt:     deletedAt,
 	}, nil
 }
 
@@ -71,6 +73,7 @@ func (m *MonthlyData) Breakdown() []byte        { return m.breakdown }
 func (m *MonthlyData) Logs() string             { return m.logs }
 func (m *MonthlyData) CreatedAt() time.Time     { return m.createdAt }
 func (m *MonthlyData) UpdatedAt() time.Time     { return m.updatedAt }
+func (m *MonthlyData) DeletedAt() *time.Time    { return m.deletedAt }
 
 // Validate performs business validation
 func (m *MonthlyData) Validate() error {
@@ -169,4 +172,16 @@ func (m *MonthlyData) AddLog(log KpiLogEntry) error {
 	m.logs = string(data)
 	m.updatedAt = time.Now()
 	return nil
+}
+
+// SoftDelete marks the monthly data as deleted
+func (m *MonthlyData) SoftDelete() {
+	now := time.Now()
+	m.deletedAt = &now
+	m.updatedAt = time.Now()
+}
+
+// IsActive returns true if the monthly data is not deleted
+func (m *MonthlyData) IsActive() bool {
+	return m.deletedAt == nil
 }

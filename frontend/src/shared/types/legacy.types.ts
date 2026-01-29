@@ -6,6 +6,7 @@ export interface BreakdownItem {
 }
 
 export interface MonthlyData {
+  id?: string; // UUID do registro mensal (necessário para exclusão)
   year?: number; // Year (e.g., 2024, 2025)
   month: string;
   realized: number | null;

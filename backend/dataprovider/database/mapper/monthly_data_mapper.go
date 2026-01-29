@@ -33,6 +33,7 @@ func (m *MonthlyDataMapper) ToDomain(dataModel *model.MonthlyData) (*entity.Mont
 		breakdownBytes,
 		dataModel.CreatedAt,
 		dataModel.UpdatedAt,
+		dataModel.DeletedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -81,5 +82,6 @@ func (m *MonthlyDataMapper) ToModel(data *entity.MonthlyData) (*model.MonthlyDat
 		Logs:          logsJSON,
 		CreatedAt:     data.CreatedAt(),
 		UpdatedAt:     data.UpdatedAt(),
+		DeletedAt:     data.DeletedAt(),
 	}, nil
 }

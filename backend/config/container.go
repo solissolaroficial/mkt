@@ -206,6 +206,7 @@ type Container struct {
 	UpdateKpiUseCase         *kpis.UpdateKpiUseCase
 	DeleteKpiUseCase         *kpis.DeleteKpiUseCase
 	UpdateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
+	DeleteMonthlyDataUseCase *kpis.DeleteMonthlyData
 
 	// Use Cases - Tasks
 	CreateTaskUseCase                  *tasks.CreateTaskUseCase
@@ -359,6 +360,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		monthlyDataGateway,
 		kpiGateway,
 	)
+	deleteMonthlyDataUseCase := kpis.NewDeleteMonthlyData(kpiGateway)
 
 	// Task Use Cases
 	createTaskUseCase := tasks.NewCreateTaskUseCase(taskGateway, subtaskGateway, notificationGateway)
@@ -531,6 +533,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		updateKpiUseCase,
 		deleteKpiUseCase,
 		updateMonthlyDataUseCase,
+		deleteMonthlyDataUseCase,
 	)
 	taskController := controller.NewTaskController(
 		createTaskUseCase,
@@ -745,6 +748,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		UpdateKpiUseCase:                       updateKpiUseCase,
 		DeleteKpiUseCase:                       deleteKpiUseCase,
 		UpdateMonthlyDataUseCase:               updateMonthlyDataUseCase,
+		DeleteMonthlyDataUseCase:               deleteMonthlyDataUseCase,
 		CreateTaskUseCase:                      createTaskUseCase,
 		UpdateTaskUseCase:                      updateTaskUseCase,
 		DeleteTaskUseCase:                      deleteTaskUseCase,

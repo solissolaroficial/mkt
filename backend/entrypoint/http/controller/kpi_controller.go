@@ -24,6 +24,7 @@ type KpiController struct {
 	updateKpiUseCase         *kpis.UpdateKpiUseCase
 	deleteKpiUseCase         *kpis.DeleteKpiUseCase
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
+	deleteMonthlyDataUseCase *kpis.DeleteMonthlyData
 	mapper                   *KpiMapper
 }
 
@@ -36,6 +37,7 @@ func NewKpiController(
 	updateKpiUseCase *kpis.UpdateKpiUseCase,
 	deleteKpiUseCase *kpis.DeleteKpiUseCase,
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase,
+	deleteMonthlyDataUseCase *kpis.DeleteMonthlyData,
 ) *KpiController {
 	return &KpiController{
 		createKpiUseCase:         createKpiUseCase,
@@ -45,6 +47,7 @@ func NewKpiController(
 		updateKpiUseCase:         updateKpiUseCase,
 		deleteKpiUseCase:         deleteKpiUseCase,
 		updateMonthlyDataUseCase: updateMonthlyDataUseCase,
+		deleteMonthlyDataUseCase: deleteMonthlyDataUseCase,
 		mapper:                   NewKpiMapper(),
 	}
 }
@@ -270,9 +273,10 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 				"---",                  // Consolidated month
 				&totalRealized,         // Annual sum
 				&totalMeta,             // Sum of all metas
-				nil,                    // Empty breakdown
+				[]byte{},               // Empty breakdown as []byte
 				time.Now(),
 				time.Now(),
+				nil, // deletedAt = nil (not deleted)
 			)
 			if err != nil {
 				return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
@@ -441,4 +445,36 @@ func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
 	monthlyDataResponse := c.mapper.ToMonthlyDataResponse(monthlyData)
 
 	return ctx.Status(fiber.StatusOK).JSON(monthlyDataResponse)
+}
+
+// DeleteMonthlyData handles monthly data deletion
+// @Summary Delete monthly data
+// @Description Delete a monthly data record by its ID (admin only)
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param monthlyDataId path string true "Monthly data ID"
+// @Success 204
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/monthly-data/{monthlyDataId} [delete]
+func (c *KpiController) DeleteMonthlyData(ctx *fiber.Ctx) error {
+	// Extract IDs from params
+	monthlyDataId := ctx.Params("monthlyDataId")
+
+	// Execute use case
+	err := c.deleteMonthlyDataUseCase.Execute(context.Background(), monthlyDataId)
+	if err != nil {
+		if err == errors.ErrMonthDataNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "Monthly data not found",
+			})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	return ctx.Status(fiber.StatusNoContent).Send(nil)
 }

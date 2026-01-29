@@ -33,4 +33,13 @@ type KpiGateway interface {
 
 	// Delete removes a KPI category by its ID
 	Delete(ctx context.Context, id uuid.UUID) error
+
+	// FindMonthlyDataByID retrieves monthly data by its ID
+	FindMonthlyDataByID(ctx context.Context, id uuid.UUID) (*entity.MonthlyData, error)
+
+	// UpdateMonthlyData modifies an existing monthly data
+	UpdateMonthlyData(ctx context.Context, monthlyData *entity.MonthlyData) error
+
+	// DeleteMonthlyData soft deletes a monthly data record by its ID
+	DeleteMonthlyData(ctx context.Context, id uuid.UUID) error
 }

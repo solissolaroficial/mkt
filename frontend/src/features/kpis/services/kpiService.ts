@@ -71,18 +71,25 @@ export const kpiService = {
    * Atualiza apenas a meta de um mês específico
    */
   updateMeta: async (
-    kpiId: string,
-    year: number,
-    month: string,
-    meta: number
+  	kpiId: string,
+  	year: number,
+  	month: string,
+  	meta: number
   ): Promise<KpiCategory> => {
-    const response = await apiClient.put<KpiCategory>(
-      ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId),
-      { year, month, meta }
-    );
-    return response.data;
+  	const response = await apiClient.put<KpiCategory>(
+  		ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId),
+  		{ year, month, meta }
+  	);
+  	return response.data;
   },
-
+ 
+  /**
+   * Deleta dados mensais de um KPI
+   */
+  deleteMonthlyData: async (kpiId: string, monthlyDataId: string): Promise<void> => {
+  	await apiClient.delete(`${ENDPOINTS.KPIS.UPDATE_MONTHLY(kpiId)}/${monthlyDataId}`);
+  },
+ 
   /**
    * Busca KPIs por uma lista de slugs com filtros opcionais de mês e ano
    */

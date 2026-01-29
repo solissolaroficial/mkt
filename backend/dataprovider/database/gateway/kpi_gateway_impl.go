@@ -15,15 +15,17 @@ import (
 )
 
 type kpiGatewayImpl struct {
-	db     *gorm.DB
-	mapper *mapper.KpiMapper
+	db            *gorm.DB
+	mapper        *mapper.KpiMapper
+	monthlyMapper *mapper.MonthlyDataMapper
 }
 
 // NewKpiGateway creates a new KpiGateway implementation
 func NewKpiGateway(db *gorm.DB) gateway.KpiGateway {
 	return &kpiGatewayImpl{
-		db:     db,
-		mapper: &mapper.KpiMapper{},
+		db:            db,
+		mapper:        &mapper.KpiMapper{},
+		monthlyMapper: &mapper.MonthlyDataMapper{},
 	}
 }
 
@@ -202,6 +204,57 @@ func (g *kpiGatewayImpl) Delete(ctx context.Context, id uuid.UUID) error {
 
 	if result.RowsAffected == 0 {
 		return kpiErrors.ErrKpiNotFound
+	}
+
+	return nil
+}
+
+// FindMonthlyDataByID retrieves monthly data by its ID
+func (g *kpiGatewayImpl) FindMonthlyDataByID(ctx context.Context, id uuid.UUID) (*entity.MonthlyData, error) {
+	var dataModel model.MonthlyData
+
+	err := g.db.WithContext(ctx).
+		Where("uuid = ? AND deleted_at IS NULL", id).
+		First(&dataModel).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, kpiErrors.ErrMonthDataNotFound
+		}
+		return nil, err
+	}
+
+	return g.monthlyMapper.ToDomain(&dataModel)
+}
+
+// UpdateMonthlyData modifies an existing monthly data
+func (g *kpiGatewayImpl) UpdateMonthlyData(ctx context.Context, monthlyData *entity.MonthlyData) error {
+	dataModel, err := g.monthlyMapper.ToModel(monthlyData)
+	if err != nil {
+		return err
+	}
+
+	result := g.db.WithContext(ctx).Where("uuid = ?", dataModel.UUID).Save(dataModel)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return kpiErrors.ErrMonthDataNotFound
+	}
+
+	return nil
+}
+
+// DeleteMonthlyData soft deletes a monthly data record by its ID
+func (g *kpiGatewayImpl) DeleteMonthlyData(ctx context.Context, id uuid.UUID) error {
+	result := g.db.WithContext(ctx).Delete(&model.MonthlyData{}, "uuid = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return kpiErrors.ErrMonthDataNotFound
 	}
 
 	return nil

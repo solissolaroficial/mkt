@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/controller"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/middleware"
 )
 
 // SetupKpiRoutes registra as rotas de KPIs (protegidas)
@@ -21,4 +22,5 @@ func SetupKpiRoutes(router fiber.Router, kpiController *controller.KpiController
 
 	// Monthly data
 	kpis.Put("/:kpiId/monthly-data", kpiController.UpdateMonthlyData)
+	kpis.Delete("/:kpiId/monthly-data/:monthlyDataId", middleware.RequireAdmin(), kpiController.DeleteMonthlyData)
 }

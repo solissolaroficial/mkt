@@ -19,6 +19,7 @@ type MonthlyData struct {
 	Logs          datatypes.JSON `gorm:"type:jsonb" json:"logs"`                                                 // PostgreSQL JSONB - array of log entries
 	CreatedAt     time.Time      `gorm:"not null" json:"created_at"`
 	UpdatedAt     time.Time      `gorm:"not null" json:"updated_at"`
+	DeletedAt     *time.Time     `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (MonthlyData) TableName() string {

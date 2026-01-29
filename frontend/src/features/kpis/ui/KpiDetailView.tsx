@@ -14,9 +14,10 @@ import {
   Line
 } from 'recharts';
 import { KpiCategory, KpiLog, BreakdownItem } from '@/shared/types/legacy.types';
-import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator } from 'lucide-react';
+import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2 } from 'lucide-react';
 import { MONTHS } from '@/shared/utils/legacy.constants';
 import { useUpdateMonthlyData } from '../hooks/useKpiMutations';
+import { useDeleteMonthlyData } from '../hooks/useKpis';
 import { useRepresentatives } from '@/features/pdv/hooks';
 
 interface KpiDetailViewProps {
@@ -53,6 +54,10 @@ const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
 // ADICIONAR: Hook de mutation para salvar dados
 const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
+const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
+
+// Delete confirmation state
+const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; month: string } | null>(null);
 
 const currentYear = new Date().getFullYear();
 
@@ -540,11 +545,24 @@ const currentYear = new Date().getFullYear();
                                     onClick={() => row.breakdown && toggleRow(row.month)}
                                 >
                                     <td className="px-4 py-3 text-center">
-                                        {row.breakdown && (
-                                            <span className="text-gray-500">
-                                                {expandedRows[row.month] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                            </span>
-                                        )}
+                                        <div className="flex items-center justify-center gap-2">
+                                            {row.breakdown && (
+                                                <span className="text-gray-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleRow(row.month); }}>
+                                                    {expandedRows[row.month] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                                </span>
+                                            )}
+                                            {/* Delete Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteConfirm({ id: row.id || '', month: row.month });
+                                                }}
+                                                className="text-gray-500 hover:text-rose-400 transition-colors"
+                                                title="Remover dados mensais"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 font-medium text-white">{row.month}</td>
                                     <td className="px-4 py-3">{row.realized?.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' }) || '-'}</td>
@@ -980,6 +998,40 @@ const currentYear = new Date().getFullYear();
                     )}
                 </div>
             </div>
+        </div>
+      )}
+      
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <h3 className="text-lg font-bold text-gray-100">Confirmar Remoção</h3>
+              <p className="text-sm text-gray-400 mt-2">
+                Tem certeza que deseja remover os dados mensais de <span className="font-bold text-white">{deleteConfirm.month}</span>?
+              </p>
+            </div>
+            <div className="p-6 flex justify-end gap-3 bg-[#20232b]">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-gray-400 hover:bg-gray-800 rounded-lg text-sm font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirm.id) {
+                    deleteMonthlyData({ kpiId: kpi.id, monthlyDataId: deleteConfirm.id });
+                    setDeleteConfirm(null);
+                  }
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-sm font-medium shadow-lg disabled:opacity-50"
+              >
+                {isDeleting ? 'Removendo...' : 'Remover'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
