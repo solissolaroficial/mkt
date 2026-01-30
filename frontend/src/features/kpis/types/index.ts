@@ -23,6 +23,7 @@ export interface UpdateMonthlyDataDTO {
   meta?: number;
   breakdown?: BreakdownItem[];
   month?: string;
+  context?: string; // Context of the change (for audit log)
 }
 
 // Filtros

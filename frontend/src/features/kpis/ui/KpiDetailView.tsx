@@ -13,13 +13,12 @@ import {
   ComposedChart,
   Line
 } from 'recharts';
-import { KpiCategory, KpiLog, BreakdownItem } from '@/shared/types/legacy.types';
-import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2 } from 'lucide-react';
+import { KpiCategory, KpiLog, BreakdownItem, MonthlyData } from '@/shared/types/legacy.types';
+import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2, Pencil } from 'lucide-react';
 import { MONTHS } from '@/shared/utils/legacy.constants';
 import { useUpdateMonthlyData } from '../hooks/useKpiMutations';
 import { useDeleteMonthlyData } from '../hooks/useKpis';
 import { useRepresentatives } from '@/features/pdv/hooks';
-
 interface KpiDetailViewProps {
   kpi: KpiCategory;
   allKpis?: KpiCategory[]; // Access to other KPIs for cross-referencing
@@ -56,10 +55,17 @@ const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 const { mutate: updateMonthlyData, isPending } = useUpdateMonthlyData();
 const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
 
-// Delete confirmation state
-const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; month: string } | null>(null);
+ // Delete confirmation state
+ const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; month: string } | null>(null);
 
-const currentYear = new Date().getFullYear();
+ // Edit modal state
+ const [isEditOpen, setIsEditOpen] = useState(false);
+ const [editData, setEditData] = useState<MonthlyData | null>(null);
+ const [editRealized, setEditRealized] = useState('');
+ const [editMeta, setEditMeta] = useState('');
+ const [editContext, setEditContext] = useState('');
+
+ const currentYear = new Date().getFullYear();
 
   useEffect(() => {
       // Set default date to today or start of selected month
@@ -281,6 +287,39 @@ const currentYear = new Date().getFullYear();
       }
   };
 
+  const handleEditSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editData) return;
+
+    // Determinar valores finais
+    const finalRealized = editRealized !== '' ? Number(editRealized) : undefined;
+    const finalMeta = editMeta !== '' ? Number(editMeta) : undefined;
+
+    // Validar que pelo menos um valor foi alterado
+    if (finalRealized === undefined && finalMeta === undefined) {
+      return;
+    }
+
+    updateMonthlyData({
+      kpiId: kpi.id,
+      data: {
+        year: currentYear,
+        realized: finalRealized,
+        meta: finalMeta,
+        month: editData.month,
+        context: editContext || 'Correção manual via interface',
+      }
+    }, {
+      onSuccess: () => {
+        setIsEditOpen(false);
+        setEditData(null);
+        setEditRealized('');
+        setEditMeta('');
+        setEditContext('');
+      }
+    });
+  };
+
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
   
@@ -419,7 +458,7 @@ const currentYear = new Date().getFullYear();
 
             {/* Conditional Buttons based on KPI Type */}
             {isAdSpend ? (
-                <button 
+                <button
                     onClick={() => setIsEnrichOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#1e5144] hover:bg-[#163c32] text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#1e5144]/20"
                 >
@@ -427,7 +466,7 @@ const currentYear = new Date().getFullYear();
                 </button>
             ) : !isCplKpi && (
                 // Default Launch Button - Hidden for CPL
-                <button 
+                <button
                     onClick={() => setIsLaunchOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-[#1e5144] hover:bg-[#163c32] text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#1e5144]/20"
                 >
@@ -551,7 +590,22 @@ const currentYear = new Date().getFullYear();
                                                     {expandedRows[row.month] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                 </span>
                                             )}
-                                            {/* Delete Button */}
+                                            {/* Edit Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditData(row);
+                                                    setEditRealized(row.realized?.toString() || '');
+                                                    setEditMeta(row.meta?.toString() || '');
+                                                    setEditContext('');
+                                                    setIsEditOpen(true);
+                                                }}
+                                                className="text-gray-500 hover:text-emerald-400 transition-colors"
+                                                title="Editar dados mensais"
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
+                                            {/* Delete Button - Only show if user has permission */}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -1031,6 +1085,130 @@ const currentYear = new Date().getFullYear();
                 {isDeleting ? 'Removendo...' : 'Remover'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT MODAL --- */}
+      {isEditOpen && editData && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsEditOpen(false)}>
+          <div
+            className="bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-[#20232b]">
+              <div>
+                <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+                  <Pencil size={18} className="text-emerald-400" />
+                  Editar Dados Mensais
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Mês: <span className="font-bold text-white">{editData.month}</span>
+                </p>
+              </div>
+              <button onClick={() => setIsEditOpen(false)} className="text-gray-500 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleEditSave} className="p-6 space-y-4">
+
+              {/* Campo: Realized */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Valor Realizado
+                </label>
+                <div className="relative">
+                  {kpi.unit === 'currency' && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
+                  )}
+                  <input
+                    type="number"
+                    step={kpi.unit === 'percent' ? "0.01" : "1"}
+                    value={editRealized}
+                    onChange={(e) => setEditRealized(e.target.value)}
+                    placeholder={editData.realized?.toString() || '0'}
+                    className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Valor atual: {editData.realized?.toLocaleString('pt-BR', {
+                    style: kpi.unit === 'currency' ? 'currency' : 'decimal',
+                    currency: 'BRL'
+                  })}
+                </p>
+              </div>
+
+              {/* Campo: Meta */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Meta do Mês
+                </label>
+                <div className="relative">
+                  {kpi.unit === 'currency' && (
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
+                  )}
+                  <input
+                    type="number"
+                    step={kpi.unit === 'percent' ? "0.01" : "1"}
+                    value={editMeta}
+                    onChange={(e) => setEditMeta(e.target.value)}
+                    placeholder={editData.meta?.toString() || '0'}
+                    className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Meta atual: {editData.meta?.toLocaleString('pt-BR', {
+                    style: kpi.unit === 'currency' ? 'currency' : 'decimal',
+                    currency: 'BRL'
+                  })}
+                </p>
+              </div>
+
+              {/* Campo: Contexto (opcional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">
+                  Contexto da Edição <span className="text-gray-600 font-normal">(opcional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={editContext}
+                  onChange={(e) => setEditContext(e.target.value)}
+                  placeholder="Ex: Correção de valor lançado errado..."
+                  className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none"
+                />
+              </div>
+
+              {/* Aviso de Auditoria */}
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                <p className="text-xs text-amber-400 flex items-start gap-2">
+                  <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                  <span>
+                    Esta alteração será registrada no log de auditoria com seu nome e data/hora.
+                  </span>
+                </p>
+              </div>
+
+              {/* Botões */}
+              <div className="pt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 text-gray-400 hover:bg-gray-800 rounded-lg text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || (!editRealized && !editMeta)}
+                  className="px-4 py-2 bg-[#1e5144] text-white hover:bg-[#163c32] rounded-lg text-sm font-medium shadow-lg disabled:opacity-50"
+                >
+                  {isPending ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

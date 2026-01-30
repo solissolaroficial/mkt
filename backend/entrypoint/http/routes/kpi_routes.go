@@ -14,8 +14,7 @@ func SetupKpiRoutes(router fiber.Router, kpiController *controller.KpiController
 	kpis.Get("/", kpiController.List)
 	kpis.Post("/", kpiController.Create)
 	kpis.Get("/:id", kpiController.GetByID)
-	kpis.Put("/:id", kpiController.Update)
-	kpis.Delete("/:id", kpiController.Delete)
+	kpis.Delete("/:id", middleware.RequireAdmin(), kpiController.Delete)
 
 	// Buscar KPIs por slugs
 	kpis.Post("/by-slugs", kpiController.GetBySlugs)

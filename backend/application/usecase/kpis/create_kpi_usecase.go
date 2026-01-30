@@ -3,15 +3,17 @@ package kpis
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
 // CreateKpiInput represents the input data for creating a KPI category
 type CreateKpiInput struct {
-	Title string `json:"title"`
-	Color string `json:"color"`
-	Unit  string `json:"unit"`
+	Title     string     `json:"title"`
+	Color     string     `json:"color"`
+	Unit      string     `json:"unit"`
+	CreatedBy *uuid.UUID `json:"created_by,omitempty"` // ID do usuário que está criando o KPI
 }
 
 // CreateKpiUseCase handles the creation of new KPI categories
@@ -29,7 +31,7 @@ func NewCreateKpiUseCase(kpiGateway gateway.KpiGateway) *CreateKpiUseCase {
 // Execute performs the KPI category creation operation
 func (uc *CreateKpiUseCase) Execute(ctx context.Context, input CreateKpiInput) (*entity.KpiCategory, error) {
 	// 1. Criar entidade KpiCategory já construída com validação
-	kpi, err := entity.NewKpiCategory(input.Title, input.Color, input.Unit)
+	kpi, err := entity.NewKpiCategory(input.Title, input.Color, input.Unit, input.CreatedBy)
 	if err != nil {
 		return nil, err
 	}

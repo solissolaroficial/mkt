@@ -15,20 +15,21 @@ type KpiCategory struct {
 	title        string
 	slug         string
 	color        string
-	unit         string // 'currency', 'percent', 'number'
+	unit         string     // 'currency', 'percent', 'number'
+	createdBy    *uuid.UUID // nullable para KPIs do sistema
 	monthlyDatas []*MonthlyData
 	createdAt    time.Time
 	updatedAt    time.Time
 }
 
 // NewKpiCategory creates a new KPI category with validation
-func NewKpiCategory(title, color, unit string) (*KpiCategory, error) {
-	return NewKpiCategoryWithSlug(title, color, unit, "")
+func NewKpiCategory(title, color, unit string, createdBy *uuid.UUID) (*KpiCategory, error) {
+	return NewKpiCategoryWithSlug(title, color, unit, "", createdBy)
 }
 
 // NewKpiCategoryWithSlug creates a new KPI category with an optional custom slug
 // If slug is empty, it will be generated automatically from the title
-func NewKpiCategoryWithSlug(title, color, unit, slug string) (*KpiCategory, error) {
+func NewKpiCategoryWithSlug(title, color, unit, slug string, createdBy *uuid.UUID) (*KpiCategory, error) {
 	// Generate slug if not provided
 	if slug == "" {
 		slug = generateSlug(title)
@@ -40,6 +41,7 @@ func NewKpiCategoryWithSlug(title, color, unit, slug string) (*KpiCategory, erro
 		slug:         slug,
 		color:        color,
 		unit:         unit,
+		createdBy:    createdBy,
 		monthlyDatas: []*MonthlyData{},
 		createdAt:    time.Now(),
 		updatedAt:    time.Now(),
@@ -53,13 +55,14 @@ func NewKpiCategoryWithSlug(title, color, unit, slug string) (*KpiCategory, erro
 }
 
 // ReconstructKpiCategory reconstructs a KPI category from database (without validation)
-func ReconstructKpiCategory(id uuid.UUID, title, color, unit string, createdAt, updatedAt time.Time) (*KpiCategory, error) {
+func ReconstructKpiCategory(id uuid.UUID, title, color, unit string, createdBy *uuid.UUID, createdAt, updatedAt time.Time) (*KpiCategory, error) {
 	return &KpiCategory{
 		id:           id,
 		title:        title,
 		slug:         generateSlug(title),
 		color:        color,
 		unit:         unit,
+		createdBy:    createdBy,
 		monthlyDatas: []*MonthlyData{},
 		createdAt:    createdAt,
 		updatedAt:    updatedAt,
@@ -67,13 +70,14 @@ func ReconstructKpiCategory(id uuid.UUID, title, color, unit string, createdAt, 
 }
 
 // ReconstructKpiCategoryWithMonthlyData reconstructs a KPI category with monthly data from database
-func ReconstructKpiCategoryWithMonthlyData(id uuid.UUID, title, color, unit string, monthlyDatas []*MonthlyData, createdAt, updatedAt time.Time) (*KpiCategory, error) {
+func ReconstructKpiCategoryWithMonthlyData(id uuid.UUID, title, color, unit string, createdBy *uuid.UUID, monthlyDatas []*MonthlyData, createdAt, updatedAt time.Time) (*KpiCategory, error) {
 	return &KpiCategory{
 		id:           id,
 		title:        title,
 		slug:         generateSlug(title),
 		color:        color,
 		unit:         unit,
+		createdBy:    createdBy,
 		monthlyDatas: monthlyDatas,
 		createdAt:    createdAt,
 		updatedAt:    updatedAt,
@@ -86,6 +90,7 @@ func (k *KpiCategory) Title() string                { return k.title }
 func (k *KpiCategory) Slug() string                 { return k.slug }
 func (k *KpiCategory) Color() string                { return k.color }
 func (k *KpiCategory) Unit() string                 { return k.unit }
+func (k *KpiCategory) CreatedBy() *uuid.UUID        { return k.createdBy }
 func (k *KpiCategory) MonthlyDatas() []*MonthlyData { return k.monthlyDatas }
 func (k *KpiCategory) CreatedAt() time.Time         { return k.createdAt }
 func (k *KpiCategory) UpdatedAt() time.Time         { return k.updatedAt }

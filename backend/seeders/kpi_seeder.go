@@ -79,7 +79,8 @@ func (s *KpiSeeder) SeedKpiCategories(ctx context.Context) (map[string]*entity.K
 		}
 
 		// Create new KPI category with explicit slug
-		kpi, err := entity.NewKpiCategoryWithSlug(def.title, def.color, def.unit, def.slug)
+		// createdBy = nil indicates this is a system KPI (editable only by admins)
+		kpi, err := entity.NewKpiCategoryWithSlug(def.title, def.color, def.unit, def.slug, nil)
 		if err != nil {
 			log.Printf("❌ Error creating KPI category '%s': %v", def.title, err)
 			continue

@@ -15,13 +15,20 @@ func NewKpiMapper() *KpiMapper {
 
 // ToKpiResponse converts entity to response
 func (m *KpiMapper) ToKpiResponse(kpi *entity.KpiCategory) *response.KpiResponse {
+	var createdBy *string
+	if kpi.CreatedBy() != nil {
+		createdByStr := kpi.CreatedBy().String()
+		createdBy = &createdByStr
+	}
+
 	return &response.KpiResponse{
-		ID:    kpi.ID().String(),
-		Title: kpi.Title(),
-		Slug:  kpi.Slug(),
-		Color: kpi.Color(),
-		Unit:  kpi.Unit(),
-		Data:  m.ToMonthlyDataResponseList(kpi.MonthlyDatas()),
+		ID:        kpi.ID().String(),
+		Title:     kpi.Title(),
+		Slug:      kpi.Slug(),
+		Color:     kpi.Color(),
+		Unit:      kpi.Unit(),
+		CreatedBy: createdBy,
+		Data:      m.ToMonthlyDataResponseList(kpi.MonthlyDatas()),
 	}
 }
 
@@ -85,12 +92,19 @@ func (m *KpiMapper) ToMonthlyDataResponseList(monthlyData []*entity.MonthlyData)
 
 // ToKpiResponseWithMonthlyData converts entity to response with monthly data
 func (m *KpiMapper) ToKpiResponseWithMonthlyData(kpi *entity.KpiCategory, monthlyData []*entity.MonthlyData) *response.KpiResponse {
+	var createdBy *string
+	if kpi.CreatedBy() != nil {
+		createdByStr := kpi.CreatedBy().String()
+		createdBy = &createdByStr
+	}
+
 	return &response.KpiResponse{
-		ID:    kpi.ID().String(),
-		Title: kpi.Title(),
-		Slug:  kpi.Slug(),
-		Color: kpi.Color(),
-		Unit:  kpi.Unit(),
-		Data:  m.ToMonthlyDataResponseList(monthlyData),
+		ID:        kpi.ID().String(),
+		Title:     kpi.Title(),
+		Slug:      kpi.Slug(),
+		Color:     kpi.Color(),
+		Unit:      kpi.Unit(),
+		CreatedBy: createdBy,
+		Data:      m.ToMonthlyDataResponseList(monthlyData),
 	}
 }

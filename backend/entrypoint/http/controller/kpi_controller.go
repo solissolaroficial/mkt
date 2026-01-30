@@ -11,6 +11,7 @@ import (
 	"github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/helper"
+	"github.com/seu-usuario/solis-backend/entrypoint/http/middleware"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
@@ -21,7 +22,6 @@ type KpiController struct {
 	getKpiUseCase            *kpis.GetKpiUseCase
 	listKpisUseCase          *kpis.ListKpisUseCase
 	getKpisBySlugsUseCase    *kpis.GetKpisBySlugsUseCase
-	updateKpiUseCase         *kpis.UpdateKpiUseCase
 	deleteKpiUseCase         *kpis.DeleteKpiUseCase
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
 	deleteMonthlyDataUseCase *kpis.DeleteMonthlyData
@@ -34,7 +34,6 @@ func NewKpiController(
 	getKpiUseCase *kpis.GetKpiUseCase,
 	listKpisUseCase *kpis.ListKpisUseCase,
 	getKpisBySlugsUseCase *kpis.GetKpisBySlugsUseCase,
-	updateKpiUseCase *kpis.UpdateKpiUseCase,
 	deleteKpiUseCase *kpis.DeleteKpiUseCase,
 	updateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase,
 	deleteMonthlyDataUseCase *kpis.DeleteMonthlyData,
@@ -44,7 +43,6 @@ func NewKpiController(
 		getKpiUseCase:            getKpiUseCase,
 		listKpisUseCase:          listKpisUseCase,
 		getKpisBySlugsUseCase:    getKpisBySlugsUseCase,
-		updateKpiUseCase:         updateKpiUseCase,
 		deleteKpiUseCase:         deleteKpiUseCase,
 		updateMonthlyDataUseCase: updateMonthlyDataUseCase,
 		deleteMonthlyDataUseCase: deleteMonthlyDataUseCase,
@@ -72,11 +70,20 @@ func (c *KpiController) Create(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// Extract user ID from context (set by AuthMiddleware)
+	userID, err := middleware.GetUserID(ctx)
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
 	// Execute use case
 	input := kpis.CreateKpiInput{
-		Title: req.Title,
-		Color: req.Color,
-		Unit:  req.Unit,
+		Title:     req.Title,
+		Color:     req.Color,
+		Unit:      req.Unit,
+		CreatedBy: &userID,
 	}
 
 	kpi, err := c.createKpiUseCase.Execute(context.Background(), input)
@@ -304,56 +311,6 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(listResponse)
-}
-
-// Update handles KPI update
-// @Summary Update KPI
-// @Description Update an existing KPI category
-// @Tags kpis
-// @Accept json
-// @Produce json
-// @Param id path string true "KPI ID"
-// @Param kpiRequest body request.UpdateKpiRequest true "KPI update data"
-// @Success 200 {object} response.KpiResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Router /kpis/{id} [put]
-func (c *KpiController) Update(ctx *fiber.Ctx) error {
-	// Extract ID from params
-	id := ctx.Params("id")
-
-	// Parse request body
-	var req request.UpdateKpiRequest
-	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Error: "Invalid request body",
-		})
-	}
-
-	// Execute use case
-	input := kpis.UpdateKpiInput{
-		Title: req.Title,
-		Color: req.Color,
-		Unit:  req.Unit,
-	}
-
-	kpi, err := c.updateKpiUseCase.Execute(context.Background(), id, input)
-	if err != nil {
-		if err == errors.ErrKpiNotFound {
-			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
-				Error: "KPI not found",
-			})
-		}
-		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
-			Error: err.Error(),
-		})
-	}
-
-	// Convert to response - now includes monthly data
-	kpiResponse := c.mapper.ToKpiResponseWithMonthlyData(kpi, kpi.MonthlyDatas())
-
-	return ctx.Status(fiber.StatusOK).JSON(kpiResponse)
 }
 
 // Delete handles KPI deletion

@@ -203,7 +203,6 @@ type Container struct {
 	GetKpiUseCase            *kpis.GetKpiUseCase
 	ListKpisUseCase          *kpis.ListKpisUseCase
 	GetKpisBySlugsUseCase    *kpis.GetKpisBySlugsUseCase
-	UpdateKpiUseCase         *kpis.UpdateKpiUseCase
 	DeleteKpiUseCase         *kpis.DeleteKpiUseCase
 	UpdateMonthlyDataUseCase *kpis.UpdateMonthlyDataUseCase
 	DeleteMonthlyDataUseCase *kpis.DeleteMonthlyData
@@ -354,7 +353,6 @@ func NewContainer(cfg *Config) (*Container, error) {
 	getKpiUseCase := kpis.NewGetKpiUseCase(kpiGateway)
 	listKpisUseCase := kpis.NewListKpisUseCase(kpiGateway)
 	getKpisBySlugsUseCase := kpis.NewGetKpisBySlugsUseCase(kpiGateway)
-	updateKpiUseCase := kpis.NewUpdateKpiUseCase(kpiGateway)
 	deleteKpiUseCase := kpis.NewDeleteKpiUseCase(kpiGateway)
 	updateMonthlyDataUseCase := kpis.NewUpdateMonthlyDataUseCase(
 		monthlyDataGateway,
@@ -530,7 +528,6 @@ func NewContainer(cfg *Config) (*Container, error) {
 		getKpiUseCase,
 		listKpisUseCase,
 		getKpisBySlugsUseCase,
-		updateKpiUseCase,
 		deleteKpiUseCase,
 		updateMonthlyDataUseCase,
 		deleteMonthlyDataUseCase,
@@ -745,7 +742,6 @@ func NewContainer(cfg *Config) (*Container, error) {
 		GetKpiUseCase:                          getKpiUseCase,
 		ListKpisUseCase:                        listKpisUseCase,
 		GetKpisBySlugsUseCase:                  getKpisBySlugsUseCase,
-		UpdateKpiUseCase:                       updateKpiUseCase,
 		DeleteKpiUseCase:                       deleteKpiUseCase,
 		UpdateMonthlyDataUseCase:               updateMonthlyDataUseCase,
 		DeleteMonthlyDataUseCase:               deleteMonthlyDataUseCase,
