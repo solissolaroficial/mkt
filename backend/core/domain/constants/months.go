@@ -15,3 +15,14 @@ func IsValidMonth(month string) bool {
 	}
 	return false
 }
+
+// GetMonthIndex returns the index of the month in the Months array
+// Returns -1 if the month is not found
+func GetMonthIndex(month string) int {
+	for i, m := range Months {
+		if m == month {
+			return i
+		}
+	}
+	return -1
+}

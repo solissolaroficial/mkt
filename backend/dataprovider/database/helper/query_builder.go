@@ -1,6 +1,9 @@
 package helper
 
 import (
+	"sort"
+
+	"github.com/seu-usuario/solis-backend/core/domain/constants"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"gorm.io/gorm"
 )
@@ -37,12 +40,14 @@ func ApplySort(query *gorm.DB, sortBy, sortOrder *string) *gorm.DB {
 	return query
 }
 
-// FilterMonthlyData filtra um slice de MonthlyData baseado em mês e ano
+// FilterMonthlyData filtra e ordena um slice de MonthlyData baseado em mês e ano
 // Se month for "---", retorna todos os dados do ano especificado
 // Se ambos month e year forem nil, retorna todos os dados
+// Os dados são sempre retornados em ordem cronológica (JAN, FEV, MAR, etc.)
 func FilterMonthlyData(monthlyData []*entity.MonthlyData, month *string, year *int) []*entity.MonthlyData {
 	if month == nil && year == nil {
-		return monthlyData
+		// Retornar todos os dados ordenados
+		return sortMonthlyData(monthlyData)
 	}
 
 	filtered := make([]*entity.MonthlyData, 0)
@@ -55,5 +60,27 @@ func FilterMonthlyData(monthlyData []*entity.MonthlyData, month *string, year *i
 		}
 	}
 
-	return filtered
+	// Ordenar os dados filtrados cronologicamente
+	return sortMonthlyData(filtered)
+}
+
+// sortMonthlyData ordena MonthlyData por mês em ordem cronológica
+func sortMonthlyData(monthlyData []*entity.MonthlyData) []*entity.MonthlyData {
+	sorted := make([]*entity.MonthlyData, len(monthlyData))
+	copy(sorted, monthlyData)
+
+	sort.Slice(sorted, func(i, j int) bool {
+		monthIndexI := constants.GetMonthIndex(sorted[i].Month())
+		monthIndexJ := constants.GetMonthIndex(sorted[j].Month())
+
+		// Se ambos os meses forem válidos, ordenar por índice
+		if monthIndexI != -1 && monthIndexJ != -1 {
+			return monthIndexI < monthIndexJ
+		}
+
+		// Fallback: ordenação alfabética para meses inválidos (não deveria acontecer)
+		return sorted[i].Month() < sorted[j].Month()
+	})
+
+	return sorted
 }

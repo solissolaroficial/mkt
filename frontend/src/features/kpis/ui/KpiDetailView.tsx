@@ -32,7 +32,7 @@ const KpiDetailView: React.FC<KpiDetailViewProps> = ({ kpi, allKpis, selectedMon
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
   const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
   const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
-  
+
   // Launch State
   const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
   const [launchMonth, setLaunchMonth] = useState('NOV'); // Extracted Month for internal logic
@@ -66,6 +66,15 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
  const [editContext, setEditContext] = useState('');
 
  const currentYear = new Date().getFullYear();
+
+ // Sort monthly data chronologically
+ const sortedData = React.useMemo(() => {
+   return [...kpi.data].sort((a, b) => {
+     const indexA = MONTHS.indexOf(a.month);
+     const indexB = MONTHS.indexOf(b.month);
+     return indexA - indexB;
+   });
+ }, [kpi.data]);
 
   useEffect(() => {
       // Set default date to today or start of selected month
@@ -325,8 +334,8 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
   
   // Get all logs from all MonthlyData (logs are stored at MonthlyData level)
   const allLogs = React.useMemo(() => {
-    return kpi.data.flatMap(monthData => monthData.logs || []);
-  }, [kpi.data]);
+    return sortedData.flatMap(monthData => monthData.logs || []);
+  }, [sortedData]);
   
   const getDailyChartData = (currentRealized: number, currentMeta: number | null, monthStr: string) => {
       const monthIdx = MONTHS.indexOf(monthStr);
@@ -385,10 +394,10 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
       return dailyData;
   };
 
-  const currentMonthData = isMonthlyView ? kpi.data.find(d => d.month === selectedMonth) : null;
-  const chartData = isMonthlyView 
-      ? getDailyChartData(currentMonthData?.realized || 0, currentMonthData?.meta || 0, selectedMonth) 
-      : kpi.data;
+  const currentMonthData = isMonthlyView ? sortedData.find(d => d.month === selectedMonth) : null;
+  const chartData = isMonthlyView
+      ? getDailyChartData(currentMonthData?.realized || 0, currentMonthData?.meta || 0, selectedMonth)
+      : sortedData;
 
   // Get existing channels for dropdown
   const existingChannels = Array.from(new Set(
@@ -577,7 +586,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800">
-                        {kpi.data.map((row, idx) => (
+                        {sortedData.map((row, idx) => (
                             <React.Fragment key={idx}>
                                 <tr 
                                     className={`hover:bg-[#20232b]/50 transition-colors ${row.breakdown ? 'cursor-pointer' : ''}`}
