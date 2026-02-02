@@ -91,9 +91,8 @@ const Header: React.FC = () => {
           onChange={(e) => setSelectedYear(e.target.value)}
           className="px-3 py-2 bg-[#0f1115] border border-gray-700 rounded-lg text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5144]"
         >
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
           <option value="2026">2026</option>
+          <option value="2027">2027</option>
         </select>
 
         {/* Notifications */}
