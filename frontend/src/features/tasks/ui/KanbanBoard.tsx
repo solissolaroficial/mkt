@@ -5,7 +5,7 @@ import { generateUUID } from '@/shared/utils/uuid';
 import { useUsers } from '@/features/users/hooks';
 import { useAuth } from '@/features/auth';
 import type { AppUser } from '@/shared/types/user.types';
-import { getPriorityColor } from '../utils/taskHelpers';
+import { getPriorityColor, TASK_PRIORITY_LABELS } from '../utils/taskHelpers';
 import {
   Plus,
   CheckCircle2,
@@ -109,8 +109,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const formatDateDisplay = (dateStr?: string) => {
     if (!dateStr || dateStr === 'Sem data') return 'Sem data';
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [y, m, d] = dateStr.split('-');
+    // Extrair apenas a parte da data se vier em formato ISO completo
+    const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    if (cleanDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [y, m, d] = cleanDateStr.split('-');
         return `${d}/${m}`;
     }
     return dateStr;
@@ -669,7 +671,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             <div className="pl-3">
                                 <div className="flex justify-between items-start mb-2">
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wide ${getPriorityColor(task.priority)}`}>
-                                    {task.priority}
+                                    {TASK_PRIORITY_LABELS[task.priority] || task.priority}
                                 </span>
                                 
                                 {(task.status === 'completed' || showArchived) && (
