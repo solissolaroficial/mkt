@@ -3,8 +3,17 @@ import React from 'react';
 import type { Task } from '@/shared/types';
 import { CheckCircle2, CalendarDays, ArrowRight, CornerDownRight, AlertTriangle, Layers, User } from 'lucide-react';
 import type { TaskWidgetProps } from '../types';
+import { useUsers } from '@/features/users/hooks';
+import { TASK_PRIORITY_LABELS, getPriorityColor } from '../utils/taskHelpers';
 
 const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }) => {
+  const { data: users } = useUsers();
+
+  // Criar mapa de usuários por ID
+  const usersMap = React.useMemo(() => {
+    if (!users) return new Map();
+    return new Map(users.map(u => [u.id, u.name]));
+  }, [users]);
   
   // Converter timestamp (ms) ou ISO date string para timestamp
   const getDateValue = (dateStr?: string) => {
@@ -112,20 +121,22 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
             else if (isToday) dateBoxClass = 'bg-amber-500/10 border-amber-500/30 text-amber-400';
 
             // Priority Badge Color
-            let priorityClass = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-            if (item.parentPriority === 'alta') priorityClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-            if (item.parentPriority === 'media') priorityClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            const priorityClass = getPriorityColor(item.parentPriority);
 
             // Format Date info for box
             let dayStr = '--';
             let weekdayStr = '-';
-            
+
             if (item.dueDate && item.dueDate !== 'Sem data') {
-                 // Using manual parsing to avoid timezone shifts
-                 const [y, m, d] = item.dueDate.split('-').map(Number);
-                 const dateObj = new Date(y, m - 1, d);
-                 dayStr = d.toString();
-                 weekdayStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3);
+                 // Extrair apenas a parte da data se vier em formato ISO completo
+                 const cleanDateStr = item.dueDate.includes('T') ? item.dueDate.split('T')[0] : item.dueDate;
+
+                 if (cleanDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                   const [y, m, d] = cleanDateStr.split('-').map(Number);
+                   const dateObj = new Date(y, m - 1, d);
+                   dayStr = d.toString();
+                   weekdayStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3);
+                 }
             }
 
             return (
@@ -147,7 +158,7 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
                       {item.title}
                     </p>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded border font-bold uppercase tracking-wider whitespace-nowrap ${priorityClass}`}>
-                        {item.parentPriority}
+                        {TASK_PRIORITY_LABELS[item.parentPriority] || item.parentPriority}
                     </span>
                   </div>
                   
@@ -161,7 +172,7 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
                     {item.assignee && (
                         <div className="flex items-center gap-1 border-l border-gray-700 pl-3">
                             <User size={12} />
-                            <span>{item.assignee}</span>
+                            <span>{usersMap.get(item.assignee) || item.assignee}</span>
                         </div>
                     )}
                   </div>

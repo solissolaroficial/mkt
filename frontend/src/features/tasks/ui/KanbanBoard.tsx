@@ -5,6 +5,7 @@ import { generateUUID } from '@/shared/utils/uuid';
 import { useUsers } from '@/features/users/hooks';
 import { useAuth } from '@/features/auth';
 import type { AppUser } from '@/shared/types/user.types';
+import { getPriorityColor } from '../utils/taskHelpers';
 import {
   Plus,
   CheckCircle2,
@@ -160,15 +161,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       setIsAddingFlow(false);
   };
 
-  const getPriorityColor = (p: string) => {
-    switch (p) {
-      case 'high': return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
-      case 'medium': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-      case 'low': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      case 'urgent': return 'text-red-400 bg-red-500/10 border-red-500/20';
-      default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-    }
-  };
 
   // --- Drag and Drop Handlers ---
   const handleDragStart = (e: React.DragEvent, taskId: string) => {

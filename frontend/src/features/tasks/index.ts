@@ -12,6 +12,9 @@ export { usePaginatedTasks } from './hooks/usePaginatedTasks';
 // Services
 export { taskService, subtaskService, commentService } from './services/taskService';
 
+// Utils
+export * from './utils/taskHelpers';
+
 // Types
 export type { 
   TaskViewProps, 
