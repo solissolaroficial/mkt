@@ -692,11 +692,17 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-800 pt-3 mt-3">
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1.5" title="Responsável">
-                                        <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 text-gray-300 font-bold">
+                                        <div className="w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 overflow-hidden">
                                             {isLoadingUsers ? (
                                                 <Loader2 size={12} className="animate-spin" />
                                             ) : task.assignee_id ? (
-                                                appUsers?.find(u => u.id === task.assignee_id)?.name[0]
+                                                appUsers?.find(u => u.id === task.assignee_id)?.profilePhotoURL ? (
+                                                    <img src={appUsers?.find(u => u.id === task.assignee_id)?.profilePhotoURL} alt={appUsers?.find(u => u.id === task.assignee_id)?.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-gray-300 font-bold text-xs">
+                                                        {appUsers?.find(u => u.id === task.assignee_id)?.name?.charAt(0) || 'U'}
+                                                    </span>
+                                                )
                                             ) : (
                                                 <User size={12} />
                                             )}
@@ -796,7 +802,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                                     {isLoadingUsers ? (
                                                         <Loader2 size={12} className="animate-spin" />
                                                     ) : (
-                                                        appUsers?.find(u => u.id === task.assignee_id)?.name
+                                                        appUsers?.find(u => u.id === task.assignee_id)?.profilePhotoURL ? (
+                                                            <img src={appUsers?.find(u => u.id === task.assignee_id)?.profilePhotoURL} alt={appUsers?.find(u => u.id === task.assignee_id)?.name} className="w-full h-full object-cover rounded-full" />
+                                                        ) : (
+                                                            <span className="text-white text-xs font-bold">
+                                                                {appUsers?.find(u => u.id === task.assignee_id)?.name?.charAt(0) || 'U'}
+                                                            </span>
+                                                        )
                                                     )}
                                                 </span>
                                             )}

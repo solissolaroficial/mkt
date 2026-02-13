@@ -120,6 +120,16 @@ func (c *UserController) ListUsers(ctx *fiber.Ctx) error {
 	paginatedUsers := users[start:end]
 	userResponses := c.mapper.ToPublicResponseList(paginatedUsers)
 
+	// Gerar presigned URLs para usuários com foto
+	for i := range userResponses {
+		if userResponses[i].ProfilePhotoKey != "" {
+			url, err := c.getProfilePhotoPresignedURL(ctx.Context(), userResponses[i].ProfilePhotoKey)
+			if err == nil {
+				userResponses[i].ProfilePhotoURL = url
+			}
+		}
+	}
+
 	return ctx.JSON(response.PaginationResponse{
 		Page:       page,
 		PageSize:   limit,
@@ -140,6 +150,17 @@ func (c *UserController) ListAllUsers(ctx *fiber.Ctx) error {
 	}
 
 	userResponses := c.mapper.ToPublicResponseList(users)
+
+	// Gerar presigned URLs para usuários com foto
+	for i := range userResponses {
+		if userResponses[i].ProfilePhotoKey != "" {
+			url, err := c.getProfilePhotoPresignedURL(ctx.Context(), userResponses[i].ProfilePhotoKey)
+			if err == nil {
+				userResponses[i].ProfilePhotoURL = url
+			}
+		}
+	}
+
 	return ctx.JSON(userResponses)
 }
 
@@ -337,6 +358,14 @@ func (c *UserController) GetProfile(ctx *fiber.Ctx) error {
 		ProfilePhotoURL: "", // Não retornar URL pública - usar presigned URL
 		CreatedAt:       user.CreatedAt(),
 		UpdatedAt:       user.UpdatedAt(),
+	}
+
+	// Gerar presigned URL se houver foto
+	if userResponse.ProfilePhotoKey != "" {
+		presignedURL, err := c.getProfilePhotoPresignedURL(ctx.Context(), userResponse.ProfilePhotoKey)
+		if err == nil {
+			userResponse.ProfilePhotoURL = presignedURL
+		}
 	}
 
 	// 4. Retornar resposta

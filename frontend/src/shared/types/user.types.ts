@@ -4,6 +4,8 @@ export interface AppUser {
   name: string;
   role: 'admin' | 'marketing' | 'commercial';
   active: boolean;
+  profilePhotoKey?: string;
+  profilePhotoURL?: string;
   created_at: string;
   updated_at: string;
 }

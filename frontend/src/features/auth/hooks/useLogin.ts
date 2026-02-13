@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useAuthStore } from '../store/authStore';
 import { tokenStorage } from '@/infrastructure/auth/tokenStorage';
-import type { LoginCredentials } from '../types';
+import type { LoginCredentials, AuthUser } from '../types';
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -16,8 +16,16 @@ export const useLogin = () => {
       // Salvar tokens (access e refresh)
       tokenStorage.setTokens(data.access_token, data.refresh_token);
 
-      // Salvar usuário no store
-      setUser(data.user);
+      // Transformar e salvar usuário no store
+      const authUser: AuthUser = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+        profilePhotoKey: data.user.profile_photo_key,
+        profilePhotoURL: data.user.profile_photo_url,
+      };
+      setUser(authUser);
 
       // Redirecionar para dashboard
       navigate('/dashboard');

@@ -126,10 +126,14 @@ const Header: React.FC = () => {
             onClick={toggleUserMenu}
             className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-[#1e5144] to-emerald-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-semibold">
-                {user?.name?.charAt(0) || 'U'}
-              </span>
+            <div className="w-8 h-8 bg-gradient-to-br from-[#1e5144] to-emerald-600 rounded-full flex items-center justify-center overflow-hidden">
+              {user?.profilePhotoURL ? (
+                <img src={user.profilePhotoURL} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-sm font-semibold">
+                  {user?.name?.charAt(0) || 'U'}
+                </span>
+              )}
             </div>
             <span className="text-gray-200 text-sm font-medium hidden md:block">
               {user?.name || 'Usuário'}

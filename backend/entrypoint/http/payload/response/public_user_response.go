@@ -10,6 +10,7 @@ type PublicUserResponse struct {
 	Role            string    `json:"role"`
 	Active          bool      `json:"active"`
 	ProfilePhotoKey string    `json:"profile_photo_key,omitempty"`
+	ProfilePhotoURL string    `json:"profile_photo_url,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }

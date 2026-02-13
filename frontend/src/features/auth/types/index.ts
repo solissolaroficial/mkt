@@ -12,6 +12,7 @@ export interface LoginResponse {
     name: string;
     role: string;
     profile_photo_key?: string;
+    profile_photo_url?: string;
   };
 }
 
