@@ -270,10 +270,26 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // --- GANTT CHART LOGIC ---
   const parseDate = (str?: string) => {
       if (!str || str === 'Sem data') return null;
+
+      // Try to parse RFC3339 (ISO 8601) - format from backend
+      // JavaScript can parse natively: "2024-01-15T12:30:00Z"
+      const date = new Date(str);
+      if (!isNaN(date.getTime())) {
+          return date;
+      }
+
+      // Fallback for YYYY-MM-DD (compatibility)
       if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
           const [y, m, d] = str.split('-').map(Number);
           return new Date(y, m - 1, d);
       }
+
+      // Fallback for DD/MM/YYYY (Brazilian format)
+      if (str.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          const [d, m, y] = str.split('/').map(Number);
+          return new Date(y, m - 1, d);
+      }
+
       return null;
   };
 
@@ -320,23 +336,25 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
       let min = new Date(8640000000000000);
       let max = new Date(-8640000000000000);
-      
-      const tasksWithDates = visibleTasks.filter(t => t.due_date && t.due_date !== 'Sem data');
+
+      // Consider tasks with start_date OR due_date
+      const tasksWithDates = visibleTasks.filter(t => t.start_date || (t.due_date && t.due_date !== 'Sem data'));
       if (tasksWithDates.length === 0) return { start: new Date(), end: new Date() };
 
       tasksWithDates.forEach(t => {
-          const e = parseDate(t.due_date);
-          
-          const start = e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date();
-          const end = e || new Date();
+          const start = parseDate(t.start_date);
+          const end = parseDate(t.due_date);
 
-          if (start < min) min = start;
-          if (end > max) max = end;
+          const taskStart = start || (end ? new Date(end.getTime() - 2*24*60*60*1000) : new Date());
+          const taskEnd = end || taskStart;
+
+          if (taskStart < min) min = taskStart;
+          if (taskEnd > max) max = taskEnd;
       });
 
-      // Buffer based on scale
-      min.setDate(min.getDate() - 7);
-      max.setDate(max.getDate() + 14);
+      // Add buffer days (CORREÇÃO: não usar setDate() para evitar mutação)
+      min = new Date(min.getTime() - 7 * 24 * 60 * 60 * 1000);
+      max = new Date(max.getTime() + 14 * 24 * 60 * 60 * 1000);
 
       return { start: min, end: max };
   }, [visibleTasks]);
@@ -344,45 +362,60 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const ganttTicks = useMemo(() => {
       const { start, end } = ganttRange;
       const ticks = [];
-      const current = new Date(start);
-      
-      // Align start date based on scale
+      let current: Date;
+
+      // CORREÇÃO: Criar nova Date alinhada do zero
       if (ganttScale === 'week') {
-          const day = current.getDay();
-          const diff = current.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is sunday
-          current.setDate(diff); // Monday
+          const day = start.getDay();
+          const daysFromMonday = (day === 0 ? -6 : 1) - day;
+          current = new Date(start.getTime() + daysFromMonday * 24 * 60 * 60 * 1000);
       } else if (ganttScale === 'month') {
-          current.setDate(1);
+          current = new Date(start.getFullYear(), start.getMonth(), 1);
+      } else {
+          current = new Date(start);
       }
 
       while (current <= end) {
           ticks.push(new Date(current));
-          
-          if (ganttScale === 'day') current.setDate(current.getDate() + 1);
-          else if (ganttScale === 'week') current.setDate(current.getDate() + 7);
-          else if (ganttScale === 'month') current.setMonth(current.getMonth() + 1);
+
+          // CORREÇÃO: Criar nova Date em vez de usar setDate()
+          if (ganttScale === 'day') {
+              current = new Date(current.getTime() + 24 * 60 * 60 * 1000);
+          } else if (ganttScale === 'week') {
+              current = new Date(current.getTime() + 7 * 24 * 60 * 60 * 1000);
+          } else if (ganttScale === 'month') {
+              const newMonth = current.getMonth() + 1;
+              const newYear = current.getFullYear() + (newMonth === 12 ? 1 : 0);
+              current = new Date(newYear, newMonth === 12 ? 0 : newMonth, 1);
+          }
       }
       return ticks;
   }, [ganttRange, ganttScale]);
 
   const getBarStyles = (task: Task) => {
       const e = parseDate(task.due_date);
-      
-      const start = e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date();
+      const s = parseDate(task.start_date);
+
+      // Use start_date if available, otherwise calculate 2 days before due_date
+      const start = s || (e ? new Date(e.getTime() - 2*24*60*60*1000) : new Date());
       const end = e || start;
 
-      // Align to Gantt Start
-      let effectiveStart = new Date(ganttRange.start);
+      // Align to Gantt Start (CORREÇÃO: não usar setDate() para evitar mutação)
+      const rangeStart = ganttRange.start;
+      let effectiveStart: Date;
       if (ganttScale === 'week') {
-          const day = effectiveStart.getDay();
-          effectiveStart.setDate(effectiveStart.getDate() - day + (day === 0 ? -6 : 1));
+          const day = rangeStart.getDay();
+          const daysFromMonday = (day === 0 ? -6 : 1) - day;
+          effectiveStart = new Date(rangeStart.getTime() + daysFromMonday * 24 * 60 * 60 * 1000);
       } else if (ganttScale === 'month') {
-          effectiveStart.setDate(1);
+          effectiveStart = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+      } else {
+          effectiveStart = new Date(rangeStart);
       }
 
       const diffMs = start.getTime() - effectiveStart.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      
+
       const durationMs = end.getTime() - start.getTime();
       const durationDays = Math.max(1, durationMs / (1000 * 60 * 60 * 24) + 1);
 

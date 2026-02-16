@@ -59,8 +59,8 @@ func (uc *CreateCommentUseCase) Execute(ctx context.Context, comment *entity.Com
 
 // createMentionNotifications creates notifications for users mentioned in a comment
 func (uc *CreateCommentUseCase) createMentionNotifications(ctx context.Context, comment *entity.Comment) {
-	// Regex to find @username mentions
-	mentionRegex := regexp.MustCompile(`@(\w+)`)
+	// Regex to find @username mentions - \S+ captures everything until next space, including accents
+	mentionRegex := regexp.MustCompile(`@(\S+)`)
 	matches := mentionRegex.FindAllStringSubmatch(comment.Text(), -1)
 
 	// Use a map to avoid duplicate notifications

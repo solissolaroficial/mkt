@@ -111,11 +111,12 @@ func (g *userGatewayImpl) ExistsByEmail(ctx context.Context, email string) (bool
 	return count > 0, nil
 }
 
-// FindByName retrieves a user by their name
+// FindByName retrieves a user by their name (case-insensitive search)
 func (g *userGatewayImpl) FindByName(ctx context.Context, name string) (*entity.User, error) {
 	var userModel model.User
 
-	err := g.db.WithContext(ctx).Where("name = ?", name).First(&userModel).Error
+	// Use ILIKE for case-insensitive search in PostgreSQL
+	err := g.db.WithContext(ctx).Where("name ILIKE ?", name).First(&userModel).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, authErrors.ErrUserNotFound
