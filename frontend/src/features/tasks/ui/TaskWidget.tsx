@@ -5,6 +5,7 @@ import { CheckCircle2, CalendarDays, ArrowRight, CornerDownRight, AlertTriangle,
 import type { TaskWidgetProps } from '../types';
 import { useUsers } from '@/features/users/hooks';
 import { TASK_PRIORITY_LABELS, getPriorityColor } from '../utils/taskHelpers';
+import { parseIsoDate, formatShortDate } from '@/shared/utils/dateFormatters';
 
 const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }) => {
   const { data: users } = useUsers();
@@ -17,26 +18,9 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
   
   // Converter timestamp (ms) ou ISO date string para timestamp
   const getDateValue = (dateStr?: string) => {
-    if (!dateStr || dateStr === 'Sem data') return 9999999999999;
-    
-    // Tratamento para datas ISO YYYY-MM-DD
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // Criar data em UTC e pegar o timestamp ajustado ao fuso horário local para comparação correta de "dia"
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const date = new Date(y, m - 1, d); // Mês é 0-indexado
-        return date.getTime();
-    }
-    
-    // Fallback para legado (se ainda existir)
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); 
-    const cleanDate = dateStr.trim().toLowerCase();
-
-    if (cleanDate === 'ontem') return now.getTime() - 86400000;
-    if (cleanDate === 'hoje') return now.getTime();
-    if (cleanDate === 'amanhã') return now.getTime() + 86400000;
-    
-    return 9999999999999; 
+    const date = parseIsoDate(dateStr);
+    if (!date) return 9999999999999;
+    return date.getTime();
   };
 
   const today = new Date();
@@ -128,14 +112,10 @@ const TaskWidget: React.FC<TaskWidgetProps> = ({ tasks, onViewAll, onTaskClick }
             let weekdayStr = '-';
 
             if (item.dueDate && item.dueDate !== 'Sem data') {
-                 // Extrair apenas a parte da data se vier em formato ISO completo
-                 const cleanDateStr = item.dueDate.includes('T') ? item.dueDate.split('T')[0] : item.dueDate;
-
-                 if (cleanDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                   const [y, m, d] = cleanDateStr.split('-').map(Number);
-                   const dateObj = new Date(y, m - 1, d);
-                   dayStr = d.toString();
-                   weekdayStr = dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3);
+                 const date = parseIsoDate(item.dueDate);
+                 if (date) {
+                    dayStr = date.getDate().toString();
+                    weekdayStr = date.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3);
                  }
             }
 

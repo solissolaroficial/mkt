@@ -4,7 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/application/usecase/tasks"
+	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	taskrequest "github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	taskresponse "github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
@@ -93,6 +95,12 @@ func (c *SubtaskController) Update(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// Convert Title to *string (opcional)
+	var title *string
+	if req.Title != nil {
+		title = req.Title
+	}
+
 	// Convert assigneeID to *string
 	var assigneeID *string
 	if req.AssigneeID != nil {
@@ -115,7 +123,7 @@ func (c *SubtaskController) Update(ctx *fiber.Ctx) error {
 
 	updatedSubtask, err := c.updateSubtaskUseCase.Execute(
 		id,
-		*req.Title,
+		title,
 		completed,
 		assigneeID,
 		dueDate,
@@ -173,9 +181,10 @@ func (c *SubtaskController) Get(ctx *fiber.Ctx) error {
 
 // List retorna uma lista de subtarefas com paginação
 // @Summary Listar subtarefas
-// @Description Retorna uma lista de subtarefas com paginação
+// @Description Retorna uma lista de subtarefas com paginação, opcionalmente filtrada por task_id
 // @Tags subtasks
 // @Produce json
+// @Param task_id query string false "ID da task para filtrar subtarefas"
 // @Param page query int false "Número da página" default(1)
 // @Param limit query int false "Itens por página" default(10)
 // @Success 200 {object} taskresponse.SubtasksListResponse
@@ -183,6 +192,7 @@ func (c *SubtaskController) Get(ctx *fiber.Ctx) error {
 func (c *SubtaskController) List(ctx *fiber.Ctx) error {
 	page, _ := strconv.Atoi(ctx.Query("page", "1"))
 	limit, _ := strconv.Atoi(ctx.Query("limit", "10"))
+	taskIDParam := ctx.Query("task_id")
 
 	if page < 1 {
 		page = 1
@@ -191,7 +201,23 @@ func (c *SubtaskController) List(ctx *fiber.Ctx) error {
 		limit = 10
 	}
 
-	subtasks, total, err := c.listSubtasksUseCase.Execute(page, limit)
+	var subtasks []*entity.Subtask
+	var total int64
+	var err error
+
+	// Se task_id foi fornecido, filtrar por task
+	if taskIDParam != "" {
+		taskID, uuidErr := uuid.Parse(taskIDParam)
+		if uuidErr != nil {
+			return ctx.Status(fiber.StatusBadRequest).JSON(taskresponse.ErrorResponse{
+				Error: "Invalid task_id format",
+			})
+		}
+		subtasks, total, err = c.listSubtasksUseCase.ExecuteByTaskID(taskID.String(), page, limit)
+	} else {
+		subtasks, total, err = c.listSubtasksUseCase.Execute(page, limit)
+	}
+
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(taskresponse.ErrorResponse{
 			Error: err.Error(),

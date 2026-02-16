@@ -118,6 +118,7 @@ export interface Task {
   flow_id?: string;  // FK para Flow
   flow?: Flow;       // Flow populado
   due_date?: string;
+  start_date?: string;
   assignee_id?: string;
   archived: boolean;
   subtasks?: Subtask[];

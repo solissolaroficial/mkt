@@ -25,6 +25,7 @@ import {
   CornerDownRight,
   Users
 } from 'lucide-react';
+import { formatShortDate } from '@/shared/utils/dateFormatters';
 import type { KanbanBoardProps } from '../types';
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -61,7 +62,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // Initialize selectedFlowId from first flow by default
   useEffect(() => {
     if (flowsData?.data && flowsData.data.length > 0 && !selectedFlowId) {
-      setSelectedFlowId(flowsData.data[0].id);
+      setSelectedFlowId(flowsData.data[0].uuid);
     }
   }, [flowsData]);
 
@@ -92,17 +93,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       onUpdateTask({ ...task, archived: !task.archived });
     }
   };
-
-  const formatDateDisplay = (dateStr?: string) => {
-    if (!dateStr || dateStr === 'Sem data') return 'Sem data';
-    // Extrair apenas a parte da data se vier em formato ISO completo
-    const cleanDateStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
-    if (cleanDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [y, m, d] = cleanDateStr.split('-');
-        return `${d}/${m}`;
-    }
-    return dateStr;
-  }
 
   const addTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -424,7 +414,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <h1 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
                 Quadro de Tarefas
                 <span className="text-sm font-normal text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">
-                    {flowsData?.data.find(f => f.id === selectedFlowId)?.name || 'Selecione'}
+                    {flowsData?.data.find(f => f.uuid === selectedFlowId)?.name || 'Selecione'}
                 </span>
             </h1>
             <p className="text-gray-500">
@@ -624,10 +614,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                     )}
                                 </div>
                                 
-                                <div className="flex items-center gap-1" title="Prazo">
-                                    <CalendarDays size={12} className={taskIsToday ? 'text-amber-500' : ''} />
-                                    <span className={taskIsToday ? 'text-amber-500 font-medium' : ''}>{formatDateDisplay(task.due_date)}</span>
-                                </div>
+                                 <div className="flex items-center gap-1" title="Prazo">
+                                     <CalendarDays size={12} className={taskIsToday ? 'text-amber-500' : ''} />
+                                     <span className={taskIsToday ? 'text-amber-500 font-medium' : ''}>{formatShortDate(task.due_date)}</span>
+                                 </div>
                                 </div>
                             </div>
                             </div>
@@ -699,7 +689,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                             }`}
                                             style={{ left: `${left}px`, width: `${width}px` }}
                                             onClick={() => onTaskClick(task.id)}
-                                            title={`${task.title} - ${formatDateDisplay(task.due_date)}`}
+                                            title={`${task.title} - ${formatShortDate(task.due_date)}`}
                                         >
                                             {width > 60 && (
                                                 <span className="drop-shadow-md">

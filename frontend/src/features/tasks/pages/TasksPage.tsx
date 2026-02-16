@@ -5,6 +5,7 @@ import TaskModal from '../ui/TaskModal';
 import { ErrorDisplay } from '@/shared/components/ErrorDisplay';
 import { ToastContainer } from '@/shared/components/ToastContainer';
 import { useToast } from '@/shared/hooks/useToast';
+import ConfirmationModal from '@/shared/components/ConfirmationModal';
 import type { Task } from '@/shared/types';
 import type { PaginatedTasks } from '../types';
 import type { Subtask, Comment } from '../types';
@@ -15,6 +16,8 @@ const TasksPage: React.FC = () => {
   const { toasts, removeToast, success, error: toastError, info } = useToast();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteCommentConfirm, setShowDeleteCommentConfirm] = useState<string | null>(null);
   const {
     createTask,
     updateTask,
@@ -51,7 +54,9 @@ const TasksPage: React.FC = () => {
         description: data.description || undefined,
       }
     }, {
-      onSuccess: () => {
+      onSuccess: (updatedTaskData) => {
+        // Atualizar o selectedTask com os dados retornados pela API
+        setSelectedTask(prev => prev ? { ...prev, ...updatedTaskData } : null);
         success('Tarefa atualizada com sucesso!');
       },
       onError: (err) => {
@@ -120,7 +125,17 @@ const TasksPage: React.FC = () => {
 
   const handleUpdateSubtask = (id: string, data: Partial<Subtask>) => {
     updateSubtask.mutate({ id, data }, {
-      onSuccess: () => {
+      onSuccess: (updatedSubtaskData) => {
+        // Atualizar o selectedTask com os dados retornados pela API
+        if (selectedTask) {
+          setSelectedTask(prev => {
+            // Encontrar e atualizar a subtarefa
+            const updatedSubtasks = (prev.subtasks || []).map(st =>
+              st.id === id ? { ...st, ...updatedSubtaskData } : st
+            );
+            return { ...prev, subtasks: updatedSubtasks };
+          });
+        }
         success('Subtarefa atualizada com sucesso!');
       },
       onError: (err) => {
@@ -130,15 +145,18 @@ const TasksPage: React.FC = () => {
   };
 
   const handleDeleteSubtask = (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir esta subtarefa?')) {
-      return;
-    }
+    setShowDeleteConfirm(id);
+  };
+
+  const handleConfirmDelete = (id: string) => {
     deleteSubtask.mutate(id, {
       onSuccess: () => {
         success('Subtarefa excluída com sucesso!');
+        setShowDeleteConfirm(null);
       },
       onError: (err) => {
         toastError('Erro ao excluir subtarefa. Tente novamente.');
+        setShowDeleteConfirm(null);
       },
     });
   };
@@ -166,15 +184,18 @@ const TasksPage: React.FC = () => {
   };
 
   const handleDeleteComment = (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este comentário?')) {
-      return;
-    }
+    setShowDeleteCommentConfirm(id);
+  };
+
+  const handleConfirmDeleteComment = (id: string) => {
     deleteComment.mutate(id, {
       onSuccess: () => {
         success('Comentário excluído com sucesso!');
+        setShowDeleteCommentConfirm(null);
       },
       onError: (err) => {
         toastError('Erro ao excluir comentário. Tente novamente.');
+        setShowDeleteCommentConfirm(null);
       },
     });
   };
@@ -221,6 +242,24 @@ const TasksPage: React.FC = () => {
           onDeleteComment={handleDeleteComment}
         />
       )}
+      <ConfirmationModal
+        isOpen={!!showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(null)}
+        onConfirm={() => handleConfirmDelete(showDeleteConfirm!)}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir esta subtarefa? Esta ação não pode ser desfeita."
+        isPending={deleteSubtask.isPending}
+        type="danger"
+      />
+      <ConfirmationModal
+        isOpen={!!showDeleteCommentConfirm}
+        onClose={() => setShowDeleteCommentConfirm(null)}
+        onConfirm={() => handleConfirmDeleteComment(showDeleteCommentConfirm!)}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita."
+        isPending={deleteComment.isPending}
+        type="danger"
+      />
     </>
   );
 };

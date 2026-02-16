@@ -1,5 +1,5 @@
  
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Task, Subtask, Comment, AllowedUser, TaskStatus } from '@/shared/types';
 import type { AppUser } from '@/shared/types/user.types';
 import { useUsers } from '@/features/users/hooks';
@@ -22,6 +22,7 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
+import { formatDisplayDate, formatDateForInput, formatDateForAPI } from '@/shared/utils/dateFormatters';
 import type { TaskModalProps } from '../types';
 
 const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onMention, onAddSubtask, onUpdateSubtask, onDeleteSubtask, onAddComment, onUpdateComment, onDeleteComment }) => {
@@ -34,10 +35,22 @@ const { data: subtasksData, isLoading: isLoadingSubtasks } = useSubtasks(task.id
 
 // Use fetched data if available, otherwise fall back to task data (for optimistic updates)
 const displayComments = commentsData || task.comments || [];
-const displaySubtasks = subtasksData || task.subtasks || [];
+const [displaySubtasks, setDisplaySubtasks] = useState<Subtask[]>(
+    subtasksData || task.subtasks || []
+);
 
+// Sincronizar displaySubtasks quando subtasksData mudar
+useEffect(() => {
+    if (subtasksData) {
+        setDisplaySubtasks(subtasksData);
+    }
+}, [subtasksData]);
 
 const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+// Estado para edição local do título de subtarefas (com debounce)
+const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
 // Initialize with first user UUID from appUsers, or empty string if not loaded
 const firstUserId = appUsers?.[0]?.id || '';
 const [newSubtaskAssignee, setNewSubtaskAssignee] = useState<string>(firstUserId);
@@ -53,8 +66,21 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
   const [mentionFilter, setMentionFilter] = useState('');
 
 
-  if (!isOpen || !task) return null; // Safety check
-  
+  // Debounce para atualizar título de subtarefa
+  useEffect(() => {
+    if (!editingSubtaskId || editingSubtaskTitle === '') return;
+
+    const timer = setTimeout(() => {
+      const subtask = displaySubtasks.find(st => st.id === editingSubtaskId);
+      if (subtask && subtask.title !== editingSubtaskTitle) {
+        updateSubtaskField(editingSubtaskId, 'title', editingSubtaskTitle);
+      }
+      setEditingSubtaskId(null);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [editingSubtaskTitle, editingSubtaskId]);
+
   // Show loading while users, comments, or subtasks are being fetched
   if (isLoadingUsers || isLoadingComments || isLoadingSubtasks) {
     return (
@@ -75,17 +101,34 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
   };
 
   const toggleSubtask = (subtaskId: string) => {
+    const subtask = displaySubtasks.find(st => st.id === subtaskId);
+    if (!subtask) return;
+
+    const newStatus = subtask.status === 'completed' ? 'pending' : 'completed';
+
+    // Atualizar estado local imediatamente
     const updatedSubtasks = (displaySubtasks || []).map(st =>
-      st.id === subtaskId ? { ...st, status: (st.status === 'completed' ? 'pending' : 'completed') as TaskStatus } : st
+      st.id === subtaskId ? { ...st, status: newStatus as TaskStatus } : st
     );
-    onUpdate({ ...task, subtasks: updatedSubtasks });
+    setDisplaySubtasks(updatedSubtasks);
+
+    // Chamar onUpdateSubtask com { id, data }
+    if (onUpdateSubtask) {
+      onUpdateSubtask(subtaskId, { status: newStatus });
+    }
   };
 
   const updateSubtaskField = (subtaskId: string, field: keyof Subtask, value: any) => {
-    const updatedSubtasks = (displaySubtasks || []).map(st =>
+    // Atualizar estado local imediatamente (feedback visual rápido)
+    const updatedSubtasks = displaySubtasks.map(st =>
       st.id === subtaskId ? { ...st, [field]: value } : st
     );
-    onUpdate({ ...task, subtasks: updatedSubtasks });
+    setDisplaySubtasks(updatedSubtasks);
+
+    // Chamar onUpdateSubtask com { id, data }
+    if (onUpdateSubtask) {
+      onUpdateSubtask(subtaskId, { [field]: value });
+    }
   };
 
   const addSubtask = (e: React.FormEvent) => {
@@ -322,8 +365,26 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                                 
                                 <input
                                     type="text"
-                                    value={st.title}
-                                    onChange={(e) => updateSubtaskField(st.id, 'title', e.target.value)}
+                                    value={editingSubtaskId === st.id ? editingSubtaskTitle : st.title}
+                                    onChange={(e) => {
+                                        setEditingSubtaskId(st.id);
+                                        setEditingSubtaskTitle(e.target.value);
+                                    }}
+                                    onBlur={() => {
+                                        if (editingSubtaskId === st.id) {
+                                            updateSubtaskField(st.id, 'title', editingSubtaskTitle || st.title);
+                                            setEditingSubtaskId(null);
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            if (editingSubtaskId === st.id) {
+                                                updateSubtaskField(st.id, 'title', editingSubtaskTitle || st.title);
+                                                setEditingSubtaskId(null);
+                                            }
+                                        }
+                                    }}
                                     className={`flex-grow bg-transparent border-none p-0 text-sm focus:ring-0 ${st.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-200'}`}
                                 />
 
@@ -347,11 +408,11 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                                     <div className="relative">
                                         <div className="flex items-center gap-1.5 bg-[#1a1d24] px-2 py-1 rounded text-xs border border-gray-700">
                                             <Calendar size={10} />
-                                            <span>{st.due_date ? st.due_date.split('-').slice(1).reverse().join('/') : '--/--'}</span>
+                                            <span>{st.due_date ? formatDisplayDate(st.due_date) : '--/--'}</span>
                                             <input
                                                 type="date"
-                                                value={st.due_date || ''}
-                                                onChange={(e) => updateSubtaskField(st.id, 'due_date', e.target.value)}
+                                                value={formatDateForInput(st.due_date)}
+                                                onChange={(e) => updateSubtaskField(st.id, 'due_date', formatDateForAPI(e.target.value))}
                                                 className="absolute inset-0 opacity-0 cursor-pointer w-full"
                                                 onClick={openDatePicker}
                                             />
@@ -394,7 +455,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                              </div>
                              <div className="relative w-24 bg-[#0f1115] border border-gray-800 rounded-lg flex items-center px-2">
                                 <Calendar size={14} className="text-gray-500 mr-2" />
-                                <span className="text-xs text-gray-300 truncate">{newSubtaskDate ? newSubtaskDate.split('-').slice(1).reverse().join('/') : 'Data'}</span>
+                                <span className="text-xs text-gray-300 truncate">{newSubtaskDate ? formatDisplayDate(newSubtaskDate) : 'Data'}</span>
                                 <input 
                                     type="date"
                                     value={newSubtaskDate}
@@ -497,8 +558,17 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                         <div className="relative bg-[#1a1d24] border border-gray-700 rounded-lg hover:border-gray-600 transition-colors group-focus-within:border-emerald-500/50">
                             <div className="flex items-center px-3 py-2.5">
                                 <Calendar size={14} className="text-gray-500 mr-2 flex-shrink-0" />
-                                <span className="text-sm text-gray-300 truncate">{task.created_at ? new Date(task.created_at).toLocaleDateString('pt-BR') : 'Selecione'}</span>
+                                <span className="text-sm text-gray-300 truncate">
+                                    {task.start_date ? formatDisplayDate(task.start_date) : 'Selecione'}
+                                </span>
                             </div>
+                            <input
+                                type="date"
+                                value={formatDateForInput(task.start_date)}
+                                onChange={(e) => onUpdate({...task, start_date: formatDateForAPI(e.target.value)})}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full appearance-none"
+                                onClick={openDatePicker}
+                            />
                         </div>
                     </div>
 
@@ -508,12 +578,12 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                         <div className="relative bg-[#1a1d24] border border-gray-700 rounded-lg hover:border-gray-600 transition-colors group-focus-within:border-emerald-500/50">
                             <div className="flex items-center px-3 py-2.5">
                                 <CalendarDays size={14} className="text-gray-500 mr-2 flex-shrink-0" />
-                                <span className="text-sm text-gray-300 truncate">{task.due_date ? task.due_date.split('-').reverse().join('/') : 'Selecione'}</span>
+                                <span className="text-sm text-gray-300 truncate">{task.due_date ? formatDisplayDate(task.due_date) : 'Selecione'}</span>
                             </div>
-                            <input 
+                            <input
                                 type="date"
-                                value={task.due_date}
-                                onChange={(e) => onUpdate({...task, due_date: e.target.value})}
+                                value={formatDateForInput(task.due_date)}
+                                onChange={(e) => onUpdate({...task, due_date: formatDateForAPI(e.target.value)})}
                                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                                 onClick={openDatePicker}
                             />
@@ -540,7 +610,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                             <select
                                 value={task.priority}
                                 onChange={(e) => onUpdate({...task, priority: e.target.value as any})}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full appearance-none"
                             >
                                 <option value="low">Baixa</option>
                                 <option value="medium">Média</option>
@@ -601,7 +671,7 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
             </div>
 
             <div className="mt-auto p-5 border-t border-gray-800 text-xs text-gray-600 space-y-2">
-                <p>Criado em {task.created_at ? new Date(task.created_at).toLocaleDateString('pt-BR') : 'N/A'}</p>
+                <p>Criado em {formatDisplayDate(task.created_at) || 'N/A'}</p>
                 <p>ID: {task.id}</p>
                 
                 <button 

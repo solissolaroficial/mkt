@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
@@ -21,7 +22,7 @@ func NewUpdateSubtaskUseCase(subtaskGateway gateway.SubtaskGateway) *UpdateSubta
 }
 
 // Execute atualiza uma subtarefa
-func (uc *UpdateSubtaskUseCase) Execute(id, title string, completed *bool, assigneeID *string, dueDate *string) (*entity.Subtask, error) {
+func (uc *UpdateSubtaskUseCase) Execute(id string, title *string, completed *bool, assigneeID *string, dueDate *string) (*entity.Subtask, error) {
 	// Parse ID
 	subtaskID, err := uuid.Parse(id)
 	if err != nil {
@@ -34,23 +35,36 @@ func (uc *UpdateSubtaskUseCase) Execute(id, title string, completed *bool, assig
 		return nil, err
 	}
 
-	// Update subtask fields using setters
-	if title != "" {
-		if err := subtask.UpdateTitle(title); err != nil {
+	// Update title se fornecido e não vazio
+	if title != nil && *title != "" {
+		if err := subtask.UpdateTitle(*title); err != nil {
 			return nil, err
 		}
 	}
 
+	// Update completed se fornecido
 	if completed != nil {
 		subtask.SetCompleted(*completed)
 	}
 
+	// Update assignee se fornecido
 	if assigneeID != nil {
 		assigneeUUID, err := uuid.Parse(*assigneeID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid assignee ID: %w", err)
 		}
 		subtask.SetAssigneeUUID(&assigneeUUID)
+	}
+
+	// Update due date se fornecido
+	if dueDate != nil {
+		// Parsear a data ISO (string) para *time.Time
+		if *dueDate != "" {
+			parsedTime, err := time.Parse(time.RFC3339, *dueDate)
+			if err == nil {
+				subtask.SetDueDate(&parsedTime)
+			}
+		}
 	}
 
 	// Save subtask
