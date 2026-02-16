@@ -25,7 +25,7 @@ func NewUpdateTaskUseCase(
 	}
 }
 
-func (uc *UpdateTaskUseCase) Execute(id string, title string, description *string, category *string, priority *string, status *string, assigneeID *string, archived *bool, flows []string, startDate *string, dueDate *string) (*entity.Task, error) {
+func (uc *UpdateTaskUseCase) Execute(id string, title string, description *string, category *string, priority *string, status *string, assigneeID *string, flowID *string, archived *bool, startDate *string, dueDate *string) (*entity.Task, error) {
 	// Parse ID
 	taskID, err := uuid.Parse(id)
 	if err != nil {
@@ -103,8 +103,12 @@ func (uc *UpdateTaskUseCase) Execute(id string, title string, description *strin
 		task.SetAssigneeUUID(&assigneeUUID)
 	}
 
-	if flows != nil {
-		task.SetFlows(flows)
+	if flowID != nil {
+		flowUUID, err := uuid.Parse(*flowID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid flow ID: %w", err)
+		}
+		task.SetFlowUUID(&flowUUID)
 	}
 
 	// Validate task

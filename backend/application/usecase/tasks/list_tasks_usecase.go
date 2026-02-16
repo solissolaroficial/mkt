@@ -3,6 +3,7 @@ package tasks
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
@@ -23,9 +24,8 @@ func (uc *ListTasksUseCase) Execute(
 	categories []string,
 	priorities []string,
 	assigneeID *string,
-	flow *string,
+	flowUUID *string,
 	archived *bool,
-	flows []string,
 	dateFrom *string,
 	dateTo *string,
 	page int,
@@ -44,8 +44,11 @@ func (uc *ListTasksUseCase) Execute(
 	if len(priorities) > 0 {
 		criteria = criteria.WithPriorities(priorities)
 	}
-	if len(flows) > 0 {
-		criteria = criteria.WithFlows(flows)
+	if flowUUID != nil {
+		flowUUIDParsed, err := uuid.Parse(*flowUUID)
+		if err == nil {
+			criteria = criteria.WithFlowUUID(&flowUUIDParsed)
+		}
 	}
 	if archived != nil {
 		criteria = criteria.WithArchived(*archived)

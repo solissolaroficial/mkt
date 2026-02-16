@@ -97,12 +97,6 @@ func (c *TaskController) Update(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Convert flows to []string
-	flows := make([]string, len(req.Flows))
-	for i, flow := range req.Flows {
-		flows[i] = string(flow)
-	}
-
 	// Convert assigneeID to *string
 	var assigneeID *string
 	if req.AssigneeID != nil {
@@ -150,8 +144,8 @@ func (c *TaskController) Update(ctx *fiber.Ctx) error {
 		priority,
 		status,
 		assigneeID,
+		nil, // flowID not provided in update request
 		req.Archived,
-		flows,
 		startDate,
 		dueDate,
 	)
@@ -231,9 +225,8 @@ func (c *TaskController) List(ctx *fiber.Ctx) error {
 		nil, // categories
 		nil, // priorities
 		nil, // assigneeID
-		nil, // flow
+		nil, // flowUUID
 		nil, // archived
-		nil, // flows
 		nil, // dateFrom
 		nil, // dateTo
 		page,

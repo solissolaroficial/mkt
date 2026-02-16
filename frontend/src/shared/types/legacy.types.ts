@@ -73,6 +73,8 @@ export type TaskFlow = 'backlog' | 'to_do' | 'in_progress' | 'review' | 'done';
 export type NotificationType = 'mention' | 'deadline' | 'system';
 export type AllowedUser = TaskFlow;
 
+import type { Flow } from './flow.types';
+
 export interface Subtask {
   id: string;
   task_id: string;
@@ -105,6 +107,7 @@ export interface Notification {
   archived: boolean;
   timestamp: string;
 }
+
 export interface Task {
   id: string;
   title: string;
@@ -112,10 +115,10 @@ export interface Task {
   category: TaskCategory;
   priority: TaskPriority;
   status: TaskStatus;
-  flow: TaskFlow;
+  flow_id?: string;  // FK para Flow
+  flow?: Flow;       // Flow populado
   due_date?: string;
   assignee_id?: string;
-  flows: TaskFlow[];
   archived: boolean;
   subtasks?: Subtask[];
   comments?: Comment[];

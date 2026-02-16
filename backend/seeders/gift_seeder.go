@@ -4,21 +4,26 @@ import (
 	"context"
 	"log"
 
+	"github.com/google/uuid"
+	"github.com/seu-usuario/solis-backend/core/domain"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
+	"github.com/seu-usuario/solis-backend/core/domain/valueobject"
 )
 
 // GiftSeeder é responsável por criar dados iniciais de gifts no sistema
 type GiftSeeder struct {
 	giftItemGateway        gateway.GiftItemGateway
 	giftTransactionGateway gateway.GiftTransactionGateway
+	representativeGateway  gateway.RepresentativeGateway
 }
 
 // NewGiftSeeder cria uma nova instância do GiftSeeder
-func NewGiftSeeder(giftItemGateway gateway.GiftItemGateway, giftTransactionGateway gateway.GiftTransactionGateway) *GiftSeeder {
+func NewGiftSeeder(giftItemGateway gateway.GiftItemGateway, giftTransactionGateway gateway.GiftTransactionGateway, representativeGateway gateway.RepresentativeGateway) *GiftSeeder {
 	return &GiftSeeder{
 		giftItemGateway:        giftItemGateway,
 		giftTransactionGateway: giftTransactionGateway,
+		representativeGateway:  representativeGateway,
 	}
 }
 
@@ -110,9 +115,29 @@ func (s *GiftSeeder) Seed(ctx context.Context) error {
 			continue
 		}
 
+		// Buscar representativeUUID para transações de saída
+		var representativeUUID *uuid.UUID
+		if txData.transactionType == "out" && txData.representative != nil {
+			// Buscar representative pelo nome usando Criteria pattern
+			criteria := domain.NewRepresentativeCriteria().WithName(*txData.representative)
+			var reps []*entity.Representative
+			var total int64
+			var err error
+
+			pagination := valueobject.NewPagination(1, 1)
+			sortOrder, _ := valueobject.NewSortOrder("name", valueobject.SortDirectionAsc)
+			reps, total, err = s.representativeGateway.FindByCriteria(criteria, &pagination, []*valueobject.SortOrder{sortOrder})
+
+			if err != nil || total == 0 {
+				log.Printf("⚠️ Representative '%s' not found, skipping transaction", *txData.representative)
+				continue
+			}
+
+			uuid := reps[0].UUID()
+			representativeUUID = &uuid
+		}
+
 		// Criar gift transaction
-		// TODO: Atualizar para buscar representativeUUID do banco de dados
-		// Por enquanto, representativeUUID é nil para as transações de seeder
 		giftTransaction, err := entity.NewGiftTransaction(
 			txData.itemName,
 			txData.quantity,
@@ -120,7 +145,7 @@ func (s *GiftSeeder) Seed(ctx context.Context) error {
 			txData.date,
 			txData.time,
 			txData.price,
-			nil, // representativeUUID - será nil até implementar busca de UUID
+			representativeUUID,
 			txData.unit,
 		)
 		if err != nil {

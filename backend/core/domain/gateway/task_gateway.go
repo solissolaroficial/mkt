@@ -41,9 +41,6 @@ type TaskGateway interface {
 	// FindByCategory busca tarefas por categoria
 	FindByCategory(category string, pagination *valueobject.Pagination, sortOrders []*valueobject.SortOrder) ([]*entity.Task, int64, error)
 
-	// FindByFlow busca tarefas por fluxo
-	FindByFlow(flow string, pagination *valueobject.Pagination, sortOrders []*valueobject.SortOrder) ([]*entity.Task, int64, error)
-
 	// FindArchived busca tarefas arquivadas
 	FindArchived(pagination *valueobject.Pagination, sortOrders []*valueobject.SortOrder) ([]*entity.Task, int64, error)
 
@@ -59,7 +56,7 @@ type TaskCriteria struct {
 	Statuses    []string
 	Categories  []string
 	Priorities  []string
-	Flows       []string
+	FlowUUID    *uuid.UUID
 	AssigneeIDs []uuid.UUID
 	Archived    *bool
 	DueDateFrom *time.Time
@@ -90,9 +87,9 @@ func (c *TaskCriteria) WithPriorities(priorities []string) *TaskCriteria {
 	return c
 }
 
-// WithFlows adiciona filtros de fluxo
-func (c *TaskCriteria) WithFlows(flows []string) *TaskCriteria {
-	c.Flows = flows
+// WithFlowUUID adiciona filtro de flowUUID
+func (c *TaskCriteria) WithFlowUUID(flowUUID *uuid.UUID) *TaskCriteria {
+	c.FlowUUID = flowUUID
 	return c
 }
 

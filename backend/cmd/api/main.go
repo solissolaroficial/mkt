@@ -59,7 +59,7 @@ func main() {
 	if *seed {
 		log.Println("🌱 Running database seeders...")
 		ctx := context.Background()
-		if err := seeders.SeedAll(ctx, container.UserSeeder, container.KpiSeeder, container.SocialBenchmarkingSeeder, container.CooperativeSeeder, container.GiftSeeder, container.BudgetSeeder, container.RepresentativeMonthlyGoalSeeder); err != nil {
+		if err := seeders.SeedAll(ctx, container.UserSeeder, container.RepresentativeSeeder, container.KpiSeeder, container.SocialBenchmarkingSeeder, container.CooperativeSeeder, container.GiftSeeder, container.BudgetSeeder, container.RepresentativeMonthlyGoalSeeder, container.FlowSeeder); err != nil {
 			log.Fatalf("❌ Seeders failed: %v", err)
 		}
 		log.Println("✅ Seeders completed successfully")

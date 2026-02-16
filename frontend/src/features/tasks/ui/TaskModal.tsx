@@ -1,6 +1,6 @@
  
 import React, { useState, useMemo } from 'react';
-import type { Task, Subtask, Comment, AllowedUser, TaskFlow, TaskStatus } from '@/shared/types';
+import type { Task, Subtask, Comment, AllowedUser, TaskStatus } from '@/shared/types';
 import type { AppUser } from '@/shared/types/user.types';
 import { useUsers } from '@/features/users/hooks';
 import { useAuth } from '@/features/auth';
@@ -18,7 +18,6 @@ import {
   Archive,
   RefreshCcw,
   Plus,
-  Layers,
   ChevronDown,
   Check,
   Loader2
@@ -37,10 +36,6 @@ const { data: subtasksData, isLoading: isLoadingSubtasks } = useSubtasks(task.id
 const displayComments = commentsData || task.comments || [];
 const displaySubtasks = subtasksData || task.subtasks || [];
 
-// AVAILABLE_FLOWS é calculado dinamicamente a partir de appUsers
-const AVAILABLE_FLOWS = useMemo(() => {
-  return appUsers?.map(u => u.id) || [];
-}, [appUsers]);
 
 const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
 // Initialize with first user UUID from appUsers, or empty string if not loaded
@@ -57,8 +52,6 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionFilter, setMentionFilter] = useState('');
 
-  // Flow Dropdown State
-  const [isFlowDropdownOpen, setIsFlowDropdownOpen] = useState(false);
 
   if (!isOpen || !task) return null; // Safety check
   
@@ -216,16 +209,6 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
       setShowMentions(false);
   };
 
-  const toggleFlow = (flowId: string) => {
-      const currentFlows = task.flows || [];
-      let newFlows;
-      if (currentFlows.includes(flowId as any)) {
-          newFlows = currentFlows.filter(f => f !== flowId);
-      } else {
-          newFlows = [...currentFlows, flowId];
-      }
-      onUpdate({ ...task, flows: newFlows });
-  };
 
   const filteredUsers = (appUsers || []).filter(u => u.name.toLowerCase().includes(mentionFilter));
 
@@ -538,53 +521,8 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
                     </div>
                 </div>
 
-                {/* FLUXOS & PRIORIDADE GRID */}
+                {/* PRIORIDADE GRID */}
                 <div className="grid grid-cols-2 gap-3">
-                    {/* FLUXOS DROPDOWN */}
-                    <div className="relative">
-                        <label className="text-[10px] text-gray-500 uppercase font-bold mb-1.5 block flex items-center gap-1">
-                            <Layers size={10} /> Fluxos
-                        </label>
-                        <button 
-                            type="button"
-                            onClick={() => setIsFlowDropdownOpen(!isFlowDropdownOpen)}
-                            className="w-full bg-[#1a1d24] border border-gray-700 rounded-lg px-3 py-2.5 text-left text-sm text-gray-200 flex items-center justify-between hover:border-gray-600 transition-colors h-[42px]"
-                        >
-                            <span className="truncate">
-                                {task.flows && task.flows.length > 0
-                                    ? (task.flows.length > 1
-                                      ? `${task.flows.length} Selec.`
-                                      : (appUsers?.find(u => u.id === task.flows[0])?.name || 'Selecione'))
-                                    : 'Selecione'}
-                            </span>
-                            <ChevronDown size={14} className="text-gray-500 flex-shrink-0" />
-                        </button>
-                        
-                        {isFlowDropdownOpen && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setIsFlowDropdownOpen(false)}></div>
-                                <div className="absolute top-full left-0 mt-1 w-48 bg-[#20232b] border border-gray-700 rounded-lg shadow-xl z-20 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                                    {AVAILABLE_FLOWS.map(flowId => {
-                                        const user = appUsers?.find(u => u.id === flowId);
-                                        if (!user) return null;
-                                        
-                                        const isActive = task.flows?.includes(flowId as any);
-                                        return (
-                                            <button
-                                                key={flowId}
-                                                type="button"
-                                                onClick={() => toggleFlow(flowId)}
-                                                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#1a1d24] transition-colors ${isActive ? 'text-pink-400 font-medium bg-pink-500/5' : 'text-gray-400'}`}
-                                            >
-                                                {user.name}
-                                                {isActive && <Check size={12} />}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
 
                     {/* PRIORIDADE DROPDOWN */}
                     <div>

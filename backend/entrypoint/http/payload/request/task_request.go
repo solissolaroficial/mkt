@@ -14,10 +14,9 @@ type CreateTaskRequest struct {
 	Category    constants.TaskCategory `json:"category" validate:"required"`
 	Priority    constants.TaskPriority `json:"priority" validate:"required"`
 	Status      constants.TaskStatus   `json:"status"`
-	Flow        constants.TaskFlow     `json:"flow"`
 	DueDate     *string                `json:"due_date"`
 	AssigneeID  *string                `json:"assignee_id"`
-	Flows       []constants.TaskFlow   `json:"flows"`
+	FlowID      *string                `json:"flow_id"`
 	Archived    bool                   `json:"archived"`
 }
 
@@ -29,10 +28,9 @@ type UpdateTaskRequest struct {
 	Category    *constants.TaskCategory `json:"category"`
 	Priority    *constants.TaskPriority `json:"priority"`
 	Status      *constants.TaskStatus   `json:"status"`
-	Flow        *constants.TaskFlow     `json:"flow"`
 	DueDate     *string                 `json:"due_date"`
 	AssigneeID  *string                 `json:"assignee_id"`
-	Flows       []constants.TaskFlow    `json:"flows"`
+	FlowID      *string                 `json:"flow_id"`
 	Archived    *bool                   `json:"archived"`
 }
 
@@ -44,7 +42,7 @@ type ListTasksRequest struct {
 	Category   *constants.TaskCategory `json:"category"`
 	Priority   *constants.TaskPriority `json:"priority"`
 	AssigneeID *string                 `json:"assignee_id"`
-	Flow       *constants.TaskFlow     `json:"flow"`
+	FlowID     *string                 `json:"flow_id"`
 	Archived   *bool                   `json:"archived"`
 	StartDate  *string                 `json:"start_date"`
 	EndDate    *string                 `json:"end_date"`
@@ -107,7 +105,7 @@ type TaskCriteriaRequest struct {
 	Category   *constants.TaskCategory `json:"category"`
 	Priority   *constants.TaskPriority `json:"priority"`
 	AssigneeID *string                 `json:"assignee_id"`
-	Flow       *constants.TaskFlow     `json:"flow"`
+	FlowID     *string                 `json:"flow_id"`
 	Archived   *bool                   `json:"archived"`
 	StartDate  *string                 `json:"start_date"`
 	EndDate    *string                 `json:"end_date"`
@@ -132,7 +130,7 @@ func (r *TaskCriteriaRequest) ToCriteria() (*domain.TaskCriteria, error) {
 	criteria.WithCategory(r.Category)
 	criteria.WithPriority(r.Priority)
 	criteria.WithAssigneeID(r.AssigneeID)
-	criteria.WithFlow(r.Flow)
+	criteria.WithFlowID(r.FlowID)
 	criteria.WithArchived(r.Archived)
 	criteria.WithStartDate(r.StartDate)
 	criteria.WithEndDate(r.EndDate)

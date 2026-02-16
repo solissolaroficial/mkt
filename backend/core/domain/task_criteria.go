@@ -13,7 +13,7 @@ type TaskCriteria struct {
 	category   *constants.TaskCategory
 	priority   *constants.TaskPriority
 	assigneeID *string
-	flow       *constants.TaskFlow
+	flowID     *string
 	archived   *bool
 	startDate  *time.Time
 	endDate    *time.Time
@@ -50,9 +50,9 @@ func (c *TaskCriteria) WithAssigneeID(assigneeID *string) *TaskCriteria {
 	return c
 }
 
-// WithFlow define o fluxo da tarefa
-func (c *TaskCriteria) WithFlow(flow *constants.TaskFlow) *TaskCriteria {
-	c.flow = flow
+// WithFlowID define o ID do fluxo da tarefa
+func (c *TaskCriteria) WithFlowID(flowID *string) *TaskCriteria {
+	c.flowID = flowID
 	return c
 }
 
@@ -116,9 +116,9 @@ func (c *TaskCriteria) GetAssigneeID() *string {
 	return c.assigneeID
 }
 
-// GetFlow retorna o fluxo
-func (c *TaskCriteria) GetFlow() *constants.TaskFlow {
-	return c.flow
+// GetFlowID retorna o ID do fluxo
+func (c *TaskCriteria) GetFlowID() *string {
+	return c.flowID
 }
 
 // GetArchived retorna se está arquivada

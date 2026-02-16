@@ -1,6 +1,9 @@
 // Re-exportar tipos legados
 export * from './legacy.types';
 
+// Flow types
+export * from './flow.types';
+
 // Tipos de API
 export interface ApiResponse<T> {
   data: T;

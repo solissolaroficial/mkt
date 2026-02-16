@@ -6,6 +6,8 @@ import { useUsers } from '@/features/users/hooks';
 import { useAuth } from '@/features/auth';
 import type { AppUser } from '@/shared/types/user.types';
 import { getPriorityColor, TASK_PRIORITY_LABELS } from '../utils/taskHelpers';
+import { FlowSidebar } from '@/features/flows/ui/FlowSidebar';
+import { useFlows, useFlowMutations } from '@/features/flows/hooks';
 import {
   Plus,
   CheckCircle2,
@@ -21,9 +23,6 @@ import {
   BarChart2,
   Layout,
   CornerDownRight,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
   Users
 } from 'lucide-react';
 import type { KanbanBoardProps } from '../types';
@@ -47,37 +46,24 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [showArchived, setShowArchived] = useState(false);
   const [viewMode, setViewMode] = useState<'board' | 'gantt'>('board');
   const [ganttScale, setGanttScale] = useState<'day' | 'week' | 'month'>('day');
-  
+
   // --- LOAD USERS ---
   const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
 
   // --- LOAD AUTH USER ---
   const { user } = useAuth();
 
-  // --- FLOWS STATE ---
-  const [flows, setFlows] = useState<string[]>([]);
-  const [selectedFlow, setSelectedFlow] = useState<string>('');
-  const [isFlowSidebarOpen, setIsFlowSidebarOpen] = useState(true);
-  const [isAddingFlow, setIsAddingFlow] = useState(false);
-  const [newFlowName, setNewFlowName] = useState('');
+  // --- LOAD FLOWS ---
+  const { data: flowsData, isLoading: isLoadingFlows } = useFlows();
+  const { createFlow, updateFlow, deleteFlow, isCreating, isUpdating, isDeleting } = useFlowMutations();
+  const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
 
-  // Carregar flows dos usuários reais
+  // Initialize selectedFlowId from first flow by default
   useEffect(() => {
-    if (appUsers && appUsers.length > 0) {
-      // Usar IDs de usuários como flows
-      const userIds = appUsers.map(u => u.id);
-      setFlows(userIds);
-      
-      // Usar usuário autenticado se disponível, senão usa o primeiro usuário
-      const authenticatedUserId = user?.id;
-      
-      if (authenticatedUserId && userIds.includes(authenticatedUserId)) {
-        setSelectedFlow(authenticatedUserId);
-      } else {
-        setSelectedFlow(userIds[0]);
-      }
+    if (flowsData?.data && flowsData.data.length > 0 && !selectedFlowId) {
+      setSelectedFlowId(flowsData.data[0].id);
     }
-  }, [appUsers, user]);
+  }, [flowsData]);
 
   // Drag and Drop State
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
@@ -87,7 +73,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   // --- FILTER TASKS ---
   const visibleTasks = localTasks.filter(t => {
     const isArchivedMatch = showArchived ? t.archived : !t.archived;
-    const isFlowMatch = t.flows?.includes(selectedFlow as any);
+    const isFlowMatch = selectedFlowId ? t.flow_id === selectedFlowId : true;
     return isArchivedMatch && isFlowMatch;
   });
 
@@ -122,10 +108,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
-    // selectedFlow já é um ID, não precisa buscar
-    const assigneeId = selectedFlow;
-    if (!assigneeId) {
-      alert('Nenhum usuário selecionado. Selecione um fluxo na sidebar.');
+    if (!selectedFlowId) {
+      alert('Nenhum fluxo selecionado. Selecione um fluxo na sidebar.');
       return;
     }
 
@@ -136,10 +120,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       category: 'administrative',
       priority: 'medium',
       status: 'pending',
-      flow: selectedFlow as any,
+      flow_id: selectedFlowId,
       due_date: new Date().toISOString(),
-      assignee_id: assigneeId,
-      flows: [selectedFlow as any],
+      assignee_id: user?.id || '',
       archived: false,
       subtasks: [],
       comments: [],
@@ -150,17 +133,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     onAddTask(newTask);
     setNewTaskTitle('');
     setIsAdding(false);
-  };
-
-  const handleAddFlow = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!newFlowName.trim()) return;
-      if (!flows.includes(newFlowName.trim())) {
-          setFlows([...flows, newFlowName.trim()]);
-          setSelectedFlow(newFlowName.trim());
-      }
-      setNewFlowName('');
-      setIsAddingFlow(false);
   };
 
 
@@ -439,78 +411,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     <div className="h-full flex overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 -ml-6 -mr-6">
       
       {/* --- FLOWS SIDEBAR --- */}
-      <div 
-        className={`bg-[#12141a] border-r border-gray-800 flex flex-col transition-all duration-300 relative ${isFlowSidebarOpen ? 'w-64' : 'w-0 border-none'}`}
-      >
-        <div className={`p-6 overflow-hidden ${isFlowSidebarOpen ? 'opacity-100' : 'opacity-0'} transition-opacity`}>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-100 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">
-                    Fluxos
-                </h2>
-                <div className="p-1 rounded bg-pink-500/10 text-pink-500">
-                    <Layers size={16} />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                {flows.map(flowId => {
-                    const user = appUsers?.find(u => u.id === flowId);
-                    if (!user) return null;
-                    
-                    return (
-                        <button
-                            key={flowId}
-                            onClick={() => setSelectedFlow(flowId)}
-                            className={`w-full text-left px-4 py-3 rounded-xl transition-all font-medium text-sm flex items-center justify-between group ${
-                                selectedFlow === flowId
-                                ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20'
-                                : 'text-gray-400 hover:bg-[#1a1d24] hover:text-gray-200'
-                            }`}
-                        >
-                            {user.name}
-                            {selectedFlow === flowId && <div className="w-2 h-2 rounded-full bg-pink-500"></div>}
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* Add Flow */}
-            {isAddingFlow ? (
-                <form onSubmit={handleAddFlow} className="mt-4 animate-in fade-in">
-                    <input 
-                        type="text" 
-                        value={newFlowName}
-                        onChange={(e) => setNewFlowName(e.target.value)}
-                        placeholder="Nome do Fluxo..."
-                        className="w-full px-3 py-2 bg-[#1a1d24] border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-pink-500 mb-2"
-                        autoFocus
-                    />
-                    <div className="flex gap-2">
-                        <button type="submit" className="flex-1 bg-pink-600 hover:bg-pink-700 text-white text-xs py-1.5 rounded transition-colors">Salvar</button>
-                        <button type="button" onClick={() => setIsAddingFlow(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-400 text-xs py-1.5 rounded transition-colors">Cancelar</button>
-                    </div>
-                </form>
-            ) : (
-                <button 
-                    onClick={() => setIsAddingFlow(true)}
-                    className="w-full mt-4 py-2 border border-dashed border-gray-700 rounded-lg text-gray-500 text-xs hover:border-pink-500/50 hover:text-pink-400 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Plus size={14} /> Novo Fluxo
-                </button>
-            )}
-        </div>
-      </div>
-
-      {/* --- TOGGLE BUTTON FOR SIDEBAR --- */}
-      <div className="relative z-10">
-          <button 
-            onClick={() => setIsFlowSidebarOpen(!isFlowSidebarOpen)}
-            className="absolute top-6 -right-3 w-6 h-6 bg-[#1a1d24] border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors z-20"
-            style={{ left: isFlowSidebarOpen ? '-12px' : '12px' }}
-          >
-              {isFlowSidebarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-          </button>
-      </div>
+      <FlowSidebar
+        selectedFlowId={selectedFlowId}
+        onSelectFlow={setSelectedFlowId}
+      />
 
       {/* --- MAIN CONTENT --- */}
       <div className="flex-grow flex flex-col min-w-0 p-6">
@@ -520,7 +424,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <h1 className="text-2xl font-bold text-gray-100 flex items-center gap-2">
                 Quadro de Tarefas
                 <span className="text-sm font-normal text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">
-                    {appUsers?.find(u => u.id === selectedFlow)?.name || 'Selecione'}
+                    {flowsData?.data.find(f => f.id === selectedFlowId)?.name || 'Selecione'}
                 </span>
             </h1>
             <p className="text-gray-500">
@@ -827,6 +731,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
             </div>
         )}
       </div>
+
     </div>
   );
 };

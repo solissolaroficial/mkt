@@ -19,9 +19,9 @@ type Task struct {
 	Category     string         `gorm:"not null;index" json:"category"`
 	AssigneeUUID *uuid.UUID     `gorm:"type:uuid;index:idx_assignee_status,priority:1" json:"assignee_uuid,omitempty"`
 	Assignee     *User          `gorm:"foreignKey:AssigneeUUID;references:UUID;constraint:onDelete:SET NULL" json:"assignee,omitempty"`
+	FlowUUID     *uuid.UUID     `gorm:"type:uuid;index" json:"flow_uuid,omitempty"`
 	Archived     bool           `gorm:"not null;default:false;index" json:"archived"`
 	SortOrder    int            `gorm:"not null;default:0;index" json:"sort_order"`
-	Flows        string         `gorm:"type:jsonb" json:"flows"`
 	CreatedAt    time.Time      `gorm:"not null" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"not null" json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`

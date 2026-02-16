@@ -15,10 +15,9 @@ type TaskResponse struct {
 	Category      constants.TaskCategory `json:"category"`
 	Priority      constants.TaskPriority `json:"priority"`
 	Status        constants.TaskStatus   `json:"status"`
-	Flow          constants.TaskFlow     `json:"flow"`
+	FlowID        *string                `json:"flow_id"`
 	DueDate       *string                `json:"due_date"`
 	AssigneeID    *string                `json:"assignee_id"`
-	Flows         []constants.TaskFlow   `json:"flows"`
 	Archived      bool                   `json:"archived"`
 	Subtasks      []SubtaskResponse      `json:"subtasks,omitempty"`
 	Comments      []CommentResponse      `json:"comments,omitempty"`

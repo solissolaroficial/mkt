@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/constants"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
@@ -30,6 +31,30 @@ func NewCreateTaskUseCase(
 
 // Execute cria uma nova tarefa
 func (uc *CreateTaskUseCase) Execute(task *entity.Task) error {
+	if err := task.Validate(); err != nil {
+		return err
+	}
+
+	if err := uc.taskGateway.Create(task); err != nil {
+		return err
+	}
+
+	// Criar notificação para o assignee (assíncrono)
+	go func() {
+		if err := uc.createTaskAssignedNotification(task); err != nil {
+			// Logar erro mas não falhar a operação principal
+			fmt.Printf("Erro ao criar notificação: %v\n", err)
+		}
+	}()
+
+	return nil
+}
+
+// ExecuteWithFlowUUID cria uma nova tarefa com flowUUID
+func (uc *CreateTaskUseCase) ExecuteWithFlowUUID(task *entity.Task, flowUUID *uuid.UUID) error {
+	// Set flowUUID on task
+	task.SetFlowUUID(flowUUID)
+
 	if err := task.Validate(); err != nil {
 		return err
 	}

@@ -1,8 +1,6 @@
 package mapper
 
 import (
-	"encoding/json"
-
 	"github.com/seu-usuario/solis-backend/core/domain/constants"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
 	"github.com/seu-usuario/solis-backend/dataprovider/database/model"
@@ -18,14 +16,6 @@ func NewTaskMapper() *TaskMapper {
 
 // ToEntity converte um Task model para Task entity
 func (m *TaskMapper) ToEntity(model *model.Task) (*entity.Task, error) {
-	// Unmarshal JSON Flows
-	var flows []string
-	if model.Flows != "" {
-		if err := json.Unmarshal([]byte(model.Flows), &flows); err != nil {
-			return nil, err
-		}
-	}
-
 	return entity.ReconstructTask(
 		model.UUID,
 		model.Title,
@@ -36,7 +26,7 @@ func (m *TaskMapper) ToEntity(model *model.Task) (*entity.Task, error) {
 		constants.TaskStatus(model.Status),
 		constants.TaskCategory(model.Category),
 		model.AssigneeUUID,
-		flows,
+		model.FlowUUID,
 		model.Archived,
 		model.SortOrder,
 		model.CreatedAt,
@@ -47,12 +37,6 @@ func (m *TaskMapper) ToEntity(model *model.Task) (*entity.Task, error) {
 
 // ToModel converte uma Task entity para Task model
 func (m *TaskMapper) ToModel(entity *entity.Task) (*model.Task, error) {
-	// Marshal JSON Flows
-	flowsJSON, err := json.Marshal(entity.Flows())
-	if err != nil {
-		return nil, err
-	}
-
 	return &model.Task{
 		UUID:         entity.ID(),
 		Title:        entity.Title(),
@@ -63,7 +47,7 @@ func (m *TaskMapper) ToModel(entity *entity.Task) (*model.Task, error) {
 		Status:       string(entity.Status()),
 		Category:     string(entity.Category()),
 		AssigneeUUID: entity.AssigneeUUID(),
-		Flows:        string(flowsJSON),
+		FlowUUID:     entity.FlowUUID(),
 		Archived:     entity.Archived(),
 		SortOrder:    entity.SortOrder(),
 		CreatedAt:    entity.CreatedAt(),

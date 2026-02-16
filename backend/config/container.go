@@ -19,6 +19,7 @@ import (
 	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
 	showroomitemusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
 	accountpayableusecase "github.com/seu-usuario/solis-backend/application/usecase/financial/accountpayable"
+	flows "github.com/seu-usuario/solis-backend/application/usecase/flows"
 	"github.com/seu-usuario/solis-backend/application/usecase/gifts"
 	"github.com/seu-usuario/solis-backend/application/usecase/kpis"
 	usecasepdv "github.com/seu-usuario/solis-backend/application/usecase/pdv"
@@ -72,15 +73,18 @@ type Container struct {
 	RepresentativeStatsGateway       gateway.RepresentativeStatsGateway
 	RepresentativeMonthlyGoalGateway gateway.RepresentativeMonthlyGoalGateway
 	BrandGateway                     gateway.BrandGateway
+	FlowGateway                      gateway.FlowGateway
 
 	// Seeders
 	UserSeeder                      *seeders.UserSeeder
+	RepresentativeSeeder            *seeders.RepresentativeSeeder
 	KpiSeeder                       *seeders.KpiSeeder
 	SocialBenchmarkingSeeder        *seeders.SocialBenchmarkingSeeder
 	CooperativeSeeder               *seeders.CooperativeSeeder
 	GiftSeeder                      *seeders.GiftSeeder
 	BudgetSeeder                    *seeders.BudgetSeeder
 	RepresentativeMonthlyGoalSeeder *seeders.RepresentativeMonthlyGoalSeeder
+	FlowSeeder                      *seeders.FlowSeeder
 
 	// Use Cases - Auth
 	LoginUseCase *auth.LoginUseCase
@@ -255,6 +259,7 @@ type Container struct {
 	RepresentativeController            *controller.RepresentativeController
 	RepresentativeMonthlyGoalController *controller.RepresentativeMonthlyGoalController
 	BrandController                     *controller.BrandController
+	FlowController                      *controller.FlowController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -332,16 +337,19 @@ func NewContainer(cfg *Config) (*Container, error) {
 	representativeStatsGateway := dbgateway.NewRepresentativeStatsGateway(db)
 	representativeMonthlyGoalGateway := dbgateway.NewRepresentativeMonthlyGoalGateway(db)
 	brandGateway := dbgateway.NewBrandGateway(db)
+	flowGateway := dbgateway.NewFlowGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
 	userSeeder := seeders.NewUserSeeder(userGateway, hasherService)
+	representativeSeeder := seeders.NewRepresentativeSeeder(db)
 	kpiSeeder := seeders.NewKpiSeeder(kpiGateway, monthlyDataGateway)
 	socialBenchmarkingSeeder := seeders.NewSocialBenchmarkingSeeder(socialBenchmarkingGateway)
 	cooperativeSeeder := seeders.NewCooperativeSeeder(offlineActionGateway, showroomItemGateway, repMarketingActionGateway, representativeGateway)
-	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway)
+	giftSeeder := seeders.NewGiftSeeder(giftItemGateway, giftTransactionGateway, representativeGateway)
 	budgetSeeder := seeders.NewBudgetSeeder(budgetGateway)
 	representativeMonthlyGoalSeeder := seeders.NewRepresentativeMonthlyGoalSeeder(representativeMonthlyGoalGateway, representativeGateway)
+	flowSeeder := seeders.NewFlowSeeder(db)
 	log.Println("✅ Seeders initialized")
 
 	// 4. Use Cases (dependem de gateways e services)
@@ -521,6 +529,14 @@ func NewContainer(cfg *Config) (*Container, error) {
 
 	log.Println("✅ Use cases initialized")
 
+	// Flow Use Cases
+	createFlowUseCase := flows.NewCreateFlow(flowGateway)
+	updateFlowUseCase := flows.NewUpdateFlow(flowGateway)
+	deleteFlowUseCase := flows.NewDeleteFlow(flowGateway)
+	getFlowUseCase := flows.NewGetFlow(flowGateway)
+	listFlowsUseCase := flows.NewListFlows(flowGateway)
+	reorderFlowsUseCase := flows.NewReorderFlows(flowGateway)
+
 	// 5. Controllers (dependem de use cases)
 	authController := controller.NewAuthController(loginUseCase)
 	kpiController := controller.NewKpiController(
@@ -675,6 +691,16 @@ func NewContainer(cfg *Config) (*Container, error) {
 		deleteBrandUseCase,
 	)
 
+	// Flow Controller
+	flowController := controller.NewFlowController(
+		createFlowUseCase,
+		updateFlowUseCase,
+		deleteFlowUseCase,
+		getFlowUseCase,
+		listFlowsUseCase,
+		reorderFlowsUseCase,
+	)
+
 	// Gift Controllers
 	giftItemController := controller.NewGiftItemController(
 		createGiftItemUseCase,
@@ -717,6 +743,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		PdvPostGateway:                         pdvPostGateway,
 		RecurrentPdvGateway:                    recurrentPdvGateway,
 		UserSeeder:                             userSeeder,
+		RepresentativeSeeder:                   representativeSeeder,
 		KpiSeeder:                              kpiSeeder,
 		SocialBenchmarkingSeeder:               socialBenchmarkingSeeder,
 		CooperativeSeeder:                      cooperativeSeeder,
@@ -737,6 +764,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		GiftSeeder:                             giftSeeder,
 		BudgetSeeder:                           budgetSeeder,
 		RepresentativeMonthlyGoalSeeder:        representativeMonthlyGoalSeeder,
+		FlowSeeder:                             flowSeeder,
 		LoginUseCase:                           loginUseCase,
 		CreateKpiUseCase:                       createKpiUseCase,
 		GetKpiUseCase:                          getKpiUseCase,
@@ -871,6 +899,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 		ListBrandsUseCase:                      listBrandsUseCase,
 		DeleteBrandUseCase:                     deleteBrandUseCase,
 		BrandController:                        brandController,
+		FlowController:                         flowController,
 		AuthMiddleware:                         authMiddleware,
 		CorsMiddleware:                         corsMiddleware,
 	}, nil
@@ -948,6 +977,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		RepresentativeController:            c.RepresentativeController,
 		RepresentativeMonthlyGoalController: c.RepresentativeMonthlyGoalController,
 		BrandController:                     c.BrandController,
+		FlowController:                      c.FlowController,
 	}
 }
 

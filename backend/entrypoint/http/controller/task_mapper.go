@@ -62,12 +62,14 @@ func (m *TaskMapper) ToTask(req *taskrequest.CreateTaskRequest) (*entity.Task, e
 		task.SetAssigneeUUID(&parsedID)
 	}
 
-	// Set flows after creation
-	flows := make([]string, len(req.Flows))
-	for i, flow := range req.Flows {
-		flows[i] = string(flow)
+	// Set flowID after creation
+	if req.FlowID != nil {
+		parsedID, err := uuid.Parse(*req.FlowID)
+		if err != nil {
+			return nil, err
+		}
+		task.SetFlowUUID(&parsedID)
 	}
-	task.SetFlows(flows)
 
 	return task, nil
 }
@@ -106,10 +108,14 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 		assigneeID = &parsedID
 	}
 
-	// Convert flows to []string
-	flows := make([]string, len(req.Flows))
-	for i, flow := range req.Flows {
-		flows[i] = string(flow)
+	// Convert flowID to *uuid.UUID
+	var flowID *uuid.UUID
+	if req.FlowID != nil {
+		parsedID, err := uuid.Parse(*req.FlowID)
+		if err != nil {
+			return nil, err
+		}
+		flowID = &parsedID
 	}
 
 	// Convert description to *string
@@ -152,7 +158,7 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 		status,
 		category,
 		assigneeID,
-		flows,
+		flowID,
 		archived,
 		0,          // sortOrder (default 0)
 		time.Now(), // updatedAt
@@ -163,12 +169,6 @@ func (m *TaskMapper) ToTaskUpdate(id string, req *taskrequest.UpdateTaskRequest)
 
 // ToTaskResponse converte entity.Task para TaskResponse
 func (m *TaskMapper) ToTaskResponse(task *entity.Task) taskresponse.TaskResponse {
-	// Convert []string to []constants.TaskFlow
-	flows := make([]constants.TaskFlow, len(task.Flows()))
-	for i, flow := range task.Flows() {
-		flows[i] = constants.TaskFlow(flow)
-	}
-
 	return taskresponse.TaskResponse{
 		ID:            task.ID().String(),
 		Title:         task.Title(),
@@ -177,10 +177,9 @@ func (m *TaskMapper) ToTaskResponse(task *entity.Task) taskresponse.TaskResponse
 		Category:      task.Category(),
 		Priority:      task.Priority(),
 		Status:        task.Status(),
-		Flow:          "", // Task doesn't have Flow field, use Flows instead
+		FlowID:        uuidPtrToString(task.FlowUUID()),
 		DueDate:       formatTimePtr(formatTimeToPtr(task.DueDate())),
 		AssigneeID:    uuidPtrToString(task.AssigneeUUID()),
-		Flows:         flows,
 		Archived:      task.Archived(),
 		Subtasks:      []taskresponse.SubtaskResponse{},
 		Comments:      []taskresponse.CommentResponse{},

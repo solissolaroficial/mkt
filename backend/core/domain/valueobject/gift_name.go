@@ -27,8 +27,8 @@ func NewGiftName(name string) (*GiftName, error) {
 		return nil, ErrInvalidGiftName
 	}
 
-	// Validar que não contém apenas caracteres especiais
-	matched, err := regexp.MatchString(`^[a-zA-Z0-9\s\-_&\.]+$`, trimmed)
+	// Validar que não contém apenas caracteres especiais (aceita letras Unicode com acento)
+	matched, err := regexp.MatchString(`^[\p{L}0-9\s\-_&\.]+$`, trimmed)
 	if err != nil {
 		return nil, err
 	}

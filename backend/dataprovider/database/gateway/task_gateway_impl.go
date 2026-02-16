@@ -161,8 +161,8 @@ func (g *taskGatewayImpl) FindByCriteria(criteria *gateway.TaskCriteria, paginat
 		query = query.Where("priority IN ?", criteria.Priorities)
 	}
 
-	if len(criteria.Flows) > 0 {
-		query = query.Where("flow IN ?", criteria.Flows)
+	if criteria.FlowUUID != nil {
+		query = query.Where("flow_uuid = ?", *criteria.FlowUUID)
 	}
 
 	if len(criteria.AssigneeIDs) > 0 {
@@ -235,8 +235,8 @@ func (g *taskGatewayImpl) CountByCriteria(criteria *gateway.TaskCriteria) (int64
 		query = query.Where("priority IN ?", criteria.Priorities)
 	}
 
-	if len(criteria.Flows) > 0 {
-		query = query.Where("flow IN ?", criteria.Flows)
+	if criteria.FlowUUID != nil {
+		query = query.Where("flow_uuid = ?", *criteria.FlowUUID)
 	}
 
 	if len(criteria.AssigneeIDs) > 0 {

@@ -20,7 +20,7 @@ type Task struct {
 	priority     constants.TaskPriority
 	category     constants.TaskCategory
 	assigneeUUID *uuid.UUID
-	flows        []string
+	flowUUID     *uuid.UUID
 	archived     bool
 	sortOrder    int
 	createdAt    time.Time
@@ -65,7 +65,7 @@ func NewTask(
 		priority:    priority,
 		status:      status,
 		category:    category,
-		flows:       []string{},
+		flowUUID:    nil,
 		archived:    false,
 		sortOrder:   sortOrder,
 		createdAt:   now,
@@ -84,7 +84,7 @@ func ReconstructTask(
 	status constants.TaskStatus,
 	category constants.TaskCategory,
 	assigneeUUID *uuid.UUID,
-	flows []string,
+	flowUUID *uuid.UUID,
 	archived bool,
 	sortOrder int,
 	createdAt time.Time,
@@ -101,7 +101,7 @@ func ReconstructTask(
 		status:       status,
 		category:     category,
 		assigneeUUID: assigneeUUID,
-		flows:        flows,
+		flowUUID:     flowUUID,
 		archived:     archived,
 		sortOrder:    sortOrder,
 		createdAt:    createdAt,
@@ -148,8 +148,8 @@ func (t *Task) AssigneeUUID() *uuid.UUID {
 	return t.assigneeUUID
 }
 
-func (t *Task) Flows() []string {
-	return t.flows
+func (t *Task) FlowUUID() *uuid.UUID {
+	return t.flowUUID
 }
 
 func (t *Task) Archived() bool {
@@ -238,26 +238,9 @@ func (t *Task) SetAssigneeUUID(assigneeUUID *uuid.UUID) {
 	t.updatedAt = time.Now()
 }
 
-// SetFlows atualiza os fluxos da tarefa
-func (t *Task) SetFlows(flows []string) {
-	t.flows = flows
-	t.updatedAt = time.Now()
-}
-
-// AddFlow adiciona um fluxo à tarefa
-func (t *Task) AddFlow(flow string) {
-	t.flows = append(t.flows, flow)
-	t.updatedAt = time.Now()
-}
-
-// RemoveFlow remove um fluxo da tarefa
-func (t *Task) RemoveFlow(flow string) {
-	for i, f := range t.flows {
-		if f == flow {
-			t.flows = append(t.flows[:i], t.flows[i+1:]...)
-			break
-		}
-	}
+// SetFlowUUID atualiza o flow UUID da tarefa
+func (t *Task) SetFlowUUID(flowUUID *uuid.UUID) {
+	t.flowUUID = flowUUID
 	t.updatedAt = time.Now()
 }
 
@@ -338,14 +321,12 @@ func (t *Task) Validate() error {
 	return nil
 }
 
-// HasFlow verifica se a tarefa pertence a um fluxo específico
-func (t *Task) HasFlow(flow string) bool {
-	for _, f := range t.flows {
-		if f == flow {
-			return true
-		}
+// HasFlowUUID verifica se a tarefa pertence a um fluxo específico
+func (t *Task) HasFlowUUID(flowUUID uuid.UUID) bool {
+	if t.flowUUID == nil {
+		return false
 	}
-	return false
+	return *t.flowUUID == flowUUID
 }
 
 // IsOverdue verifica se a tarefa está atrasada

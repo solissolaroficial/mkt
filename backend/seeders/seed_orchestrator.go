@@ -9,12 +9,14 @@ import (
 func SeedAll(
 	ctx context.Context,
 	userSeeder *UserSeeder,
+	representativeSeeder *RepresentativeSeeder,
 	kpiSeeder *KpiSeeder,
 	socialBenchmarkingSeeder *SocialBenchmarkingSeeder,
 	cooperativeSeeder *CooperativeSeeder,
 	giftSeeder *GiftSeeder,
 	budgetSeeder *BudgetSeeder,
 	representativeMonthlyGoalSeeder *RepresentativeMonthlyGoalSeeder,
+	flowSeeder *FlowSeeder,
 ) error {
 	log.Println("🌱 Starting database seeding...")
 	log.Println("========================================")
@@ -25,6 +27,14 @@ func SeedAll(
 		return err
 	}
 	log.Println("✅ Users seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 1.5: Seed Representatives
+	if err := representativeSeeder.Seed(); err != nil {
+		log.Printf("❌ Error seeding representatives: %v", err)
+		return err
+	}
+	log.Println("✅ Representatives seeded successfully")
 	log.Println("----------------------------------------")
 
 	// Step 2: Seed KPI Categories and Monthly Data
@@ -73,6 +83,14 @@ func SeedAll(
 		return err
 	}
 	log.Println("✅ Representative monthly goals data seeded successfully")
+	log.Println("----------------------------------------")
+
+	// Step 8: Seed Flows
+	if err := flowSeeder.Seed(); err != nil {
+		log.Printf("❌ Error seeding flows: %v", err)
+		return err
+	}
+	log.Println("✅ Flows seeded successfully")
 	log.Println("----------------------------------------")
 
 	log.Println("========================================")
