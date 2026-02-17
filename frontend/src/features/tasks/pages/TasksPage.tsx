@@ -101,17 +101,6 @@ const TasksPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleMention = (taskId: string, taskTitle: string) => {
-    // Mostrar um toast informando que o usuário foi mencionado
-    info(`Você mencionou alguém na tarefa "${taskTitle}"`);
-    
-    // Log para debug
-    console.log(`Usuário mencionado na tarefa ${taskId}: ${taskTitle}`);
-    
-    // TODO: Implementar notificação real no backend
-    // Exemplo: criar uma notificação para o usuário mencionado
-  };
-
   const handleAddSubtask = (subtask: Subtask) => {
     createSubtask.mutate(subtask, {
       onSuccess: () => {
@@ -233,7 +222,6 @@ const TasksPage: React.FC = () => {
           onClose={handleCloseModal}
           onUpdate={handleUpdateTask}
           onDelete={handleDeleteTask}
-          onMention={handleMention}
           onAddSubtask={handleAddSubtask}
           onUpdateSubtask={handleUpdateSubtask}
           onDeleteSubtask={handleDeleteSubtask}

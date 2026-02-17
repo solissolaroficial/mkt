@@ -27,7 +27,7 @@ func NewUseCases(
 		},
 		Comment: CommentUseCases{
 			Create: NewCreateCommentUseCase(commentGateway, notificationGateway, userGateway, taskGateway),
-			Update: NewUpdateCommentUseCase(commentGateway),
+			Update: NewUpdateCommentUseCase(commentGateway, notificationGateway, userGateway, taskGateway),
 			Delete: NewDeleteCommentUseCase(commentGateway),
 			Get:    NewGetCommentUseCase(commentGateway),
 			List:   NewListCommentsUseCase(commentGateway),

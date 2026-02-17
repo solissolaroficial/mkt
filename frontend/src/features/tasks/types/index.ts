@@ -36,7 +36,6 @@ export interface TaskModalProps {
   onClose: () => void;
   onUpdate: (updatedTask: Task) => void;
   onDelete: (taskId: string) => void;
-  onMention?: (taskId: string, taskTitle: string) => void;
   onAddSubtask?: (subtask: Subtask) => void;
   onUpdateSubtask?: (subtaskId: string, data: Partial<Subtask>) => void;
   onDeleteSubtask?: (subtaskId: string) => void;

@@ -25,7 +25,7 @@ import {
 import { formatDisplayDate, formatDateForInput, formatDateForAPI } from '@/shared/utils/dateFormatters';
 import type { TaskModalProps } from '../types';
 
-const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onMention, onAddSubtask, onUpdateSubtask, onDeleteSubtask, onAddComment, onUpdateComment, onDeleteComment }) => {
+const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onAddSubtask, onUpdateSubtask, onDeleteSubtask, onAddComment, onUpdateComment, onDeleteComment }) => {
 // Load users from API
 const { data: appUsers, isLoading: isLoadingUsers } = useUsers();
 
@@ -165,26 +165,6 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
     e.preventDefault();
     if (!newComment.trim()) return;
     
-    const lowerComment = newComment.toLowerCase();
-    
-    if (onMention) {
-        // Extract all mentions from the comment
-        const mentionRegex = /@(\w+)/g;
-        const matches = lowerComment.match(mentionRegex) || [];
-        
-        // Convert to names (remove the @)
-        const mentionedNames = matches.map(m => m.substring(1).toLowerCase());
-        
-        // Check if any of the mentions correspond to an existing user
-        const hasValidMention = mentionedNames.some(name =>
-            appUsers?.some(u => u.name.toLowerCase() === name)
-        );
-        
-        if (hasValidMention) {
-            onMention(task.id, task.title);
-        }
-    }
-
     const comment: Comment = {
       id: Date.now().toString(),
       task_id: task.id,
@@ -218,16 +198,26 @@ const [activeUser] = useState<string>(user?.id || firstUserId);
   };
 
   const renderCommentText = (text: string) => {
-    return text.split(' ').map((word, index) => {
-        if (word.startsWith('@')) {
-            return (
-                <span key={index} className="text-[#1e5144] font-bold bg-[#1e5144]/10 px-1 rounded mx-0.5">
-                    {word}
-                </span>
-            );
-        }
-        return <span key={index}>{word} </span>;
-    });
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = mentionRegex.exec(text)) !== null) {
+      // Add text before the mention
+      parts.push(text.slice(lastIndex, match.index));
+      // Add highlighted mention
+      parts.push(
+        <span key={match.index} className="text-[#1e5144] font-bold bg-[#1e5144]/10 px-1 rounded mx-0.5">
+          {match[0]}
+        </span>
+      );
+      lastIndex = mentionRegex.lastIndex;
+    }
+    // Add remaining text
+    parts.push(text.slice(lastIndex));
+
+    return parts;
   };
 
   // Mention Autocomplete Logic
