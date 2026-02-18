@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueryWithError } from '@/shared/hooks/useQueryWithError';
 import { kpiService } from '../services/kpiService';
 import type { KpiCategory } from '../types';
 import { QUERY_KEYS } from '@/shared/utils/constants';
@@ -9,11 +9,11 @@ import { QUERY_KEYS } from '@/shared/utils/constants';
  * @returns Objeto com data, isLoading, error e refetch do React Query
  */
 export function useKpiById(kpiId: string) {
-  return useQuery({
+  return useQueryWithError({
     queryKey: QUERY_KEYS.KPIS.DETAIL(kpiId),
     queryFn: () => kpiService.getById(kpiId),
     enabled: !!kpiId, // Só busca se tiver ID válido
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 1, // Tenta uma vez em caso de erro
+    errorMessage: 'Falha ao carregar KPI',
   });
 }

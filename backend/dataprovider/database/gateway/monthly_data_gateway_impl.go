@@ -61,7 +61,7 @@ func (g *monthlyDataGatewayImpl) FindByKpiAndMonth(ctx context.Context, kpiID uu
 	var dataModel model.MonthlyData
 
 	err := g.db.WithContext(ctx).
-		Where("kpi_category_id = ? AND year = ? AND month = ?", kpiID, year, month).
+		Where("kpi_category_id = ? AND year = ? AND month = ? AND deleted_at IS NULL", kpiID, year, month).
 		First(&dataModel).Error
 
 	if err != nil {
@@ -153,6 +153,67 @@ func (g *monthlyDataGatewayImpl) UpdateRealized(ctx context.Context, kpiID uuid.
 	}
 
 	return nil
+}
+
+// SaveWithTx saves monthly data within a transaction
+func (g *monthlyDataGatewayImpl) SaveWithTx(ctx context.Context, tx *gorm.DB, data *entity.MonthlyData) error {
+	dataModel, err := g.mapper.ToModel(data)
+	if err != nil {
+		return err
+	}
+
+	var existingData model.MonthlyData
+	err = tx.WithContext(ctx).Where("uuid = ?", dataModel.UUID).First(&existingData).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err := tx.WithContext(ctx).Create(dataModel).Error; err != nil {
+			return err
+		}
+	} else {
+		if err := tx.WithContext(ctx).Save(dataModel).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// UpdateTx updates monthly data within a transaction
+func (g *monthlyDataGatewayImpl) UpdateTx(ctx context.Context, tx *gorm.DB, data *entity.MonthlyData) error {
+	dataModel, err := g.mapper.ToModel(data)
+	if err != nil {
+		return err
+	}
+
+	result := tx.WithContext(ctx).Where("uuid = ?", dataModel.UUID).Save(dataModel)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return kpiErrors.ErrMonthDataNotFound
+	}
+
+	return nil
+}
+
+// BeginTx begins a new transaction
+func (g *monthlyDataGatewayImpl) BeginTx(ctx context.Context) (*gorm.DB, error) {
+	return g.db.Begin(), nil
+}
+
+// CommitTx commits a transaction
+func (g *monthlyDataGatewayImpl) CommitTx(tx *gorm.DB) error {
+	return tx.Commit().Error
+}
+
+// RollbackTx rolls back a transaction
+func (g *monthlyDataGatewayImpl) RollbackTx(tx *gorm.DB) error {
+	return tx.Rollback().Error
 }
 
 // UpdateBreakdown updates only the breakdown data for a specific KPI, year and month

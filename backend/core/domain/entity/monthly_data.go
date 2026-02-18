@@ -185,3 +185,230 @@ func (m *MonthlyData) SoftDelete() {
 func (m *MonthlyData) IsActive() bool {
 	return m.deletedAt == nil
 }
+
+// DailyEntry represents a single daily entry in the breakdown
+type DailyEntry struct {
+	Date      string    `json:"date"`      // ISO date format (e.g., "2024-11-01")
+	Value     float64   `json:"value"`     // The value for this day
+	Context   string    `json:"context"`   // Context description
+	User      string    `json:"user"`      // User who made the entry
+	CreatedAt time.Time `json:"createdAt"` // Creation timestamp
+}
+
+// GetDailyEntries retrieves all daily entries from the breakdown
+func (m *MonthlyData) GetDailyEntries() ([]DailyEntry, error) {
+	if m.breakdown == nil {
+		return []DailyEntry{}, nil
+	}
+
+	var breakdown map[string]interface{}
+	if err := json.Unmarshal(m.breakdown, &breakdown); err != nil {
+		return nil, err
+	}
+
+	dailyData, ok := breakdown["daily"].([]interface{})
+	if !ok || dailyData == nil {
+		return []DailyEntry{}, nil
+	}
+
+	var entries []DailyEntry
+	for _, item := range dailyData {
+		entryMap, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Convert to DailyEntry struct with proper type checking
+		date, ok := entryMap["date"].(string)
+		if !ok {
+			continue
+		}
+		value, ok := entryMap["value"].(float64)
+		if !ok {
+			continue
+		}
+		ctx, ok := entryMap["context"].(string)
+		if !ok {
+			continue
+		}
+		user, ok := entryMap["user"].(string)
+		if !ok {
+			continue
+		}
+
+		entries = append(entries, DailyEntry{
+			Date:      date,
+			Value:     value,
+			Context:   ctx,
+			User:      user,
+			CreatedAt: time.Now(),
+		})
+	}
+
+	return entries, nil
+}
+
+// AddDailyEntry adds a new daily entry to the breakdown
+func (m *MonthlyData) AddDailyEntry(date string, value float64, context, user string) error {
+	// Parse date to check validity
+	if date == "" {
+		return errors.New("date cannot be empty")
+	}
+
+	// Get existing daily entries
+	dailyEntries, err := m.GetDailyEntries()
+	if err != nil {
+		return err
+	}
+
+	// Check if entry for this date already exists and update, or add new entry
+	found := false
+	for i, entry := range dailyEntries {
+		if entry.Date == date {
+			// Update existing entry
+			dailyEntries[i] = DailyEntry{
+				Date:      date,
+				Value:     value,
+				Context:   context,
+				User:      user,
+				CreatedAt: time.Now(),
+			}
+			found = true
+			break
+		}
+	}
+
+	// If not found, add new entry
+	if !found {
+		dailyEntries = append(dailyEntries, DailyEntry{
+			Date:      date,
+			Value:     value,
+			Context:   context,
+			User:      user,
+			CreatedAt: time.Now(),
+		})
+	}
+
+	// Update breakdown with daily entries
+	breakdown := make(map[string]interface{})
+	breakdown["daily"] = dailyEntries
+
+	// Preserve existing breakdown data if any
+	if m.breakdown != nil {
+		var existingBreakdown map[string]interface{}
+		if err := json.Unmarshal(m.breakdown, &existingBreakdown); err == nil {
+			// Keep non-daily data
+			for k, v := range existingBreakdown {
+				if k != "daily" {
+					breakdown[k] = v
+				}
+			}
+		}
+	}
+
+	return m.SetBreakdown(breakdown)
+}
+
+// UpdateDailyEntry updates an existing daily entry
+func (m *MonthlyData) UpdateDailyEntry(date string, value float64, context, user string) error {
+	dailyEntries, err := m.GetDailyEntries()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for i, entry := range dailyEntries {
+		if entry.Date == date {
+			dailyEntries[i] = DailyEntry{
+				Date:      date,
+				Value:     value,
+				Context:   context,
+				User:      user,
+				CreatedAt: time.Now(),
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return errors.New("daily entry not found")
+	}
+
+	breakdown := make(map[string]interface{})
+	breakdown["daily"] = dailyEntries
+
+	if m.breakdown != nil {
+		var existingBreakdown map[string]interface{}
+		if err := json.Unmarshal(m.breakdown, &existingBreakdown); err == nil {
+			for k, v := range existingBreakdown {
+				if k != "daily" {
+					breakdown[k] = v
+				}
+			}
+		}
+	}
+
+	return m.SetBreakdown(breakdown)
+}
+
+// DeleteDailyEntry removes a daily entry by date
+func (m *MonthlyData) DeleteDailyEntry(date string) error {
+	dailyEntries, err := m.GetDailyEntries()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for i, entry := range dailyEntries {
+		if entry.Date == date {
+			dailyEntries = append(dailyEntries[:i], dailyEntries[i+1:]...)
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return errors.New("daily entry not found")
+	}
+
+	breakdown := make(map[string]interface{})
+	breakdown["daily"] = dailyEntries
+
+	if m.breakdown != nil {
+		var existingBreakdown map[string]interface{}
+		if err := json.Unmarshal(m.breakdown, &existingBreakdown); err == nil {
+			for k, v := range existingBreakdown {
+				if k != "daily" {
+					breakdown[k] = v
+				}
+			}
+		}
+	}
+
+	return m.SetBreakdown(breakdown)
+}
+
+// RecalculateFromDaily recalculates the realized value by summing all daily entries
+func (m *MonthlyData) RecalculateFromDaily() error {
+	dailyEntries, err := m.GetDailyEntries()
+	if err != nil {
+		return err
+	}
+
+	if len(dailyEntries) == 0 {
+		// If no daily entries, clear the realized value
+		m.realized = nil
+		return nil
+	}
+
+	// Sum all daily values
+	var total float64
+	for _, entry := range dailyEntries {
+		total += entry.Value
+	}
+
+	// Update realized value
+	m.SetRealized(total)
+	return nil
+}

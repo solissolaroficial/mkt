@@ -96,3 +96,16 @@ func GetUserRole(c *fiber.Ctx) (string, error) {
 
 	return role, nil
 }
+
+// Authenticated returns a middleware that requires authentication
+func Authenticated() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Check if user ID is in context (set by AuthMiddleware)
+		if c.Locals("userID") == nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+				Error: "User not authenticated",
+			})
+		}
+		return c.Next()
+	}
+}

@@ -2,11 +2,14 @@ package kpis
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
-	"github.com/seu-usuario/solis-backend/core/domain/errors"
+	kpiErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
 
@@ -20,6 +23,45 @@ type UpdateMonthlyDataInput struct {
 	Breakdown interface{} `json:"breakdown,omitempty"`
 	UserID    string      `json:"user_id,omitempty"` // User making the change
 	Context   string      `json:"context,omitempty"` // Context of the change
+}
+
+// AddDailyEntryInput represents input for adding a daily entry
+type AddDailyEntryInput struct {
+	KpiID   string  `json:"kpi_id,omitempty"`
+	Year    int     `json:"year,omitempty"`
+	Month   string  `json:"month,omitempty"`
+	Date    string  `json:"date,omitempty"` // ISO date format (e.g., "2024-11-01")
+	Value   float64 `json:"value,omitempty"`
+	Context string  `json:"context,omitempty"`
+	User    string  `json:"user,omitempty"`
+}
+
+// UpdateDailyEntryInput represents input for updating a daily entry
+type UpdateDailyEntryInput struct {
+	KpiID   string  `json:"kpi_id,omitempty"`
+	Year    int     `json:"year,omitempty"`
+	Month   string  `json:"month,omitempty"`
+	Date    string  `json:"date,omitempty"` // ISO date format (e.g., "2024-11-01")
+	Value   float64 `json:"value,omitempty"`
+	Context string  `json:"context,omitempty"`
+	User    string  `json:"user,omitempty"`
+}
+
+// DeleteDailyEntryInput represents input for deleting a daily entry
+type DeleteDailyEntryInput struct {
+	KpiID   string `json:"kpi_id,omitempty"`
+	Year    int    `json:"year,omitempty"`
+	Month   string `json:"month,omitempty"`
+	Date    string `json:"date,omitempty"` // ISO date format (e.g., "2024-11-01")
+	User    string `json:"user,omitempty"`
+	Context string `json:"context,omitempty"`
+}
+
+// GetDailyEntriesInput represents input for getting daily entries
+type GetDailyEntriesInput struct {
+	KpiID string `json:"kpi_id,omitempty"`
+	Year  int    `json:"year,omitempty"`
+	Month string `json:"month,omitempty"`
 }
 
 // UpdateMonthlyDataUseCase handles updating of monthly data for KPIs
@@ -43,19 +85,19 @@ func NewUpdateMonthlyDataUseCase(
 func (uc *UpdateMonthlyDataUseCase) Execute(ctx context.Context, input UpdateMonthlyDataInput) (*entity.MonthlyData, error) {
 	// 1. Validar parâmetros obrigatórios
 	if input.KpiID == "" || input.Month == "" || input.Year == 0 {
-		return nil, errors.ErrMonthDataNotFound
+		return nil, kpiErrors.ErrMonthDataNotFound
 	}
 
 	kpiID, err := uuid.Parse(input.KpiID)
 	if err != nil {
-		return nil, errors.ErrKpiNotFound
+		return nil, kpiErrors.ErrKpiNotFound
 	}
 
 	// 2. Validar que KPI existe
 	kpi, err := uc.kpiGateway.FindByID(ctx, kpiID)
 	if err != nil {
-		if err == errors.ErrKpiNotFound {
-			return nil, errors.ErrKpiNotFound
+		if err == kpiErrors.ErrKpiNotFound {
+			return nil, kpiErrors.ErrKpiNotFound
 		}
 		return nil, err
 	}
@@ -63,7 +105,7 @@ func (uc *UpdateMonthlyDataUseCase) Execute(ctx context.Context, input UpdateMon
 	// 3. Buscar ou criar MonthlyData
 	monthlyData, err := uc.monthlyDataGateway.FindByKpiAndMonth(ctx, kpiID, input.Year, input.Month)
 	if err != nil {
-		if err == errors.ErrMonthDataNotFound {
+		if err == kpiErrors.ErrMonthDataNotFound {
 			// MonthlyData não existe, criar um novo
 			monthlyData, err = entity.NewMonthlyData(kpiID, input.Year, input.Month)
 			if err != nil {
@@ -153,4 +195,236 @@ func (uc *UpdateMonthlyDataUseCase) Execute(ctx context.Context, input UpdateMon
 
 	// 6. Retornar entity atualizada
 	return monthlyData, nil
+}
+
+// AddDailyEntry adds a daily entry to the monthly data
+func (uc *UpdateMonthlyDataUseCase) AddDailyEntry(ctx context.Context, input AddDailyEntryInput) (*entity.MonthlyData, error) {
+	// 1. Validar parâmetros obrigatórios
+	if input.KpiID == "" || input.Month == "" || input.Year == 0 || input.Date == "" {
+		return nil, errors.New("kpi_id, month, year and date are required")
+	}
+
+	kpiID, err := uuid.Parse(input.KpiID)
+	if err != nil {
+		return nil, kpiErrors.ErrKpiNotFound
+	}
+
+	// 2. Buscar ou criar MonthlyData
+	monthlyData, err := uc.monthlyDataGateway.FindByKpiAndMonth(ctx, kpiID, input.Year, input.Month)
+	if err != nil {
+		if err == kpiErrors.ErrMonthDataNotFound {
+			// MonthlyData não existe, criar um novo
+			monthlyData, err = entity.NewMonthlyData(kpiID, input.Year, input.Month)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	// 3. Validar formato da data YYYY-MM-DD
+	parsedDate, err := time.Parse("2006-01-02", input.Date)
+	if err != nil {
+		return nil, errors.New("invalid date format, expected YYYY-MM-DD")
+	}
+	// Validar que a data pertence ao mês/ano esperado
+	if parsedDate.Year() != monthlyData.Year() {
+		return nil, errors.New("date year does not match monthly data year")
+	}
+	expectedMonth := strings.ToUpper(parsedDate.Month().String()[:3])
+	if expectedMonth != monthlyData.Month() {
+		return nil, fmt.Errorf("date month %s does not match monthly data month %s", expectedMonth, monthlyData.Month())
+	}
+
+	// 4. Adicionar daily entry
+	if err := monthlyData.AddDailyEntry(input.Date, input.Value, input.Context, input.User); err != nil {
+		return nil, err
+	}
+
+	// 5. Recalcular realized value from daily entries
+	if err := monthlyData.RecalculateFromDaily(); err != nil {
+		return nil, err
+	}
+
+	// 6. Salvar o MonthlyData
+	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
+		return nil, err
+	}
+
+	// 7. Adicionar log
+	if input.User != "" && monthlyData.Realized() != nil {
+		logEntry := entity.KpiLogEntry{
+			ID:        uuid.New().String(),
+			Date:      time.Now().Format(time.RFC3339),
+			Timestamp: time.Now().Format("15:04"),
+			User:      input.User,
+			Month:     monthlyData.Month(),
+			OldValue:  nil,
+			NewValue:  *monthlyData.Realized(),
+			Action:    "daily_entry",
+			Context:   input.Context,
+		}
+		if err := monthlyData.AddLog(logEntry); err != nil {
+			return nil, err
+		}
+		// Update after adding log
+		if err := uc.monthlyDataGateway.Update(ctx, monthlyData); err != nil {
+			return nil, err
+		}
+	}
+
+	return monthlyData, nil
+}
+
+// UpdateDailyEntry updates an existing daily entry
+func (uc *UpdateMonthlyDataUseCase) UpdateDailyEntry(ctx context.Context, input UpdateDailyEntryInput) (*entity.MonthlyData, error) {
+	// 1. Validar parâmetros obrigatórios
+	if input.KpiID == "" || input.Month == "" || input.Year == 0 || input.Date == "" {
+		return nil, errors.New("kpi_id, month, year and date are required")
+	}
+
+	kpiID, err := uuid.Parse(input.KpiID)
+	if err != nil {
+		return nil, kpiErrors.ErrKpiNotFound
+	}
+
+	// 2. Buscar ou criar MonthlyData
+	monthlyData, err := uc.monthlyDataGateway.FindByKpiAndMonth(ctx, kpiID, input.Year, input.Month)
+	if err != nil {
+		if err == kpiErrors.ErrMonthDataNotFound {
+			// MonthlyData não existe, criar um novo
+			monthlyData, err = entity.NewMonthlyData(kpiID, input.Year, input.Month)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	// 4. Atualizar daily entry
+	if err := monthlyData.UpdateDailyEntry(input.Date, input.Value, input.Context, input.User); err != nil {
+		return nil, err
+	}
+
+	// 5. Recalcular realized value
+	if err := monthlyData.RecalculateFromDaily(); err != nil {
+		return nil, err
+	}
+
+	// 6. Salvar o MonthlyData
+	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
+		return nil, err
+	}
+
+	// 7. Adicionar log
+	if input.User != "" && monthlyData.Realized() != nil {
+		logEntry := entity.KpiLogEntry{
+			ID:        uuid.New().String(),
+			Date:      time.Now().Format(time.RFC3339),
+			Timestamp: time.Now().Format("15:04"),
+			User:      input.User,
+			Month:     monthlyData.Month(),
+			OldValue:  nil,
+			NewValue:  *monthlyData.Realized(),
+			Action:    "daily_entry_update",
+			Context:   input.Context,
+		}
+		if err := monthlyData.AddLog(logEntry); err != nil {
+			return nil, err
+		}
+		// Update after adding log
+		if err := uc.monthlyDataGateway.Update(ctx, monthlyData); err != nil {
+			return nil, err
+		}
+	}
+
+	return monthlyData, nil
+}
+
+// DeleteDailyEntry removes a daily entry by date
+func (uc *UpdateMonthlyDataUseCase) DeleteDailyEntry(ctx context.Context, input DeleteDailyEntryInput) (*entity.MonthlyData, error) {
+	// 1. Validar parâmetros obrigatórios
+	if input.KpiID == "" || input.Month == "" || input.Year == 0 || input.Date == "" {
+		return nil, errors.New("kpi_id, month, year and date are required")
+	}
+
+	kpiID, err := uuid.Parse(input.KpiID)
+	if err != nil {
+		return nil, kpiErrors.ErrKpiNotFound
+	}
+
+	// 2. Buscar MonthlyData
+	monthlyData, err := uc.monthlyDataGateway.FindByKpiAndMonth(ctx, kpiID, input.Year, input.Month)
+	if err != nil {
+		if err == kpiErrors.ErrMonthDataNotFound {
+			return nil, kpiErrors.ErrMonthDataNotFound
+		}
+		return nil, err
+	}
+
+	// 4. Deletar daily entry
+	if err := monthlyData.DeleteDailyEntry(input.Date); err != nil {
+		return nil, err
+	}
+
+	// 5. Recalcular realized value
+	if err := monthlyData.RecalculateFromDaily(); err != nil {
+		return nil, err
+	}
+
+	// 6. Salvar o MonthlyData
+	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
+		return nil, err
+	}
+
+	// 7. Adicionar log
+	if input.User != "" && monthlyData.Realized() != nil {
+		logEntry := entity.KpiLogEntry{
+			ID:        uuid.New().String(),
+			Date:      time.Now().Format(time.RFC3339),
+			Timestamp: time.Now().Format("15:04"),
+			User:      input.User,
+			Month:     monthlyData.Month(),
+			OldValue:  nil,
+			NewValue:  *monthlyData.Realized(),
+			Action:    "daily_entry_delete",
+			Context:   input.Context,
+		}
+		if err := monthlyData.AddLog(logEntry); err != nil {
+			return nil, err
+		}
+		// Update after adding log
+		if err := uc.monthlyDataGateway.Update(ctx, monthlyData); err != nil {
+			return nil, err
+		}
+	}
+
+	return monthlyData, nil
+}
+
+// GetDailyEntries retrieves all daily entries for a specific KPI, year and month
+func (uc *UpdateMonthlyDataUseCase) GetDailyEntries(ctx context.Context, input GetDailyEntriesInput) ([]entity.DailyEntry, error) {
+	// 1. Validar parâmetros obrigatórios
+	if input.KpiID == "" || input.Month == "" || input.Year == 0 {
+		return nil, errors.New("kpi_id, month, year are required")
+	}
+
+	kpiID, err := uuid.Parse(input.KpiID)
+	if err != nil {
+		return nil, kpiErrors.ErrKpiNotFound
+	}
+
+	// 2. Buscar MonthlyData
+	monthlyData, err := uc.monthlyDataGateway.FindByKpiAndMonth(ctx, kpiID, input.Year, input.Month)
+	if err != nil {
+		if err == kpiErrors.ErrMonthDataNotFound {
+			return []entity.DailyEntry{}, nil
+		}
+		return nil, err
+	}
+
+	// 3. Retornar daily entries
+	return monthlyData.GetDailyEntries()
 }

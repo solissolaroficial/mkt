@@ -2,6 +2,9 @@ package controller
 
 import (
 	"context"
+	"slices"
+	"sort"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,6 +18,9 @@ import (
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/request"
 	"github.com/seu-usuario/solis-backend/entrypoint/http/payload/response"
 )
+
+// KPIs that use the last monthly value instead of sum for annual calculation
+var kpisLastValue = []string{"autoridade_na_internet_da"}
 
 // KpiController handles HTTP requests for KPI operations
 type KpiController struct {
@@ -259,16 +265,37 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 
 		// Check if it's full year (month = ---)
 		if queryParams.GetMonth() != nil && *queryParams.GetMonth() == "---" {
-			// Calculate annual sum
+			// Check if this KPI uses last value instead of sum
+			usesLastValue := slices.Contains(kpisLastValue, kpi.Slug())
+
 			var totalRealized float64 = 0
 			var totalMeta float64 = 0
 
-			for _, data := range filteredMonthlyData {
-				if data.Realized() != nil {
-					totalRealized += *data.Realized()
+			if usesLastValue && len(filteredMonthlyData) > 0 {
+				// Se usa último valor, garantir que dados estão ordenados por mês
+				monthOrder := map[string]int{"JAN": 1, "FEV": 2, "MAR": 3, "ABR": 4, "MAI": 5, "JUN": 6,
+					"JUL": 7, "AGO": 8, "SET": 9, "OUT": 10, "NOV": 11, "DEZ": 12}
+				sort.Slice(filteredMonthlyData, func(i, j int) bool {
+					return monthOrder[filteredMonthlyData[i].Month()] < monthOrder[filteredMonthlyData[j].Month()]
+				})
+
+				// Use the last monthly value for KPIs that require it
+				lastData := filteredMonthlyData[len(filteredMonthlyData)-1]
+				if lastData.Realized() != nil {
+					totalRealized = *lastData.Realized()
 				}
-				if data.Meta() != nil {
-					totalMeta += *data.Meta()
+				if lastData.Meta() != nil {
+					totalMeta = *lastData.Meta()
+				}
+			} else {
+				// Calculate annual sum normally
+				for _, data := range filteredMonthlyData {
+					if data.Realized() != nil {
+						totalRealized += *data.Realized()
+					}
+					if data.Meta() != nil {
+						totalMeta += *data.Meta()
+					}
 				}
 			}
 
@@ -278,7 +305,7 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 				kpi.ID(),
 				*queryParams.GetYear(), // Use filtered year (dereference pointer)
 				"---",                  // Consolidated month
-				&totalRealized,         // Annual sum
+				&totalRealized,         // Annual value (sum or last value)
 				&totalMeta,             // Sum of all metas
 				[]byte{},               // Empty breakdown as []byte
 				time.Now(),
@@ -322,21 +349,34 @@ func (c *KpiController) GetBySlugs(ctx *fiber.Ctx) error {
 // @Param id path string true "KPI ID"
 // @Success 204
 // @Failure 404 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Router /kpis/{id} [delete]
 func (c *KpiController) Delete(ctx *fiber.Ctx) error {
 	// Extract ID from params
 	id := ctx.Params("id")
 
-	err := c.deleteKpiUseCase.Execute(context.Background(), id)
+	// Extract user ID from JWT token (safe type assertion)
+	userID := ""
+	if userIDStr, ok := ctx.Locals("userID").(string); ok {
+		userID = userIDStr
+	}
+
+	// Check if user is admin
+	isAdmin := false
+	if role, ok := ctx.Locals("userRole").(string); ok && role == "admin" {
+		isAdmin = true
+	}
+
+	err := c.deleteKpiUseCase.Execute(context.Background(), id, userID, isAdmin)
 	if err != nil {
 		if err == errors.ErrKpiNotFound {
 			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
 				Error: "KPI not found",
 			})
 		}
-		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
-			Error: "Internal server error",
+		return ctx.Status(fiber.StatusForbidden).JSON(response.ErrorResponse{
+			Error: err.Error(),
 		})
 	}
 
@@ -368,10 +408,10 @@ func (c *KpiController) UpdateMonthlyData(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Extract user ID from JWT token
+	// Extract user ID from JWT token (safe type assertion)
 	userID := ""
-	if ctx.Locals("userID") != nil {
-		userID = ctx.Locals("userID").(string)
+	if userIDStr, ok := ctx.Locals("userID").(string); ok {
+		userID = userIDStr
 	}
 
 	// Execute use case
@@ -434,4 +474,261 @@ func (c *KpiController) DeleteMonthlyData(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusNoContent).Send(nil)
+}
+
+// AddDailyEntry handles adding a daily entry to monthly data
+// @Summary Add daily entry
+// @Description Add a daily entry to monthly data for a specific KPI
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param dailyEntryRequest body request.AddDailyEntryRequest true "Daily entry data"
+// @Success 200 {object} response.MonthlyDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/daily-entry [post]
+func (c *KpiController) AddDailyEntry(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	kpiId := ctx.Params("kpiId")
+
+	// Parse request body
+	var req request.AddDailyEntryRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Extract user ID from JWT token (safe type assertion)
+	userID := ""
+	if userIDStr, ok := ctx.Locals("userID").(string); ok {
+		userID = userIDStr
+	}
+	// If userID is empty, return unauthorized error
+	if userID == "" {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// Execute use case
+	input := kpis.AddDailyEntryInput{
+		KpiID:   kpiId,
+		Year:    req.Year,
+		Month:   req.Month,
+		Date:    req.Date,
+		Value:   req.Value,
+		Context: req.Context,
+		User:    userID,
+	}
+
+	monthlyData, err := c.updateMonthlyDataUseCase.AddDailyEntry(context.Background(), input)
+	if err != nil {
+		if err == errors.ErrKpiNotFound || err == errors.ErrMonthDataNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI or monthly data not found",
+			})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response
+	monthlyDataResponse := c.mapper.ToMonthlyDataResponse(monthlyData)
+
+	return ctx.Status(fiber.StatusOK).JSON(monthlyDataResponse)
+}
+
+// UpdateDailyEntry handles updating a daily entry in monthly data
+// @Summary Update daily entry
+// @Description Update an existing daily entry in monthly data for a specific KPI
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param dailyEntryRequest body request.UpdateDailyEntryRequest true "Daily entry data"
+// @Success 200 {object} response.MonthlyDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/daily-entry [put]
+func (c *KpiController) UpdateDailyEntry(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	kpiId := ctx.Params("kpiId")
+
+	// Parse request body
+	var req request.UpdateDailyEntryRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Extract user ID from JWT token (safe type assertion)
+	userID := ""
+	if userIDStr, ok := ctx.Locals("userID").(string); ok {
+		userID = userIDStr
+	}
+	// If userID is empty, return unauthorized error
+	if userID == "" {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// Execute use case
+	input := kpis.UpdateDailyEntryInput{
+		KpiID:   kpiId,
+		Year:    req.Year,
+		Month:   req.Month,
+		Date:    req.Date,
+		Value:   req.Value,
+		Context: req.Context,
+		User:    userID,
+	}
+
+	monthlyData, err := c.updateMonthlyDataUseCase.UpdateDailyEntry(context.Background(), input)
+	if err != nil {
+		if err == errors.ErrKpiNotFound || err == errors.ErrMonthDataNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI or monthly data not found",
+			})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response
+	monthlyDataResponse := c.mapper.ToMonthlyDataResponse(monthlyData)
+
+	return ctx.Status(fiber.StatusOK).JSON(monthlyDataResponse)
+}
+
+// DeleteDailyEntry handles deleting a daily entry from monthly data
+// @Summary Delete daily entry
+// @Description Delete a daily entry from monthly data for a specific KPI
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param dailyEntryRequest body request.DeleteDailyEntryRequest true "Daily entry data"
+// @Success 200 {object} response.MonthlyDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/daily-entry [delete]
+func (c *KpiController) DeleteDailyEntry(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	kpiId := ctx.Params("kpiId")
+
+	// Parse request body
+	var req request.DeleteDailyEntryRequest
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "Invalid request body",
+		})
+	}
+
+	// Extract user ID from JWT token (safe type assertion)
+	userID := ""
+	if userIDStr, ok := ctx.Locals("userID").(string); ok {
+		userID = userIDStr
+	}
+	// If userID is empty, return unauthorized error
+	if userID == "" {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.ErrorResponse{
+			Error: "User not authenticated",
+		})
+	}
+
+	// Execute use case
+	// req.Year is already an int, no conversion needed
+	yearInt := req.Year
+
+	input := kpis.DeleteDailyEntryInput{
+		KpiID:   kpiId,
+		Year:    yearInt,
+		Month:   req.Month,
+		Date:    req.Date,
+		User:    userID,
+		Context: req.Context,
+	}
+
+	monthlyData, err := c.updateMonthlyDataUseCase.DeleteDailyEntry(context.Background(), input)
+	if err != nil {
+		if err == errors.ErrKpiNotFound || err == errors.ErrMonthDataNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI or monthly data not found",
+			})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: err.Error(),
+		})
+	}
+
+	// Convert to response
+	monthlyDataResponse := c.mapper.ToMonthlyDataResponse(monthlyData)
+
+	return ctx.Status(fiber.StatusOK).JSON(monthlyDataResponse)
+}
+
+// GetDailyEntries handles getting all daily entries for a specific KPI, year and month
+// @Summary Get daily entries
+// @Description Get all daily entries for a specific KPI, year and month
+// @Tags kpis
+// @Accept json
+// @Produce json
+// @Param kpiId path string true "KPI ID"
+// @Param month query string true "Month (JAN, FEV, etc.)"
+// @Param year query int true "Year"
+// @Success 200 {array} entity.DailyEntry
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /kpis/{kpiId}/daily-entries [get]
+func (c *KpiController) GetDailyEntries(ctx *fiber.Ctx) error {
+	// Extract ID from params
+	kpiId := ctx.Params("kpiId")
+
+	// Parse query params
+	month := ctx.Query("month")
+	yearStr := ctx.Query("year")
+
+	if month == "" || yearStr == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "month and year are required query parameters",
+		})
+	}
+
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.ErrorResponse{
+			Error: "invalid year parameter",
+		})
+	}
+
+	// Execute use case
+	input := kpis.GetDailyEntriesInput{
+		KpiID: kpiId,
+		Year:  year,
+		Month: month,
+	}
+
+	dailyEntries, err := c.updateMonthlyDataUseCase.GetDailyEntries(context.Background(), input)
+	if err != nil {
+		if err == errors.ErrKpiNotFound || err == errors.ErrMonthDataNotFound {
+			return ctx.Status(fiber.StatusNotFound).JSON(response.ErrorResponse{
+				Error: "KPI or monthly data not found",
+			})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.ErrorResponse{
+			Error: "Internal server error",
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(dailyEntries)
 }

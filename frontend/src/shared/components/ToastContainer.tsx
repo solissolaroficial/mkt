@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
-import type { Toast } from '../hooks/useToast';
+import type { Toast } from '@/shared/store/toastStore';
 
 interface ToastContainerProps {
   toasts: Toast[];

@@ -3,7 +3,6 @@ import { useTasks, useTaskMutations } from '@/features/tasks/hooks';
 import KanbanBoard from '../ui/KanbanBoard';
 import TaskModal from '../ui/TaskModal';
 import { ErrorDisplay } from '@/shared/components/ErrorDisplay';
-import { ToastContainer } from '@/shared/components/ToastContainer';
 import { useToast } from '@/shared/hooks/useToast';
 import ConfirmationModal from '@/shared/components/ConfirmationModal';
 import type { Task } from '@/shared/types';
@@ -13,7 +12,7 @@ import type { Subtask, Comment } from '../types';
 const TasksPage: React.FC = () => {
   const { data: paginatedTasks, isLoading, error, refetch } = useTasks(1, 100);
   const tasks = paginatedTasks?.data || [];
-  const { toasts, removeToast, success, error: toastError, info } = useToast();
+  const { success, error: toastError } = useToast();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
@@ -206,7 +205,6 @@ const TasksPage: React.FC = () => {
 
   return (
     <>
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <KanbanBoard
         tasks={tasks || []}
         onAddTask={handleAddTask}

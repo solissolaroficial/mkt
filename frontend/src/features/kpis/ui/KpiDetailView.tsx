@@ -14,6 +14,21 @@ import {
   Line
 } from 'recharts';
 import { KpiCategory, KpiLog, BreakdownItem, MonthlyData } from '@/shared/types/legacy.types';
+
+// Chart data type definitions
+interface MonthlyChartDataPoint {
+  month: string;
+  realized?: number;
+  meta?: number;
+}
+
+interface DailyChartDataPoint {
+  day: number;
+  value: number;
+  target: number;
+}
+
+type ChartData = MonthlyChartDataPoint[] | DailyChartDataPoint[];
 import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2, Pencil } from 'lucide-react';
 import { MONTHS } from '@/shared/utils/legacy.constants';
 import { useUpdateMonthlyData } from '../hooks/useKpiMutations';
@@ -489,7 +504,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
                 {!isMonthlyView ? (
-                    <AreaChart data={chartData as any[]} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                    <AreaChart data={chartData as ChartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
                         <defs>
                             <linearGradient id="colorRealized" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor={kpi.color} stopOpacity={0.3}/>
@@ -519,7 +534,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                         />
                     </AreaChart>
                 ) : (
-                    <ComposedChart data={chartData as any[]} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                    <ComposedChart data={chartData as ChartData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
                         <defs>
                             <linearGradient id="colorGradientDaily" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor={kpi.color} stopOpacity={0.3}/>
@@ -618,7 +633,11 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setDeleteConfirm({ id: row.id || '', month: row.month });
+                                                    if (!row.id) {
+                                                        console.error('Não é possível excluir: ID não encontrado');
+                                                        return;
+                                                    }
+                                                    setDeleteConfirm({ id: row.id, month: row.month });
                                                 }}
                                                 className="text-gray-500 hover:text-rose-400 transition-colors"
                                                 title="Remover dados mensais"

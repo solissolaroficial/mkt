@@ -1,35 +1,8 @@
-import { useState, useCallback } from 'react';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-export interface Toast {
-  id: string;
-  type: ToastType;
-  message: string;
-  duration?: number;
-}
+import { useToastStore, toastActions, ToastType, Toast } from '@/shared/store/toastStore';
+import { useCallback } from 'react';
 
 export const useToast = () => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = useCallback((type: ToastType, message: string, duration = 5000) => {
-    const id = Date.now().toString();
-    const newToast: Toast = { id, type, message, duration };
-    
-    setToasts((prev) => [...prev, newToast]);
-    
-    if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
-    }
-    
-    return id;
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
+  const { toasts, addToast, removeToast, clearToasts } = useToastStore();
 
   const success = useCallback((message: string, duration?: number) => {
     return addToast('success', message, duration);
@@ -51,9 +24,14 @@ export const useToast = () => {
     toasts,
     addToast,
     removeToast,
+    clearToasts,
     success,
     error,
     warning,
     info,
   };
 };
+
+// Re-exportar tipos e ações não-hook para uso
+export type { ToastType, Toast };
+export { toastActions };

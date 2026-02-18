@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/seu-usuario/solis-backend/core/domain/entity"
+	"gorm.io/gorm"
 )
 
 // MonthlyDataGateway defines the interface for monthly data operations
@@ -29,4 +30,11 @@ type MonthlyDataGateway interface {
 
 	// UpdateBreakdown updates only the breakdown data for a specific KPI, year and month
 	UpdateBreakdown(ctx context.Context, kpiID uuid.UUID, year int, month string, breakdown interface{}) error
+
+	// Transaction methods for atomic operations
+	SaveWithTx(ctx context.Context, tx *gorm.DB, data *entity.MonthlyData) error
+	UpdateTx(ctx context.Context, tx *gorm.DB, data *entity.MonthlyData) error
+	BeginTx(ctx context.Context) (*gorm.DB, error)
+	CommitTx(tx *gorm.DB) error
+	RollbackTx(tx *gorm.DB) error
 }

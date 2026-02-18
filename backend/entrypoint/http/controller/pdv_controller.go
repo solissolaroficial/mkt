@@ -153,7 +153,7 @@ func (c *PdvController) UpdatePdvPostStatus(ctx *fiber.Ctx) error {
 
 	// Obter usuário do contexto de autenticação
 	user := ""
-	if userID := ctx.Locals("user"); userID != nil {
+	if userID := ctx.Locals("userID"); userID != nil {
 		if userIDStr, ok := userID.(string); ok {
 			user = userIDStr
 		}

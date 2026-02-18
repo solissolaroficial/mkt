@@ -11,6 +11,17 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
 
+// userBasedKeyGenerator generates a rate limit key based on user ID or falls back to IP
+func userBasedKeyGenerator(c *fiber.Ctx) string {
+	userID := c.Locals("userID")
+	if userID != nil {
+		if id, ok := userID.(string); ok {
+			return id
+		}
+	}
+	return c.IP()
+}
+
 // SetupPdvRoutes configura as rotas do PDV
 func SetupPdvRoutes(
 	router fiber.Router,
@@ -27,17 +38,9 @@ func SetupPdvRoutes(
 	// Rate limiting para operações de escrita (20 req/min)
 	pdvPosts.Patch("/:id/status",
 		limiter.New(limiter.Config{
-			Max:        20,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          20,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -51,17 +54,9 @@ func SetupPdvRoutes(
 	// Rate limiting para operações de escrita (20 req/min)
 	pdvPosts.Post("/",
 		limiter.New(limiter.Config{
-			Max:        20,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          20,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -73,17 +68,9 @@ func SetupPdvRoutes(
 
 	pdvPosts.Put("/:id",
 		limiter.New(limiter.Config{
-			Max:        20,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          20,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -98,10 +85,10 @@ func SetupPdvRoutes(
 			Max:        20,
 			Expiration: 1 * time.Minute,
 			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
+				userID := c.Locals("userID")
+				if userID != nil {
+					if id, ok := userID.(string); ok {
+						return id
 					}
 				}
 				return c.IP()
@@ -119,17 +106,9 @@ func SetupPdvRoutes(
 	// NOTA: GET /:id (específico) antes de GET / (genérico)
 	pdvPosts.Get("/:id",
 		limiter.New(limiter.Config{
-			Max:        100,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          100,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -141,17 +120,9 @@ func SetupPdvRoutes(
 
 	pdvPosts.Get("/",
 		limiter.New(limiter.Config{
-			Max:        100,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          100,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -165,17 +136,9 @@ func SetupPdvRoutes(
 	// Rate limiting para operações de escrita (20 req/min)
 	recurrentPdvs.Post("/",
 		limiter.New(limiter.Config{
-			Max:        20,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          20,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -190,10 +153,10 @@ func SetupPdvRoutes(
 			Max:        20,
 			Expiration: 1 * time.Minute,
 			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
+				userID := c.Locals("userID")
+				if userID != nil {
+					if id, ok := userID.(string); ok {
+						return id
 					}
 				}
 				return c.IP()
@@ -209,17 +172,9 @@ func SetupPdvRoutes(
 
 	recurrentPdvs.Delete("/:id",
 		limiter.New(limiter.Config{
-			Max:        20,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          20,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -232,17 +187,9 @@ func SetupPdvRoutes(
 	// Rate limiting para operações de leitura (100 req/min)
 	recurrentPdvs.Get("/:id",
 		limiter.New(limiter.Config{
-			Max:        100,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          100,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",
@@ -254,17 +201,9 @@ func SetupPdvRoutes(
 
 	recurrentPdvs.Get("/",
 		limiter.New(limiter.Config{
-			Max:        100,
-			Expiration: 1 * time.Minute,
-			KeyGenerator: func(c *fiber.Ctx) string {
-				user := c.Locals("user")
-				if user != nil {
-					if userID, ok := user.(string); ok {
-						return userID
-					}
-				}
-				return c.IP()
-			},
+			Max:          100,
+			Expiration:   1 * time.Minute,
+			KeyGenerator: userBasedKeyGenerator,
 			LimitReached: func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusTooManyRequests).JSON(response.ErrorResponse{
 					Error: "Too many requests, please try again later",

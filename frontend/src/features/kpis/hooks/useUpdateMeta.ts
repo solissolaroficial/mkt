@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { kpiService } from '../services/kpiService';
 import { QUERY_KEYS } from '@/shared/utils/constants';
+import { useToast } from '@/shared/hooks/useToast';
 
 export interface UpdateMetaParams {
   kpiId: string;
@@ -11,7 +12,8 @@ export interface UpdateMetaParams {
 
 export function useUpdateMeta() {
   const queryClient = useQueryClient();
-  
+  const toast = useToast();
+
   return useMutation({
     mutationFn: ({ kpiId, year, month, meta }: UpdateMetaParams) =>
       kpiService.updateMeta(kpiId, year, month, meta),
@@ -24,6 +26,14 @@ export function useUpdateMeta() {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.KPIS.LIST()
       });
-    }
+      toast.success('Meta atualizada com sucesso');
+    },
+    onError: (error: Error) => {
+      console.error('Falha ao atualizar meta:', error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Falha ao atualizar meta';
+      toast.error(errorMessage);
+    },
   });
 }

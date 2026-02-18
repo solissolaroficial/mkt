@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { kpiService } from '../services/kpiService';
 import { useUIStore } from '@/shared/store/uiStore';
 import { QUERY_KEYS } from '@/shared/utils/constants';
+import { useQueryWithError } from '@/shared/hooks/useQueryWithError';
 import { useToast } from '@/shared/hooks/useToast';
 
 /**
@@ -10,10 +11,11 @@ import { useToast } from '@/shared/hooks/useToast';
 export const useKpis = () => {
   const { selectedMonth, selectedYear } = useUIStore();
 
-  return useQuery({
+  return useQueryWithError({
     queryKey: QUERY_KEYS.KPIS.LIST({ month: selectedMonth, year: selectedYear }),
     queryFn: () => kpiService.list(selectedMonth, selectedYear ? parseInt(selectedYear) : undefined),
     staleTime: 1000 * 60 * 5, // 5 minutos
+    errorMessage: 'Falha ao carregar KPIs',
   });
 };
 
@@ -21,10 +23,11 @@ export const useKpis = () => {
  * Hook para buscar um KPI específico
  */
 export const useKpi = (id: string) => {
-  return useQuery({
+  return useQueryWithError({
     queryKey: QUERY_KEYS.KPIS.DETAIL(id),
     queryFn: () => kpiService.getById(id),
     enabled: !!id, // Só executa se tiver ID
+    errorMessage: 'Falha ao carregar KPI',
   });
 };
 
@@ -49,6 +52,7 @@ export const useDeleteMonthlyData = () => {
       toast.success('Dados mensais removidos com sucesso!');
     },
     onError: (error: Error) => {
+      console.error('Falha ao remover dados mensais:', error);
       toast.error('Erro ao remover dados mensais: ' + error.message);
     },
   });
