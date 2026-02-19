@@ -10,7 +10,7 @@ export interface SettingsViewProps {
   onUpdateKpiMeta?: (kpiId: string, month: string, year: number, newMeta: number) => void;
 }
 
-export type SettingsSection = 'profile' | 'security' | 'history' | 'goals';
+export type SettingsSection = 'profile' | 'security' | 'history' | 'goals' | 'passwords';
 
 export interface UserFormData {
   name: string;
@@ -28,4 +28,40 @@ export interface ChangePasswordRequest {
 
 export interface ChangePasswordResponse {
   message: string;
+}
+
+// ==================== CREDENTIALS CRUD TYPES ====================
+
+export interface CreateCredentialRequest {
+  name: string;
+  user?: string;
+  password?: string;
+  access?: string;
+  notes?: string;
+  active?: boolean;
+}
+
+export interface UpdateCredentialRequest {
+  name?: string;
+  user?: string;
+  password?: string;
+  access?: string;
+  notes?: string;
+  active?: boolean;
+}
+
+export interface CredentialResponse {
+  id: string;
+  name: string;
+  user?: string;
+  password?: string;
+  access?: string;
+  notes?: string;
+  active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CredentialsListResponse {
+  credentials: CredentialResponse[];
 }

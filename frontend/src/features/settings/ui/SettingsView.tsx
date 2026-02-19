@@ -18,7 +18,8 @@ import {
   X,
   Upload,
   Trash2,
-  Loader2
+  Loader2,
+  KeyRound
 } from 'lucide-react';
 import type { Notification, KpiCategory } from '@/shared/types';
 import type { SettingsViewProps, SettingsSection, UserFormData } from '../types';
@@ -30,6 +31,7 @@ import { useRemoveProfilePhoto } from '../hooks/useRemoveProfilePhoto';
 import { usePresignedURL } from '../hooks/usePresignedURL';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { validatePassword, getPasswordStrengthColor, getPasswordStrengthLabel } from '../utils/passwordValidation';
+import PasswordsView from './PasswordsView';
 
 const SettingsView: React.FC<SettingsViewProps> = ({
     onLogout,
@@ -343,6 +345,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     <Target size={18} /> Metas do Sistema
                 </button>
             )}
+            <button 
+                onClick={() => setActiveSection('passwords')}
+                className={`w-full text-left px-4 py-3 rounded-xl font-medium flex items-center gap-3 transition-colors ${activeSection === 'passwords' ? 'bg-[#1e5144]/10 text-emerald-400 border border-[#1e5144]/20' : 'text-gray-400 hover:bg-[#1a1d24] hover:text-gray-200'}`}
+            >
+                <KeyRound size={18} /> Acessos
+            </button>
             
             <div className="pt-8 mt-8 border-t border-gray-800">
                 <button 
@@ -807,6 +815,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                 </div>
             )}
+
+            {activeSection === 'passwords' && <PasswordsView />}
         </div>
       </div>
     </div>

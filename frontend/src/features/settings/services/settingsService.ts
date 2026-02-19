@@ -1,13 +1,49 @@
 import { apiClient } from '@/infrastructure/api/client';
-import type { ProgramCredential, InternalContact, ChangePasswordRequest, ChangePasswordResponse } from '../types';
+import type {
+  ProgramCredential,
+  InternalContact,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
+  CreateCredentialRequest,
+  UpdateCredentialRequest,
+  CredentialResponse
+} from '../types';
+
+// Backend response type for credentials
+interface CredentialsResponse {
+  credentials: ProgramCredential[];
+}
 
 export const settingsService = {
   /**
    * Get program credentials
    */
-  getCredentials: async (): Promise<ProgramCredential[]> => {
-    const response = await apiClient.get('/api/settings/credentials');
+  getCredentials: async (): Promise<CredentialsResponse> => {
+    const response = await apiClient.get<CredentialsResponse>('/api/settings/credentials');
     return response.data;
+  },
+
+  /**
+   * Create a new credential
+   */
+  createCredential: async (data: CreateCredentialRequest): Promise<CredentialResponse> => {
+    const response = await apiClient.post<CredentialResponse>('/api/settings/credentials', data);
+    return response.data;
+  },
+
+  /**
+   * Update a credential
+   */
+  updateCredential: async (id: string, data: UpdateCredentialRequest): Promise<CredentialResponse> => {
+    const response = await apiClient.put<CredentialResponse>(`/api/settings/credentials/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete a credential
+   */
+  deleteCredential: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/settings/credentials/${id}`);
   },
 
   /**

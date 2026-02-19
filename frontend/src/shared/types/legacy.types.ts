@@ -417,11 +417,15 @@ export interface UpdateSocialBenchmarkingRequest {
 }
 
 export interface ProgramCredential {
+    id: string;
     name: string;
     user?: string;
     password?: string;
     access?: string;
     notes?: string;
+    active?: boolean;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface InternalContact {

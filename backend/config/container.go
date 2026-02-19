@@ -18,6 +18,7 @@ import (
 	offlineactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/offlineaction"
 	repmarketingactionusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/repmarketingaction"
 	showroomitemusecase "github.com/seu-usuario/solis-backend/application/usecase/cooperative/showroomitem"
+	"github.com/seu-usuario/solis-backend/application/usecase/credentials"
 	accountpayableusecase "github.com/seu-usuario/solis-backend/application/usecase/financial/accountpayable"
 	flows "github.com/seu-usuario/solis-backend/application/usecase/flows"
 	"github.com/seu-usuario/solis-backend/application/usecase/gifts"
@@ -74,6 +75,7 @@ type Container struct {
 	RepresentativeMonthlyGoalGateway gateway.RepresentativeMonthlyGoalGateway
 	BrandGateway                     gateway.BrandGateway
 	FlowGateway                      gateway.FlowGateway
+	ProgramCredentialGateway         gateway.ProgramCredentialGateway
 
 	// Seeders
 	UserSeeder                      *seeders.UserSeeder
@@ -237,6 +239,13 @@ type Container struct {
 	MarkAllAsReadNotificationsUseCase  *tasks.MarkAllAsReadNotificationsUseCase
 	DeleteNotificationsByTaskIDUseCase *tasks.DeleteNotificationsByTaskIDUseCase
 
+	// Use Cases - Credentials
+	ListCredentialsUseCase  *credentials.ListCredentialsUseCase
+	GetCredentialUseCase    *credentials.GetCredentialUseCase
+	CreateCredentialUseCase *credentials.CreateCredentialUseCase
+	UpdateCredentialUseCase *credentials.UpdateCredentialUseCase
+	DeleteCredentialUseCase *credentials.DeleteCredentialUseCase
+
 	// Controllers
 	AuthController                      *controller.AuthController
 	KpiController                       *controller.KpiController
@@ -260,6 +269,7 @@ type Container struct {
 	RepresentativeMonthlyGoalController *controller.RepresentativeMonthlyGoalController
 	BrandController                     *controller.BrandController
 	FlowController                      *controller.FlowController
+	ProgramCredentialController         *controller.ProgramCredentialController
 
 	// Middlewares
 	AuthMiddleware *middleware.AuthMiddleware
@@ -338,6 +348,7 @@ func NewContainer(cfg *Config) (*Container, error) {
 	representativeMonthlyGoalGateway := dbgateway.NewRepresentativeMonthlyGoalGateway(db)
 	brandGateway := dbgateway.NewBrandGateway(db)
 	flowGateway := dbgateway.NewFlowGateway(db)
+	programCredentialGateway := dbgateway.NewProgramCredentialGateway(db)
 	log.Println("✅ Gateways initialized")
 
 	// 3.1 Seeders (dependem de gateways e services)
@@ -542,6 +553,13 @@ func NewContainer(cfg *Config) (*Container, error) {
 	listFlowsUseCase := flows.NewListFlows(flowGateway)
 	reorderFlowsUseCase := flows.NewReorderFlows(flowGateway)
 
+	// Credentials Use Cases
+	listCredentialsUseCase := credentials.NewListCredentialsUseCase(programCredentialGateway)
+	getCredentialUseCase := credentials.NewGetCredentialUseCase(programCredentialGateway)
+	createCredentialUseCase := credentials.NewCreateCredentialUseCase(programCredentialGateway)
+	updateCredentialUseCase := credentials.NewUpdateCredentialUseCase(programCredentialGateway)
+	deleteCredentialUseCase := credentials.NewDeleteCredentialUseCase(programCredentialGateway)
+
 	// 5. Controllers (dependem de use cases)
 	authController := controller.NewAuthController(loginUseCase)
 	kpiController := controller.NewKpiController(
@@ -721,6 +739,15 @@ func NewContainer(cfg *Config) (*Container, error) {
 		getGiftTransactionUseCase,
 		updateGiftTransactionUseCase,
 		deleteGiftTransactionUseCase,
+	)
+
+	// Program Credential Controller
+	programCredentialController := controller.NewProgramCredentialController(
+		listCredentialsUseCase,
+		getCredentialUseCase,
+		createCredentialUseCase,
+		updateCredentialUseCase,
+		deleteCredentialUseCase,
 	)
 
 	log.Println("✅ Gift controllers initialized")
@@ -905,6 +932,13 @@ func NewContainer(cfg *Config) (*Container, error) {
 		DeleteBrandUseCase:                     deleteBrandUseCase,
 		BrandController:                        brandController,
 		FlowController:                         flowController,
+		ProgramCredentialController:            programCredentialController,
+		ProgramCredentialGateway:               programCredentialGateway,
+		ListCredentialsUseCase:                 listCredentialsUseCase,
+		GetCredentialUseCase:                   getCredentialUseCase,
+		CreateCredentialUseCase:                createCredentialUseCase,
+		UpdateCredentialUseCase:                updateCredentialUseCase,
+		DeleteCredentialUseCase:                deleteCredentialUseCase,
 		AuthMiddleware:                         authMiddleware,
 		CorsMiddleware:                         corsMiddleware,
 	}, nil
@@ -983,6 +1017,7 @@ func (c *Container) GetControllers() *routes.Controllers {
 		RepresentativeMonthlyGoalController: c.RepresentativeMonthlyGoalController,
 		BrandController:                     c.BrandController,
 		FlowController:                      c.FlowController,
+		ProgramCredentialController:         c.ProgramCredentialController,
 	}
 }
 
