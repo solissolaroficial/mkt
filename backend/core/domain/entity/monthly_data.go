@@ -3,6 +3,7 @@ package entity
 import (
 	"encoding/json"
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/seu-usuario/solis-backend/core/domain/constants"
@@ -245,6 +246,11 @@ func (m *MonthlyData) GetDailyEntries() ([]DailyEntry, error) {
 		})
 	}
 
+	// Sort entries by date to ensure correct order for last_value mode
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Date < entries[j].Date
+	})
+
 	return entries, nil
 }
 
@@ -389,8 +395,16 @@ func (m *MonthlyData) DeleteDailyEntry(date string) error {
 	return m.SetBreakdown(breakdown)
 }
 
-// RecalculateFromDaily recalculates the realized value by summing all daily entries
-func (m *MonthlyData) RecalculateFromDaily() error {
+// RecalculateMode defines calculation mode for daily entries
+type RecalculateMode string
+
+const (
+	RecalculateModeSum       RecalculateMode = "sum"        // Default: sum all values
+	RecalculateModeLastValue RecalculateMode = "last_value" // Use last entry value only
+)
+
+// RecalculateFromDailyMode recalculates realized value based on calculation mode
+func (m *MonthlyData) RecalculateFromDailyMode(mode RecalculateMode) error {
 	dailyEntries, err := m.GetDailyEntries()
 	if err != nil {
 		return err
@@ -402,13 +416,26 @@ func (m *MonthlyData) RecalculateFromDaily() error {
 		return nil
 	}
 
-	// Sum all daily values
-	var total float64
-	for _, entry := range dailyEntries {
-		total += entry.Value
+	var value float64
+	switch mode {
+	case RecalculateModeLastValue:
+		// Use the last daily entry value
+		// Get the most recent entry (entries should be sorted by date)
+		lastEntry := dailyEntries[len(dailyEntries)-1]
+		value = lastEntry.Value
+	default: // RecalculateModeSum
+		// Sum all daily values (existing behavior)
+		for _, entry := range dailyEntries {
+			value += entry.Value
+		}
 	}
 
 	// Update realized value
-	m.SetRealized(total)
+	m.SetRealized(value)
 	return nil
+}
+
+// RecalculateFromDaily recalculates the realized value by summing all daily entries (legacy, default)
+func (m *MonthlyData) RecalculateFromDaily() error {
+	return m.RecalculateFromDailyMode(RecalculateModeSum)
 }

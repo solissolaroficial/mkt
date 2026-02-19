@@ -4,6 +4,14 @@ import type { KpiCategory, MonthlyData, KpiLog, BreakdownItem } from '@/shared/t
 // Re-exportar para uso externo
 export type { KpiCategory, MonthlyData, KpiLog, BreakdownItem };
 
+// Tipos de entradas diárias
+export type {
+  DailyEntry,
+  AddDailyEntryDTO,
+  UpdateDailyEntryDTO,
+  DeleteDailyEntryDTO,
+} from './daily-entry.types';
+
 // DTOs para API
 export interface CreateKpiDTO {
   title: string;

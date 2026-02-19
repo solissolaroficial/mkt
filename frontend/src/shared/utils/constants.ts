@@ -58,5 +58,7 @@ export const QUERY_KEYS = {
     LIST: (filters?: KpiListFilters) => ['kpis', 'list', filters],
     DETAIL: (id: string) => ['kpis', 'detail', id],
     BY_SLUGS: (slugs: string[]) => ['kpis', 'by-slugs', slugs],
+    DAILY_ENTRIES: (kpiId: string, month: string, year: number) =>
+      ['kpis', 'daily-entries', kpiId, month, year],
   },
 } as const;

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,6 +11,27 @@ import (
 	kpiErrors "github.com/seu-usuario/solis-backend/core/domain/errors"
 	"github.com/seu-usuario/solis-backend/core/domain/gateway"
 )
+
+// KPI slugs that require special calculation modes
+const (
+	AuthorityOnInternetSlug = "autoridade_na_internet_da"
+)
+
+// monthToAbbr maps Go's time.Month to Portuguese abbreviations used in the system
+var monthToAbbr = map[time.Month]string{
+	time.January:   "JAN",
+	time.February:  "FEV",
+	time.March:     "MAR",
+	time.April:     "ABR",
+	time.May:       "MAI",
+	time.June:      "JUN",
+	time.July:      "JUL",
+	time.August:    "AGO",
+	time.September: "SET",
+	time.October:   "OUT",
+	time.November:  "NOV",
+	time.December:  "DEZ",
+}
 
 // UpdateMonthlyDataInput represents input data for updating monthly data
 type UpdateMonthlyDataInput struct {
@@ -232,7 +252,7 @@ func (uc *UpdateMonthlyDataUseCase) AddDailyEntry(ctx context.Context, input Add
 	if parsedDate.Year() != monthlyData.Year() {
 		return nil, errors.New("date year does not match monthly data year")
 	}
-	expectedMonth := strings.ToUpper(parsedDate.Month().String()[:3])
+	expectedMonth := monthToAbbr[parsedDate.Month()]
 	if expectedMonth != monthlyData.Month() {
 		return nil, fmt.Errorf("date month %s does not match monthly data month %s", expectedMonth, monthlyData.Month())
 	}
@@ -242,17 +262,24 @@ func (uc *UpdateMonthlyDataUseCase) AddDailyEntry(ctx context.Context, input Add
 		return nil, err
 	}
 
-	// 5. Recalcular realized value from daily entries
-	if err := monthlyData.RecalculateFromDaily(); err != nil {
+	// 5. Determinar modo de cálculo baseado no KPI
+	calcMode := entity.RecalculateModeSum
+	kpi, err := uc.kpiGateway.FindByID(ctx, kpiID)
+	if err == nil && kpi != nil && kpi.Slug() == AuthorityOnInternetSlug {
+		calcMode = entity.RecalculateModeLastValue
+	}
+
+	// 6. Recalcular realized value from daily entries
+	if err := monthlyData.RecalculateFromDailyMode(calcMode); err != nil {
 		return nil, err
 	}
 
-	// 6. Salvar o MonthlyData
+	// 7. Salvar o MonthlyData
 	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
 		return nil, err
 	}
 
-	// 7. Adicionar log
+	// 8. Adicionar log
 	if input.User != "" && monthlyData.Realized() != nil {
 		logEntry := entity.KpiLogEntry{
 			ID:        uuid.New().String(),
@@ -308,17 +335,24 @@ func (uc *UpdateMonthlyDataUseCase) UpdateDailyEntry(ctx context.Context, input 
 		return nil, err
 	}
 
-	// 5. Recalcular realized value
-	if err := monthlyData.RecalculateFromDaily(); err != nil {
+	// 5. Determinar modo de cálculo baseado no KPI
+	calcMode := entity.RecalculateModeSum
+	kpi, err := uc.kpiGateway.FindByID(ctx, kpiID)
+	if err == nil && kpi != nil && kpi.Slug() == AuthorityOnInternetSlug {
+		calcMode = entity.RecalculateModeLastValue
+	}
+
+	// 6. Recalcular realized value
+	if err := monthlyData.RecalculateFromDailyMode(calcMode); err != nil {
 		return nil, err
 	}
 
-	// 6. Salvar o MonthlyData
+	// 7. Salvar o MonthlyData
 	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
 		return nil, err
 	}
 
-	// 7. Adicionar log
+	// 8. Adicionar log
 	if input.User != "" && monthlyData.Realized() != nil {
 		logEntry := entity.KpiLogEntry{
 			ID:        uuid.New().String(),
@@ -369,17 +403,24 @@ func (uc *UpdateMonthlyDataUseCase) DeleteDailyEntry(ctx context.Context, input 
 		return nil, err
 	}
 
-	// 5. Recalcular realized value
-	if err := monthlyData.RecalculateFromDaily(); err != nil {
+	// 5. Determinar modo de cálculo baseado no KPI
+	calcMode := entity.RecalculateModeSum
+	kpi, err := uc.kpiGateway.FindByID(ctx, kpiID)
+	if err == nil && kpi != nil && kpi.Slug() == AuthorityOnInternetSlug {
+		calcMode = entity.RecalculateModeLastValue
+	}
+
+	// 6. Recalcular realized value
+	if err := monthlyData.RecalculateFromDailyMode(calcMode); err != nil {
 		return nil, err
 	}
 
-	// 6. Salvar o MonthlyData
+	// 7. Salvar o MonthlyData
 	if err := uc.monthlyDataGateway.Save(ctx, monthlyData); err != nil {
 		return nil, err
 	}
 
-	// 7. Adicionar log
+	// 8. Adicionar log
 	if input.User != "" && monthlyData.Realized() != nil {
 		logEntry := entity.KpiLogEntry{
 			ID:        uuid.New().String(),

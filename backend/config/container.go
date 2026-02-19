@@ -386,7 +386,12 @@ func NewContainer(cfg *Config) (*Container, error) {
 		userGateway,
 		taskGateway,
 	)
-	updateCommentUseCase := tasks.NewUpdateCommentUseCase(commentGateway)
+	updateCommentUseCase := tasks.NewUpdateCommentUseCase(
+		commentGateway,
+		notificationGateway,
+		userGateway,
+		taskGateway,
+	)
 	deleteCommentUseCase := tasks.NewDeleteCommentUseCase(commentGateway)
 	getCommentUseCase := tasks.NewGetCommentUseCase(commentGateway)
 	listCommentsUseCase := tasks.NewListCommentsUseCase(commentGateway)

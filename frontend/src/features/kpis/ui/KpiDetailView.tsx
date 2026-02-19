@@ -29,11 +29,41 @@ interface DailyChartDataPoint {
 }
 
 type ChartData = MonthlyChartDataPoint[] | DailyChartDataPoint[];
-import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2, Pencil } from 'lucide-react';
+
+import { ArrowLeft, Plus, History, X, AlertCircle, ChevronDown, ChevronRight, Sparkles, Calendar, Calculator, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { MONTHS } from '@/shared/utils/legacy.constants';
 import { useUpdateMonthlyData } from '../hooks/useKpiMutations';
 import { useDeleteMonthlyData } from '../hooks/useKpis';
 import { useRepresentatives } from '@/features/pdv/hooks';
+import { useDailyEntries } from '../hooks/useDailyEntries';
+import { useAddDailyEntry, useUpdateDailyEntry, useDeleteDailyEntry } from '../hooks/useDailyEntryMutations';
+import type { DailyEntry } from '../types';
+import { useToast } from '@/shared/hooks/useToast';
+
+// KPI slugs that require special handling
+const OPP_KPI_SLUG = 'taxa_de_oportunidades';
+const AUTHORITY_KPI_SLUG = 'autoridade_na_internet_da';
+
+// Month name mapping for validation
+const MONTH_NAME_TO_INDEX: Record<string, number> = {
+  'Janeiro': 0, 'Fevereiro': 1, 'Março': 2, 'Abril': 3,
+  'Maio': 4, 'Junho': 5, 'Julho': 6, 'Agosto': 7,
+  'Setembro': 8, 'Outubro': 9, 'Novembro': 10, 'Dezembro': 11
+};
+
+const getMonthFullName = (abbr: string): string => {
+  const index = MONTHS.indexOf(abbr);
+  const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  return index !== -1 ? months[index] : '';
+};
+
+const isDateInMonth = (dateString: string, expectedMonthName: string): boolean => {
+  const date = new Date(dateString + 'T00:00:00');
+  const expectedMonthIndex = MONTH_NAME_TO_INDEX[expectedMonthName];
+  if (expectedMonthIndex === undefined) return false;
+  return date.getMonth() === expectedMonthIndex;
+};
+
 interface KpiDetailViewProps {
   kpi: KpiCategory;
   allKpis?: KpiCategory[]; // Access to other KPIs for cross-referencing
@@ -47,6 +77,7 @@ const KpiDetailView: React.FC<KpiDetailViewProps> = ({ kpi, allKpis, selectedMon
   const [isLaunchOpen, setIsLaunchOpen] = useState(false);
   const [isEnrichOpen, setIsEnrichOpen] = useState(false); // New state for Enrichment Modal
   const { data: representatives = [], isLoading: isLoadingReps } = useRepresentatives();
+  const toast = useToast();
 
   // Launch State
   const [launchDate, setLaunchDate] = useState(''); // Specific Date YYYY-MM-DD
@@ -73,14 +104,42 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
  // Delete confirmation state
  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; month: string } | null>(null);
 
- // Edit modal state
- const [isEditOpen, setIsEditOpen] = useState(false);
- const [editData, setEditData] = useState<MonthlyData | null>(null);
- const [editRealized, setEditRealized] = useState('');
- const [editMeta, setEditMeta] = useState('');
- const [editContext, setEditContext] = useState('');
+  // Edit modal state
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editData, setEditData] = useState<MonthlyData | null>(null);
+  const [editRealized, setEditRealized] = useState('');
+  const [editMeta, setEditMeta] = useState('');
+  const [editContext, setEditContext] = useState('');
+ 
+  const currentYear = new Date().getFullYear();
 
- const currentYear = new Date().getFullYear();
+  // Edit modal tabs state
+  const [editTab, setEditTab] = useState<'monthly' | 'daily'>('monthly');
+
+  // Daily entries state
+  const { data: dailyEntries = [], isLoading: isLoadingDaily, refetch: refetchDailyEntries } = useDailyEntries(
+    kpi.id,
+    editData?.month || '',
+    currentYear,
+    isEditOpen && editTab === 'daily' && !!editData?.month
+  );
+
+  // Daily entry mutations
+  const { mutate: addDailyEntry, isPending: isAddingDaily } = useAddDailyEntry();
+  const { mutate: updateDailyEntry, isPending: isUpdatingDaily } = useUpdateDailyEntry();
+  const { mutate: deleteDailyEntry, isPending: isDeletingDaily } = useDeleteDailyEntry();
+
+  // Daily entry edit/delete state
+  const [editingDailyEntry, setEditingDailyEntry] = useState<DailyEntry | null>(null);
+  const [deletingDailyEntry, setDeletingDailyEntry] = useState<DailyEntry | null>(null);
+  const [dailyEntryValue, setDailyEntryValue] = useState('');
+  const [dailyEntryContext, setDailyEntryContext] = useState('');
+
+  // Add daily entry form state
+  const [showAddDailyForm, setShowAddDailyForm] = useState(false);
+  const [newDailyDate, setNewDailyDate] = useState('');
+  const [newDailyValue, setNewDailyValue] = useState('');
+  const [newDailyContext, setNewDailyContext] = useState('');
 
  // Sort monthly data chronologically
  const sortedData = React.useMemo(() => {
@@ -138,7 +197,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
   // Determine input configuration based on KPI slug
   const isRepKpi = ['treinamentos_realizados_reps', 'acoes_de_marketing_reps'].includes(kpi.slug);
   const isChannelKpi = ['roas_retorno_em_ads'].includes(kpi.slug);
-  const isOppKpi = kpi.slug === 'taxa_de_oportunidades';
+  const isOppKpi = kpi.slug === OPP_KPI_SLUG;
   const isAdSpend = kpi.slug === 'investimento_em_ads';
   const isCplKpi = kpi.slug === 'custo_por_lead_cpl';
   
@@ -216,25 +275,24 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
           }
 
       } else {
-          // Standard Update
-          const monthData = kpi.data.find(d => d.month === launchMonth);
-          if (monthData) {
-            updateMonthlyData({
-              kpiId: kpi.id,
-              data: {
-                year: currentYear,
-                realized: Number(launchValue),
-                month: launchMonth,
-              }
-            }, {
-              onSuccess: () => {
-                setIsLaunchOpen(false);
-                // Limpar form
-                setLaunchValue('');
-                setLaunchContext('');
-              }
-            });
-          }
+          // Standard KPIs - Use addDailyEntry instead of updateMonthlyData
+          addDailyEntry({
+            kpiId: kpi.id,
+            data: {
+              year: currentYear,
+              month: launchMonth,
+              date: launchDate,
+              value: Number(launchValue),
+              context: launchContext || '',
+            }
+          }, {
+            onSuccess: () => {
+              setIsLaunchOpen(false);
+              // Limpar form
+              setLaunchValue('');
+              setLaunchContext('');
+            }
+          });
       }
   };
 
@@ -340,9 +398,171 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
         setEditRealized('');
         setEditMeta('');
         setEditContext('');
+        setEditTab('monthly');
       }
     });
   };
+
+  // Daily entry handlers
+  const handleAddDailyEntry = () => {
+    if (!editData || !newDailyDate || !newDailyValue) return;
+
+    // Validate date is in the correct month
+    const monthFullName = getMonthFullName(editData.month);
+    if (!isDateInMonth(newDailyDate, monthFullName)) {
+      toast.error(`Data deve estar no mês de ${monthFullName}`);
+      return;
+    }
+
+    addDailyEntry({
+      kpiId: kpi.id,
+      data: {
+        year: currentYear,
+        month: editData.month,
+        date: newDailyDate,
+        value: Number(newDailyValue),
+        context: newDailyContext || '',
+      }
+    }, {
+      onSuccess: () => {
+        setShowAddDailyForm(false);
+        setNewDailyDate('');
+        setNewDailyValue('');
+        setNewDailyContext('');
+        refetchDailyEntries();
+      },
+      onSettled: () => {
+        // Garantir cleanup mesmo em caso de erro
+        setShowAddDailyForm(false);
+      }
+    });
+  };
+
+  const handleUpdateDailyEntry = () => {
+    if (!editData || !editingDailyEntry || !dailyEntryValue) return;
+
+    // Validate date is in the correct month
+    const monthFullName = getMonthFullName(editData.month);
+    if (!isDateInMonth(editingDailyEntry.date, monthFullName)) {
+      toast.error(`Data deve estar no mês de ${monthFullName}`);
+      return;
+    }
+
+    updateDailyEntry({
+      kpiId: kpi.id,
+      data: {
+        year: currentYear,
+        month: editData.month,
+        date: editingDailyEntry.date,
+        value: Number(dailyEntryValue),
+        context: dailyEntryContext || '',
+      }
+    }, {
+      onSuccess: () => {
+        setEditingDailyEntry(null);
+        setDailyEntryValue('');
+        setDailyEntryContext('');
+        refetchDailyEntries();
+      },
+      onSettled: () => {
+        // Garantir cleanup mesmo em caso de erro
+        setEditingDailyEntry(null);
+        setDailyEntryValue('');
+        setDailyEntryContext('');
+      }
+    });
+  };
+
+  const handleDeleteDailyEntry = () => {
+    if (!editData || !deletingDailyEntry) return;
+
+    deleteDailyEntry({
+      kpiId: kpi.id,
+      data: {
+        year: currentYear,
+        month: editData.month,
+        date: deletingDailyEntry.date,
+      }
+    }, {
+      onSuccess: () => {
+        setDeletingDailyEntry(null);
+        refetchDailyEntries();
+      },
+      onSettled: () => {
+        // Garantir cleanup mesmo em caso de erro
+        setDeletingDailyEntry(null);
+      }
+    });
+  };
+
+  // Cleanup dos estados de entrada diária ao fechar modal ou trocar de aba
+  const cleanupDailyEntryState = () => {
+    setEditingDailyEntry(null);
+    setDeletingDailyEntry(null);
+    setDailyEntryValue('');
+    setDailyEntryContext('');
+    setShowAddDailyForm(false);
+    setNewDailyDate('');
+    setNewDailyValue('');
+    setNewDailyContext('');
+  };
+
+  // Cleanup de todos os estados do modal de edição
+  const closeEditModal = () => {
+    cleanupDailyEntryState();
+    setIsEditOpen(false);
+    setEditData(null);
+    setEditRealized('');
+    setEditMeta('');
+    setEditContext('');
+    setEditTab('monthly');
+  };
+
+  // Reset daily entry form when opening edit modal
+  const openEditModal = (row: MonthlyData) => {
+    setEditData(row);
+    setEditRealized(row.realized?.toString() || '');
+    setEditMeta(row.meta?.toString() || '');
+    setEditContext('');
+    setEditTab('monthly');
+    setShowAddDailyForm(false);
+    // Set default date to first day of the selected month
+    const monthIndex = MONTHS.indexOf(row.month);
+    if (monthIndex !== -1) {
+      const defaultDate = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+      setNewDailyDate(defaultDate);
+    } else {
+      setNewDailyDate('');
+    }
+    setNewDailyValue('');
+    setNewDailyContext('');
+    setIsEditOpen(true);
+  };
+
+  // ESC key handler for modals
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (editingDailyEntry) {
+          setEditingDailyEntry(null);
+          setDailyEntryValue('');
+          setDailyEntryContext('');
+        } else if (deletingDailyEntry) {
+          setDeletingDailyEntry(null);
+        } else if (isEditOpen) {
+          closeEditModal();
+        }
+      }
+    };
+
+    if (isEditOpen || editingDailyEntry || deletingDailyEntry) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isEditOpen, editingDailyEntry, deletingDailyEntry]);
 
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
@@ -415,8 +635,17 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
       : sortedData;
 
   // Get existing channels for dropdown
+  // Note: breakdown can be an array (OPP KPIs) or object with daily property
   const existingChannels = Array.from(new Set(
-      kpi.data.flatMap(d => d.breakdown?.map(b => b.label) || [])
+      kpi.data.flatMap(d => {
+        if (!d.breakdown) return [];
+        // Check if breakdown is an array (OPP style)
+        if (Array.isArray(d.breakdown)) {
+          return d.breakdown.map(b => b.label);
+        }
+        // If it's an object with daily property, return empty (no channels)
+        return [];
+      })
   ));
 
   // --- PREPARE DATA FOR ENRICHMENT FORM ---
@@ -604,12 +833,12 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                         {sortedData.map((row, idx) => (
                             <React.Fragment key={idx}>
                                 <tr 
-                                    className={`hover:bg-[#20232b]/50 transition-colors ${row.breakdown ? 'cursor-pointer' : ''}`}
-                                    onClick={() => row.breakdown && toggleRow(row.month)}
+                                    className={`hover:bg-[#20232b]/50 transition-colors ${row.breakdown && Array.isArray(row.breakdown) ? 'cursor-pointer' : ''}`}
+                                    onClick={() => row.breakdown && Array.isArray(row.breakdown) && toggleRow(row.month)}
                                 >
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            {row.breakdown && (
+                                            {row.breakdown && Array.isArray(row.breakdown) && (
                                                 <span className="text-gray-500 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleRow(row.month); }}>
                                                     {expandedRows[row.month] ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                 </span>
@@ -618,11 +847,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setEditData(row);
-                                                    setEditRealized(row.realized?.toString() || '');
-                                                    setEditMeta(row.meta?.toString() || '');
-                                                    setEditContext('');
-                                                    setIsEditOpen(true);
+                                                    openEditModal(row);
                                                 }}
                                                 className="text-gray-500 hover:text-emerald-400 transition-colors"
                                                 title="Editar dados mensais"
@@ -660,7 +885,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                                 </tr>
                                 
                                 {/* Detailed Breakdown Row */}
-                                {row.breakdown && expandedRows[row.month] && (
+                                {row.breakdown && expandedRows[row.month] && Array.isArray(row.breakdown) && (
                                     <tr className="bg-[#15171c] animate-in slide-in-from-top-2">
                                         <td colSpan={5} className="px-8 py-4 border-l-2 border-[#1e5144]">
                                             <div className="space-y-4">
@@ -1119,9 +1344,9 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
 
       {/* --- EDIT MODAL --- */}
       {isEditOpen && editData && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsEditOpen(false)}>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={closeEditModal}>
           <div
-            className="bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden"
+            className="bg-[#1a1d24] w-full max-w-2xl rounded-2xl shadow-2xl border border-gray-700 overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -1129,25 +1354,341 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
               <div>
                 <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
                   <Pencil size={18} className="text-emerald-400" />
-                  Editar Dados Mensais
+                  Editar Dados
                 </h3>
                 <p className="text-sm text-gray-500">
                   Mês: <span className="font-bold text-white">{editData.month}</span>
                 </p>
               </div>
-              <button onClick={() => setIsEditOpen(false)} className="text-gray-500 hover:text-white">
+              <button onClick={closeEditModal} className="text-gray-500 hover:text-white">
                 <X size={20} />
               </button>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleEditSave} className="p-6 space-y-4">
+            {/* Tabs */}
+            <div className="flex gap-4 border-b border-gray-800 px-6 pt-4">
+              <button
+                onClick={() => {
+                  cleanupDailyEntryState();
+                  setEditTab('monthly');
+                }}
+                className={`pb-3 px-4 font-medium text-sm transition-colors relative ${
+                  editTab === 'monthly' 
+                    ? 'text-emerald-400' 
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Dados Mensais
+                {editTab === 'monthly' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  cleanupDailyEntryState();
+                  setEditTab('daily');
+                }}
+                className={`pb-3 px-4 font-medium text-sm transition-colors relative ${
+                  editTab === 'daily' 
+                    ? 'text-emerald-400' 
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Entradas Diárias
+                {editTab === 'daily' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
+                )}
+              </button>
+            </div>
 
-              {/* Campo: Realized */}
+            {/* Tab Content */}
+            <div className="p-6">
+              {/* Monthly Data Tab */}
+              {editTab === 'monthly' && (
+                <form onSubmit={handleEditSave} className="space-y-4">
+                  {/* Campo: Realized */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                      Valor Realizado
+                    </label>
+                    <div className="relative">
+                      {kpi.unit === 'currency' && (
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
+                      )}
+                      <input
+                        type="number"
+                        step={kpi.unit === 'percent' ? "0.01" : "1"}
+                        value={editRealized}
+                        onChange={(e) => setEditRealized(e.target.value)}
+                        placeholder={editData.realized?.toString() || '0'}
+                        className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Valor atual: {editData.realized?.toLocaleString('pt-BR', {
+                        style: kpi.unit === 'currency' ? 'currency' : 'decimal',
+                        currency: 'BRL'
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Campo: Meta */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                      Meta do Mês
+                    </label>
+                    <div className="relative">
+                      {kpi.unit === 'currency' && (
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
+                      )}
+                      <input
+                        type="number"
+                        step={kpi.unit === 'percent' ? "0.01" : "1"}
+                        value={editMeta}
+                        onChange={(e) => setEditMeta(e.target.value)}
+                        placeholder={editData.meta?.toString() || '0'}
+                        className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Meta atual: {editData.meta?.toLocaleString('pt-BR', {
+                        style: kpi.unit === 'currency' ? 'currency' : 'decimal',
+                        currency: 'BRL'
+                      })}
+                    </p>
+                  </div>
+
+                  {/* Campo: Contexto (opcional) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                      Contexto da Edição <span className="text-gray-600 font-normal">(opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editContext}
+                      onChange={(e) => setEditContext(e.target.value)}
+                      placeholder="Ex: Correção de valor lançado errado..."
+                      className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  {/* Aviso de Auditoria */}
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p className="text-xs text-amber-400 flex items-start gap-2">
+                      <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                      <span>
+                        Esta alteração será registrada no log de auditoria com seu nome e data/hora.
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Botões */}
+                  <div className="pt-4 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={closeEditModal}
+                      className="px-4 py-2 text-gray-400 hover:bg-gray-800 rounded-lg text-sm font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPending || (!editRealized && !editMeta)}
+                      className="px-4 py-2 bg-[#1e5144] text-white hover:bg-[#163c32] rounded-lg text-sm font-medium shadow-lg disabled:opacity-50"
+                    >
+                      {isPending ? 'Salvando...' : 'Salvar Alterações'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Daily Entries Tab */}
+              {editTab === 'daily' && (
+                <div className="space-y-4">
+                  {/* Add Entry Button */}
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-gray-400">
+                      Gerencie as entradas diárias deste mês.
+                    </p>
+                    <button
+                      onClick={() => setShowAddDailyForm(!showAddDailyForm)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded-lg transition-colors"
+                    >
+                      <Plus size={16} />
+                      Adicionar Entrada
+                    </button>
+                  </div>
+
+                  {/* Loading State */}
+                  {isLoadingDaily && (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+                      <span className="ml-2 text-gray-400">Carregando entradas...</span>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!isLoadingDaily && dailyEntries.length === 0 && !showAddDailyForm && (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar size={32} className="mx-auto mb-2 opacity-50" />
+                      <p>Nenhuma entrada diária registrada para este mês.</p>
+                      <p className="text-sm mt-1">Clique em "Adicionar Entrada" para começar.</p>
+                    </div>
+                  )}
+
+                  {/* Daily Entries Table */}
+                  {(dailyEntries.length > 0 || showAddDailyForm) && !isLoadingDaily && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-gray-400 border-b border-gray-800">
+                            <th className="text-left py-2 px-3 font-medium">Data</th>
+                            <th className="text-left py-2 px-3 font-medium">Valor</th>
+                            <th className="text-left py-2 px-3 font-medium">Contexto</th>
+                            <th className="text-right py-2 px-3 font-medium">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {/* Add New Entry Form Row */}
+                          {showAddDailyForm && (
+                            <tr className="bg-emerald-400/5">
+                              <td className="py-2 px-3">
+                                <input
+                                  type="date"
+                                  value={newDailyDate}
+                                  onChange={(e) => setNewDailyDate(e.target.value)}
+                                  className="bg-[#0f1115] border border-gray-700 rounded px-2 py-1 text-gray-200 text-sm w-full"
+                                />
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="relative">
+                                  {kpi.unit === 'currency' && (
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">R$</span>
+                                  )}
+                                  <input
+                                    type="number"
+                                    step={kpi.unit === 'percent' ? "0.01" : "1"}
+                                    value={newDailyValue}
+                                    onChange={(e) => setNewDailyValue(e.target.value)}
+                                    placeholder="0"
+                                    className={`bg-[#0f1115] border border-gray-700 rounded px-2 py-1 text-gray-200 text-sm w-full ${kpi.unit === 'currency' ? 'pl-8' : ''}`}
+                                  />
+                                </div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <input
+                                  type="text"
+                                  value={newDailyContext}
+                                  onChange={(e) => setNewDailyContext(e.target.value)}
+                                  placeholder="Contexto..."
+                                  className="bg-[#0f1115] border border-gray-700 rounded px-2 py-1 text-gray-200 text-sm w-full"
+                                />
+                              </td>
+                              <td className="py-2 px-3 text-right">
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setShowAddDailyForm(false);
+                                      setNewDailyDate('');
+                                      setNewDailyValue('');
+                                      setNewDailyContext('');
+                                    }}
+                                    className="px-2 py-1 text-gray-400 hover:text-white text-xs"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                  <button
+                                    onClick={handleAddDailyEntry}
+                                    disabled={isAddingDaily || !newDailyDate || !newDailyValue}
+                                    className="px-3 py-1 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1"
+                                  >
+                                    {isAddingDaily ? (
+                                      <>
+                                        <Loader2 size={12} className="animate-spin" />
+                                        Salvando...
+                                      </>
+                                    ) : (
+                                      'Salvar'
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+
+                          {/* Existing Entries */}
+                          {dailyEntries.map((entry) => (
+                            <tr key={entry.date} className="hover:bg-[#20232b]/50">
+                              <td className="py-2 px-3 text-gray-200">
+                                {new Date(entry.date).toLocaleDateString('pt-BR')}
+                              </td>
+                              <td className="py-2 px-3 text-white font-medium">
+                                {entry.value.toLocaleString('pt-BR', {
+                                  style: kpi.unit === 'currency' ? 'currency' : 'decimal',
+                                  currency: 'BRL'
+                                })}
+                              </td>
+                              <td className="py-2 px-3 text-gray-400">
+                                {entry.context || '-'}
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingDailyEntry(entry);
+                                      setDailyEntryValue(entry.value.toString());
+                                      setDailyEntryContext(entry.context || '');
+                                    }}
+                                    className="text-gray-500 hover:text-emerald-400 transition-colors"
+                                    title="Editar entrada"
+                                  >
+                                    <Pencil size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingDailyEntry(entry)}
+                                    className="text-gray-500 hover:text-rose-400 transition-colors"
+                                    title="Remover entrada"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Info about recalculation */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                    <p className="text-xs text-blue-400 flex items-start gap-2">
+                      <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                      <span>
+                        O valor realizado mensal será recalculado automaticamente com base nas entradas diárias.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT DAILY ENTRY MODAL --- */}
+      {editingDailyEntry && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <h3 className="text-lg font-bold text-gray-100">Editar Entrada Diária</h3>
+              <p className="text-sm text-gray-400 mt-1">
+                Data: <span className="font-bold text-white">{new Date(editingDailyEntry.date).toLocaleDateString('pt-BR')}</span>
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Valor Realizado
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Valor</label>
                 <div className="relative">
                   {kpi.unit === 'currency' && (
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
@@ -1155,88 +1696,76 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
                   <input
                     type="number"
                     step={kpi.unit === 'percent' ? "0.01" : "1"}
-                    value={editRealized}
-                    onChange={(e) => setEditRealized(e.target.value)}
-                    placeholder={editData.realized?.toString() || '0'}
+                    value={dailyEntryValue}
+                    onChange={(e) => setDailyEntryValue(e.target.value)}
                     className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Valor atual: {editData.realized?.toLocaleString('pt-BR', {
-                    style: kpi.unit === 'currency' ? 'currency' : 'decimal',
-                    currency: 'BRL'
-                  })}
-                </p>
               </div>
-
-              {/* Campo: Meta */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Meta do Mês
-                </label>
-                <div className="relative">
-                  {kpi.unit === 'currency' && (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">R$</span>
-                  )}
-                  <input
-                    type="number"
-                    step={kpi.unit === 'percent' ? "0.01" : "1"}
-                    value={editMeta}
-                    onChange={(e) => setEditMeta(e.target.value)}
-                    placeholder={editData.meta?.toString() || '0'}
-                    className={`w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none ${kpi.unit === 'currency' ? 'pl-10' : ''}`}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Meta atual: {editData.meta?.toLocaleString('pt-BR', {
-                    style: kpi.unit === 'currency' ? 'currency' : 'decimal',
-                    currency: 'BRL'
-                  })}
-                </p>
-              </div>
-
-              {/* Campo: Contexto (opcional) */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Contexto da Edição <span className="text-gray-600 font-normal">(opcional)</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Contexto</label>
                 <input
                   type="text"
-                  value={editContext}
-                  onChange={(e) => setEditContext(e.target.value)}
-                  placeholder="Ex: Correção de valor lançado errado..."
+                  value={dailyEntryContext}
+                  onChange={(e) => setDailyEntryContext(e.target.value)}
+                  placeholder="Contexto opcional..."
                   className="w-full bg-[#0f1115] border border-gray-700 rounded-lg px-3 py-2 text-gray-200 focus:ring-1 focus:ring-[#1e5144] focus:border-transparent outline-none"
                 />
               </div>
-
-              {/* Aviso de Auditoria */}
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-                <p className="text-xs text-amber-400 flex items-start gap-2">
-                  <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                  <span>
-                    Esta alteração será registrada no log de auditoria com seu nome e data/hora.
-                  </span>
-                </p>
-              </div>
-
-              {/* Botões */}
-              <div className="pt-4 flex justify-end gap-3">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
-                  type="button"
-                  onClick={() => setIsEditOpen(false)}
+                  onClick={() => {
+                    setEditingDailyEntry(null);
+                    setDailyEntryValue('');
+                    setDailyEntryContext('');
+                  }}
                   className="px-4 py-2 text-gray-400 hover:bg-gray-800 rounded-lg text-sm font-medium"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="submit"
-                  disabled={isPending || (!editRealized && !editMeta)}
-                  className="px-4 py-2 bg-[#1e5144] text-white hover:bg-[#163c32] rounded-lg text-sm font-medium shadow-lg disabled:opacity-50"
+                  onClick={handleUpdateDailyEntry}
+                  disabled={isUpdatingDaily || !dailyEntryValue}
+                  className="px-4 py-2 bg-[#1e5144] text-white hover:bg-[#163c32] rounded-lg text-sm font-medium shadow-lg disabled:opacity-50 flex items-center gap-2"
                 >
-                  {isPending ? 'Salvando...' : 'Salvar Alterações'}
+                  {isUpdatingDaily && <Loader2 size={14} className="animate-spin" />}
+                  {isUpdatingDaily ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
-            </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DELETE DAILY ENTRY CONFIRMATION MODAL --- */}
+      {deletingDailyEntry && (
+        <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <h3 className="text-lg font-bold text-gray-100">Confirmar Remoção</h3>
+              <p className="text-sm text-gray-400 mt-2">
+                Deseja remover a entrada de <span className="font-bold text-white">{new Date(deletingDailyEntry.date).toLocaleDateString('pt-BR')}</span>?
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                Valor: <span className="font-bold text-white">{deletingDailyEntry.value.toLocaleString('pt-BR', { style: kpi.unit === 'currency' ? 'currency' : 'decimal', currency: 'BRL' })}</span>
+              </p>
+            </div>
+            <div className="p-6 flex justify-end gap-3">
+              <button
+                onClick={() => setDeletingDailyEntry(null)}
+                className="px-4 py-2 text-gray-400 hover:bg-gray-800 rounded-lg text-sm font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteDailyEntry}
+                disabled={isDeletingDaily}
+                className="px-4 py-2 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-sm font-medium shadow-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeletingDaily && <Loader2 size={14} className="animate-spin" />}
+                {isDeletingDaily ? 'Removendo...' : 'Remover'}
+              </button>
+            </div>
           </div>
         </div>
       )}

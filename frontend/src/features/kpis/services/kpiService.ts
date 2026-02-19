@@ -5,7 +5,11 @@ import type {
   CreateKpiDTO,
   UpdateKpiDTO,
   UpdateMonthlyDataDTO,
-  KpiListResponse
+  KpiListResponse,
+  DailyEntry,
+  AddDailyEntryDTO,
+  UpdateDailyEntryDTO,
+  DeleteDailyEntryDTO,
 } from '../types';
 
 export const kpiService = {
@@ -104,5 +108,42 @@ export const kpiService = {
       { slugs }
     );
     return response.data.data;
+  },
+
+  /**
+   * Métodos para entradas diárias
+   */
+  dailyEntry: {
+    /**
+     * Lista entradas diárias de um KPI para um mês/ano específico
+     */
+    get: async (kpiId: string, month: string, year: number): Promise<DailyEntry[]> => {
+      const params = new URLSearchParams({ month, year: year.toString() });
+      const response = await apiClient.get<DailyEntry[]>(
+        `${ENDPOINTS.KPIS.GET(kpiId)}/daily-entries?${params.toString()}`
+      );
+      return response.data;
+    },
+
+    /**
+     * Adiciona uma entrada diária
+     */
+    add: async (kpiId: string, data: AddDailyEntryDTO): Promise<void> => {
+      await apiClient.post(`${ENDPOINTS.KPIS.GET(kpiId)}/daily-entry`, data);
+    },
+
+    /**
+     * Atualiza uma entrada diária
+     */
+    update: async (kpiId: string, data: UpdateDailyEntryDTO): Promise<void> => {
+      await apiClient.put(`${ENDPOINTS.KPIS.GET(kpiId)}/daily-entry`, data);
+    },
+
+    /**
+     * Remove uma entrada diária
+     */
+    delete: async (kpiId: string, data: DeleteDailyEntryDTO): Promise<void> => {
+      await apiClient.delete(`${ENDPOINTS.KPIS.GET(kpiId)}/daily-entry`, { data });
+    },
   },
 };
