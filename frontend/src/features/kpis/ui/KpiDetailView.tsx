@@ -159,7 +159,11 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
               // Construct a date in the selected month
               // If selected month is current month, use today, else 1st of month
               if (monthIdx === now.getMonth()) {
-                  setLaunchDate(now.toISOString().split('T')[0]);
+                  // Format date in local time (YYYY-MM-DD)
+                  const year = now.getFullYear();
+                  const month = String(now.getMonth() + 1).padStart(2, '0');
+                  const day = String(now.getDate()).padStart(2, '0');
+                  setLaunchDate(`${year}-${month}-${day}`);
               } else {
                   const dateStr = `${currentYear}-${String(monthIdx + 1).padStart(2, '0')}-01`;
                   setLaunchDate(dateStr);
@@ -167,7 +171,11 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
               setLaunchMonth(selectedMonth);
           }
       } else {
-          setLaunchDate(now.toISOString().split('T')[0]);
+          // Format date in local time (YYYY-MM-DD)
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          setLaunchDate(`${year}-${month}-${day}`);
           setLaunchMonth(MONTHS[now.getMonth()]);
       }
   }, [selectedMonth]);
