@@ -575,58 +575,38 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
   
-  // Get all logs from all MonthlyData (logs are stored at MonthlyData level)
-  const allLogs = React.useMemo(() => {
-    return sortedData.flatMap(monthData => monthData.logs || []);
-  }, [sortedData]);
-  
-  const getDailyChartData = (currentRealized: number, currentMeta: number | null, monthStr: string) => {
+  const getDailyChartData = (dailyEntries: DailyEntry[], currentRealized: number, currentMeta: number | null, monthStr: string) => {
       const monthIdx = MONTHS.indexOf(monthStr);
       const year = currentYear;
       const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-      
-      // Filter logs for this month
-      const relevantLogs = allLogs.filter(l => {
-          if (!l.date) return false;
-          const d = new Date(l.date);
-          // Check if log belongs to this month/year
-          return l.month === monthStr;
-      });
 
       const dailyData = [];
       let accumulatedRealized = 0;
-      const hasLogs = relevantLogs.length > 0;
-      
-      // Calculate linear step for fallback (no logs)
-      const linearStep = currentRealized / daysInMonth;
+      const hasDailyEntries = dailyEntries.length > 0;
+
+      // Create a map to sum multiple entries on the same day
+      const dayValues = new Map<number, number>();
+      dailyEntries.forEach((entry: DailyEntry) => {
+          const day = new Date(entry.date).getDate();
+          dayValues.set(day, (dayValues.get(day) || 0) + entry.value);
+      });
 
       for (let i = 1; i <= daysInMonth; i++) {
           let dayValue = 0;
-          
-          if (hasLogs) {
-              const dayLogs = relevantLogs.filter(l => new Date(l.date).getDate() === i);
-              dayLogs.forEach(l => {
-                  // Only count positive increments for daily bar chart to show "production"
-                  // Use diff if available
-                  const diff = l.newValue - (l.oldValue || 0);
-                  // We allow negative diffs in accumulation, but logs typically store total snapshot or incremental.
-                  // Current handleKpiUpdate stores total in newValue.
-                  // But logs list contains multiple entries per day. 
-                  // We need to be careful: logs track updates to the MONTH total in the app state, 
-                  // but here we are trying to reconstruct the daily flow.
-                  // For simplicity: We sum the *net changes* recorded on this day.
-                  dayValue += diff; 
-              });
-              accumulatedRealized += dayValue;
+
+          if (hasDailyEntries) {
+              // Use actual daily entries
+              dayValue = dayValues.get(i) || 0;
           } else {
-              // Fallback: Linear accumulation if no detailed logs exist but we have a total
-              accumulatedRealized = linearStep * i;
+              // Fallback: linear if no daily entries
+              dayValue = currentRealized / daysInMonth;
           }
-          
-          // Cumulative Target: Proportional to the day of the month
-          // Formula: (Total Meta / Total Days) * Current Day
+
+          accumulatedRealized += dayValue;
+
+          // Cumulative Target: Proportional to day of month
           const cumulativeTarget = currentMeta ? (currentMeta / daysInMonth) * i : 0;
-          
+
           dailyData.push({
               day: i,
               value: accumulatedRealized,
@@ -639,7 +619,7 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
 
   const currentMonthData = isMonthlyView ? sortedData.find(d => d.month === selectedMonth) : null;
   const chartData = isMonthlyView
-      ? getDailyChartData(currentMonthData?.realized || 0, currentMonthData?.meta || 0, selectedMonth)
+      ? getDailyChartData(dailyEntries, currentMonthData?.realized || 0, currentMonthData?.meta || 0, selectedMonth)
       : sortedData;
 
   // Get existing channels for dropdown
