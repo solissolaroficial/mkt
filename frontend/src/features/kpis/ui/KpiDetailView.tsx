@@ -143,6 +143,9 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
 
  // Sort monthly data chronologically
  const sortedData = React.useMemo(() => {
+   const allLogs = React.useMemo(() => {
+  return kpi.data.flatMap((monthData) => monthData.logs || []);
+}, [kpi.data]);
    return [...kpi.data].sort((a, b) => {
      const indexA = MONTHS.indexOf(a.month);
      const indexB = MONTHS.indexOf(b.month);
