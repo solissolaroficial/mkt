@@ -575,47 +575,47 @@ const { deleteMonthlyData, isPending: isDeleting } = useDeleteMonthlyData();
   // --- CHART LOGIC ---
   const isMonthlyView = selectedMonth !== '---';
   
-const getDailyChartData = (
-  dailyEntries: DailyEntry[],
-  currentRealized: number,
-  currentMeta: number | null,
-  monthStr: string
-) => {
-  const monthIdx = MONTHS.indexOf(monthStr);
-  const year = currentYear;
-  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-  const dailyData = [];
-  const hasDailyEntries = dailyEntries.length > 0;
+  const getDailyChartData = (dailyEntries: DailyEntry[], currentRealized: number, currentMeta: number | null, monthStr: string) => {
+      const monthIdx = MONTHS.indexOf(monthStr);
+      const year = currentYear;
+      const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
-  // Soma múltiplos lançamentos no mesmo dia
-  const dayValues = new Map<number, number>();
-  dailyEntries.forEach((entry: DailyEntry) => {
-    const day = new Date(entry.date).getDate();
-    dayValues.set(day, (dayValues.get(day) || 0) + entry.value);
-  });
+      const dailyData = [];
+      let accumulatedRealized = 0;
+      const hasDailyEntries = dailyEntries.length > 0;
 
-  for (let i = 1; i <= daysInMonth; i++) {
-    let dayValue = 0;
+      // Create a map to sum multiple entries on the same day
+      const dayValues = new Map<number, number>();
+      dailyEntries.forEach((entry: DailyEntry) => {
+          const day = new Date(entry.date).getDate();
+          dayValues.set(day, (dayValues.get(day) || 0) + entry.value);
+      });
 
-    if (hasDailyEntries) {
-      dayValue = dayValues.get(i) || 0;
-    } else {
-      // fallback se não houver lançamentos diários
-      dayValue = currentRealized / daysInMonth;
-    }
+      for (let i = 1; i <= daysInMonth; i++) {
+          let dayValue = 0;
 
-    // Meta diária em vez de projeção acumulada
-    const dailyTarget = currentMeta ? currentMeta / daysInMonth : 0;
+          if (hasDailyEntries) {
+              // Use actual daily entries
+              dayValue = dayValues.get(i) || 0;
+          } else {
+              // Fallback: linear if no daily entries
+              dayValue = currentRealized / daysInMonth;
+          }
 
-    dailyData.push({
-      day: i,
-      value: dayValue,
-      target: dailyTarget,
-    });
-  }
+          accumulatedRealized += dayValue;
 
-  return dailyData;
-};
+          // Cumulative Target: Proportional to day of month
+          const cumulativeTarget = currentMeta ? (currentMeta / daysInMonth) * i : 0;
+
+          dailyData.push({
+              day: i,
+              value: accumulatedRealized,
+              target: cumulativeTarget
+          });
+      }
+
+      return dailyData;
+  };
 
   const currentMonthData = isMonthlyView ? sortedData.find(d => d.month === selectedMonth) : null;
   const chartData = isMonthlyView
